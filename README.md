@@ -25,42 +25,46 @@ The panel indicator shows `ai` with a count of providers that still have quota (
 
 ## Install
 
-### With meson (recommended)
+### 1. Clone the repo
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/freeby.git
 cd freeby
+```
+
+### 2. Install with meson
+
+```bash
 meson setup build --prefix=$HOME/.local
 meson install -C build
 ```
 
-### Manual install
+This copies the extension files to `~/.local/share/gnome-shell/extensions/freeby@kelvin.local/` and the scripts to `~/.local/bin/`.
 
-Copy these files to `~/.local/share/gnome-shell/extensions/freeby@kelvin.local/`:
+### 3. Restart GNOME Shell
 
-- `extension.js`
-- `metadata.json`
-- `stylesheet.css`
+- **Wayland:** Log out and log back in
+- **X11:** Press `Alt+F2`, type `r`, and press Enter
 
-Then copy `scripts/freeby.sh` to `~/.local/bin/freeby.sh` and make it executable.
-
-### Enable
-
-Log out and back in (Wayland), or press `Alt+F2` and type `r` (X11), then:
+### 4. Enable the extension
 
 ```bash
 gnome-extensions enable freeby@kelvin.local
 ```
 
+You should see `ai` appear in your top panel.
+
 ## Copilot setup
 
-Copilot needs a one-time device-flow auth:
+If you don't have `gh` CLI installed and authenticated, you need to set up Copilot auth manually:
 
 ```bash
 copilot-setup
 ```
 
-If `gh` CLI is installed and authenticated, this step is not needed.
+This runs a device-flow auth and saves the token to `~/.config/freeby/copilot-token`.
+
+If `gh` CLI is already authenticated, skip this step.
 
 ## Usage
 
@@ -71,10 +75,10 @@ If `gh` CLI is installed and authenticated, this step is not needed.
 ## Debugging
 
 ```bash
-# Check raw output
+# Check raw output from the data script
 bash ~/.local/bin/freeby.sh | python3 -m json.tool
 
-# Watch extension logs
+# Watch extension logs in real time
 journalctl -f -o cat /usr/bin/gnome-shell
 ```
 
