@@ -75,16 +75,13 @@ class FreebyIndicator extends PanelMenu.Button {
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        this._statusItem = new PopupMenu.PopupMenuItem('Last checked: never', {
-            reactive: false,
+        this._statusItem = new PopupMenu.PopupMenuItem('\u21BB Last checked: never', {
+            reactive: true,
             can_focus: false,
         });
         this._statusItem.label.add_style_class_name('freeby-status');
+        this._statusItem.connect('activate', () => this._refresh());
         this.menu.addMenuItem(this._statusItem);
-
-        const refreshItem = new PopupMenu.PopupMenuItem('Refresh now');
-        refreshItem.connect('activate', () => this._refresh());
-        this.menu.addMenuItem(refreshItem);
 
         this._timeoutId = null;
         this._refresh();
@@ -204,7 +201,7 @@ class FreebyIndicator extends PanelMenu.Button {
         }
 
         const now = GLib.DateTime.new_now_local().format('%H:%M:%S');
-        this._statusItem.label.text = `Last checked: ${now}`;
+        this._statusItem.label.text = `\u21BB Last checked: ${now}`;
     }
 
     destroy() {
