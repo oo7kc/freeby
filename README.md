@@ -1,4 +1,4 @@
-# AI Usage — minimal GNOME panel indicator
+# Freeby — minimal GNOME panel indicator
 
 A GNOME Shell extension that shows local AI coding tool usage
 in your top panel, with a dropdown for the per-tool breakdown.
@@ -26,8 +26,8 @@ meson install -C build
 ```
 
 This copies:
-- `extension.js`, `metadata.json`, `stylesheet.css` → `~/.local/share/gnome-shell/extensions/ai-usage@kelvin.local/`
-- `ai-usage.sh`, `copilot-setup.sh` → `~/.local/bin/`
+- `extension.js`, `metadata.json`, `stylesheet.css` → `~/.local/share/gnome-shell/extensions/freeby@kelvin.local/`
+- `freeby.sh`, `copilot-setup.sh` → `~/.local/bin/`
 
 ### Restart GNOME Shell
 
@@ -37,7 +37,7 @@ This copies:
 ### Enable
 
 ```bash
-gnome-extensions enable ai-usage@kelvin.local
+gnome-extensions enable freeby@kelvin.local
 ```
 
 ## Copilot setup
@@ -58,7 +58,7 @@ will use that instead — no setup needed.
 
 ```bash
 # Test the data script standalone
-bash ~/.local/bin/ai-usage.sh | python3 -m json.tool
+bash ~/.local/bin/freeby.sh | python3 -m json.tool
 
 # Watch extension logs
 journalctl -f -o cat /usr/bin/gnome-shell
@@ -66,7 +66,7 @@ journalctl -f -o cat /usr/bin/gnome-shell
 
 ## How it works
 
-The extension (`extension.js`) spawns `ai-usage.sh` every 120 seconds.
+The extension (`extension.js`) spawns `freeby.sh` every 120 seconds.
 The script calls each provider's API and outputs a JSON blob:
 
 ```json

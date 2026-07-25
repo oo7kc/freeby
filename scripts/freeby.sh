@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# ai-usage.sh — aggregates local AI coding tool usage into one JSON blob
-# for the "AI Usage" GNOME Shell extension.
+# freeby.sh — aggregates local AI coding tool usage into one JSON blob
+# for the "Freeby" GNOME Shell extension.
 #
 # Run it standalone to test/debug:
-#   bash ~/.local/bin/ai-usage.sh | python3 -m json.tool
+#   bash ~/.local/bin/freeby.sh | python3 -m json.tool
 #
 # Status per provider:
 #

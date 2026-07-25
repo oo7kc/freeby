@@ -19,13 +19,13 @@ const PROVIDERS = ['codex', 'cursor', 'copilot'];
 
 const SCRIPT_PATH = GLib.build_filenamev([
     GLib.get_home_dir(),
-    '.local', 'bin', 'ai-usage.sh',
+    '.local', 'bin', 'freeby.sh',
 ]);
 
-const AiUsageIndicator = GObject.registerClass(
-class AiUsageIndicator extends PanelMenu.Button {
+const FreebyIndicator = GObject.registerClass(
+class FreebyIndicator extends PanelMenu.Button {
     _init() {
-        super._init(0.0, 'AI Usage', false);
+        super._init(0.0, 'Freeby', false);
 
         this._label = new St.Label({
             text: 'AI',
@@ -49,7 +49,7 @@ class AiUsageIndicator extends PanelMenu.Button {
             reactive: false,
             can_focus: false,
         });
-        this._statusItem.label.add_style_class_name('ai-usage-status');
+        this._statusItem.label.add_style_class_name('freeby-status');
         this.menu.addMenuItem(this._statusItem);
 
         const refreshItem = new PopupMenu.PopupMenuItem('Refresh now');
@@ -73,7 +73,7 @@ class AiUsageIndicator extends PanelMenu.Button {
             );
         } catch (e) {
             this._label.text = '⚠';
-            logError(e, 'ai-usage: failed to spawn script');
+            logError(e, 'freeby: failed to spawn script');
             return;
         }
 
@@ -83,13 +83,13 @@ class AiUsageIndicator extends PanelMenu.Button {
                 [, stdout, stderr] = proc_.communicate_utf8_finish(res);
             } catch (e) {
                 this._label.text = '⚠';
-                logError(e, 'ai-usage: subprocess communication failed');
+                logError(e, 'freeby: subprocess communication failed');
                 return;
             }
 
             if (!proc_.get_successful()) {
                 this._label.text = '⚠';
-                log(`ai-usage: script exited with error: ${stderr}`);
+                log(`freeby: script exited with error: ${stderr}`);
                 return;
             }
 
@@ -103,7 +103,7 @@ class AiUsageIndicator extends PanelMenu.Button {
             data = JSON.parse(stdout);
         } catch (e) {
             this._label.text = '⚠';
-            log(`ai-usage: could not parse script output as JSON: ${stdout}`);
+            log(`freeby: could not parse script output as JSON: ${stdout}`);
             return;
         }
 
@@ -135,9 +135,9 @@ class AiUsageIndicator extends PanelMenu.Button {
     }
 });
 
-export default class AiUsageExtension extends Extension {
+export default class FreebyExtension extends Extension {
     enable() {
-        this._indicator = new AiUsageIndicator();
+        this._indicator = new FreebyIndicator();
         Main.panel.addToStatusArea(this.uuid, this._indicator);
     }
 

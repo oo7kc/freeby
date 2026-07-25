@@ -1,10 +1,10 @@
-# Implementation Plan: freeby GNOME Extension
+# Implementation Plan: Freeby GNOME Extension
 
 ## Problem
 
 The extension doesn't appear in GNOME Extensions Manager. Two root causes:
 
-1. Files were never copied to `~/.local/share/gnome-shell/extensions/ai-usage@kelvin.local/`
+1. Files were never copied to `~/.local/share/gnome-shell/extensions/freeby@kelvin.local/`
 2. `metadata.json` lists shell versions `["45","46","47","48"]` but system runs GNOME Shell 50.1 — Shell refuses to load extensions that don't claim compatibility
 
 Additionally, Cursor and Copilot providers are stubbed out.
@@ -21,9 +21,9 @@ Additionally, Cursor and Copilot providers are stubbed out.
 
 Single `meson.build` at project root. No submodules, no abstraction.
 
-- `meson install` copies `extension.js`, `metadata.json`, `stylesheet.css` → `~/.local/share/gnome-shell/extensions/ai-usage@kelvin.local/`
-- Copies `scripts/ai-usage.sh` → `~/.local/bin/ai-usage.sh`
-- `meson setup build && meson install -C build` workflow
+- `meson install` copies `extension.js`, `metadata.json`, `stylesheet.css` → `~/.local/share/gnome-shell/extensions/freeby@kelvin.local/`
+- Copies `scripts/freeby.sh` → `~/.local/bin/freeby.sh`
+- `meson setup build --prefix=$HOME/.local && meson install -C build` workflow
 
 ### Phase 3: Cursor provider (real implementation)
 
@@ -103,7 +103,7 @@ New file: `scripts/copilot-setup.sh` — one-time device flow auth helper that s
 | `metadata.json` | Edit: add shell-version "50", fix description | 1 |
 | `.gitignore` | New: build/, *.swp, etc. | 1 |
 | `meson.build` | New: install extension + script | 2 |
-| `scripts/ai-usage.sh` | Edit: implement cursor + copilot sections | 3, 4 |
+| `scripts/freeby.sh` | Edit: implement cursor + copilot sections | 3, 4 |
 | `scripts/copilot-setup.sh` | New: one-time Copilot auth helper | 4 |
 | `extension.js` | No changes needed | — |
 | `stylesheet.css` | No changes needed | — |

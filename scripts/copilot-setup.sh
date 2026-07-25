@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # copilot-setup.sh — one-time GitHub Copilot device-flow authentication
-# Saves token to ~/.config/freeby/copilot-token for ai-usage.sh to read.
+# Saves token to ~/.config/freeby/copilot-token for freeby.sh to read.
 set -euo pipefail
 
 CONFIG_DIR="$HOME/.config/freeby"
