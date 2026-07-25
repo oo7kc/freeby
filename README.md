@@ -2,7 +2,9 @@
 
 GNOME Shell extension that tracks remaining usage across your free-tier AI coding tools.
 
-![Screenshot](screenshot.png)
+![Panel indicator](docs/s1.png)
+
+![Dropdown details](docs/s2.png)
 
 The panel indicator shows `ai` with a count of providers that still have quota (e.g., `ai·2`). Open the dropdown to see per-provider details and time until reset.
 
