@@ -9,12 +9,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-// How often to re-run the aggregator script, in seconds.
-// Bumped up from the tighter 30s you'd want for a live dashboard — this
-// data doesn't change fast enough to justify spawning a process that often.
 const REFRESH_SECONDS = 120;
-
-// Order matters here only for display order in the dropdown.
 const PROVIDERS = ['codex', 'cursor', 'copilot'];
 
 const SCRIPT_PATH = GLib.build_filenamev([

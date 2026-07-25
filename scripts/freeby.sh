@@ -1,23 +1,6 @@
 #!/usr/bin/env bash
-# freeby.sh — aggregates local AI coding tool usage into one JSON blob
-# for the "Freeby" GNOME Shell extension.
-#
-# Run it standalone to test/debug:
-#   bash ~/.local/bin/freeby.sh | python3 -m json.tool
-#
-# Status per provider:
-#
-#   codex     - reads ~/.codex/auth.json via the `codex-check` npm tool.
-#   cursor    - reads ~/.config/cursor/auth.json, hits api2.cursor.sh.
-#   copilot   - reads token from ~/.config/freeby/copilot-token or gh CLI,
-#               hits api.github.com/copilot_internal/user.
-#
-# opencode was dropped: `opencode stats` only reports lifetime usage
-# (sessions/cost/tokens), never a remaining-quota or reset value, so it
-# had nothing actionable to show here.
-#
-# Each provider block outputs: {"available": bool, "summary": "short string"}
-# "available": false just means "no reader wired up yet", not "not installed".
+# Aggregates local AI coding tool usage into one JSON blob.
+# Run standalone: bash ~/.local/bin/freeby.sh | python3 -m json.tool
 
 set -uo pipefail
 
@@ -28,22 +11,14 @@ json_escape() {
     s="${s//$'\n'/ }"
     s="${s//$'\t'/ }"
     s="${s//$'\r'/ }"
-    # Final safety net: drop any raw control characters that slipped through
-    # (e.g. ANSI codes not caught by strip_ansi below) so JSON never breaks.
     s="$(printf '%s' "$s" | tr -d '[:cntrl:]')"
     printf '%s' "$s"
 }
 
-# Removes ANSI color/style escape sequences (e.g. from tools that colorize
-# output even when piped). Must run before any field-grep parsing, since
-# a color code can otherwise land in the middle of a value.
 strip_ansi() {
     printf '%s' "$1" | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g'
 }
 
-# Fallback for any provider: strip box-drawing borders and blank lines,
-# join what's left, cap length. Used when field-specific parsing below
-# doesn't match (e.g. output format changed).
 strip_box_lines() {
     printf '%s' "$1" \
         | tr -d '│╭╮╰╯─┌┐└┘┼├┤┬┴┏┓┗┛━┃' \
@@ -53,10 +28,7 @@ strip_box_lines() {
         | cut -c1-140
 }
 
-# ---------------------------------------------------------------------------
-# codex — parses codex-check's real field labels:
-#   "Limit Reached: YES/NO", "5h limit: NN.N%", "5h resets: <date>"
-# ---------------------------------------------------------------------------
+# --- codex -------------------------------------------------------------------
 codex_available=false
 codex_summary="not detected"
 if [ -f "$HOME/.codex/auth.json" ]; then
@@ -80,9 +52,7 @@ if [ -f "$HOME/.codex/auth.json" ]; then
     fi
 fi
 
-# ---------------------------------------------------------------------------
-# cursor — reads ~/.config/cursor/auth.json, hits api2.cursor.sh
-# ---------------------------------------------------------------------------
+# --- cursor ------------------------------------------------------------------
 cursor_available=false
 cursor_summary="not detected"
 cursor_auth_file="$HOME/.config/cursor/auth.json"
@@ -135,19 +105,15 @@ except Exception as e:
     fi
 fi
 
-# ---------------------------------------------------------------------------
-# copilot — reads token from ~/.config/freeby/copilot-token or gh CLI
-# ---------------------------------------------------------------------------
+# --- copilot -----------------------------------------------------------------
 copilot_available=false
 copilot_summary="not detected"
 copilot_token=""
 
-# Try gh CLI first
 if command -v gh >/dev/null 2>&1; then
     copilot_token="$(gh auth token 2>/dev/null)"
 fi
 
-# Fallback to saved token file
 if [ -z "$copilot_token" ] && [ -f "$HOME/.config/freeby/copilot-token" ]; then
     copilot_token="$(cat "$HOME/.config/freeby/copilot-token" 2>/dev/null)"
 fi
@@ -199,7 +165,7 @@ elif [ ! -f "$HOME/.config/freeby/copilot-token" ] && ! command -v gh >/dev/null
     copilot_summary="run copilot-setup to authenticate"
 fi
 
-# ---------------------------------------------------------------------------
+# --- output ------------------------------------------------------------------
 cat <<EOF
 {
   "codex":    {"available": $codex_available,    "summary": "$(json_escape "$codex_summary")"},
