@@ -40,7 +40,7 @@ if [ -f "$HOME/.codex/auth.json" ]; then
         five_h_resets="$(printf '%s' "$codex_raw" | grep -oP '5h resets\s*:\s*\K[^│]+' | xargs)"
 
         if [ "$limit_reached" = "YES" ]; then
-            codex_summary="limit reached - resets $(printf '%s' "${five_h_resets:-unknown}" | python3 -c "
+            codex_summary="limit reached, resets $(printf '%s' "${five_h_resets:-unknown}" | python3 -c "
 from datetime import datetime, timezone
 import sys
 raw = sys.stdin.read().strip()
@@ -69,7 +69,7 @@ else:
     print(f'in {h}h {m}m')
 " 2>/dev/null)"
         elif [ -n "$five_h_pct" ]; then
-            codex_summary="${five_h_pct} used - resets $(printf '%s' "${five_h_resets:-unknown}" | python3 -c "
+            codex_summary="${five_h_pct} used, resets $(printf '%s' "${five_h_resets:-unknown}" | python3 -c "
 from datetime import datetime, timezone
 import sys
 raw = sys.stdin.read().strip()
@@ -102,7 +102,7 @@ else:
         fi
         codex_available=true
     else
-        codex_summary="auth.json found - codex-check produced no output"
+        codex_summary="auth.json found, codex-check produced no output"
     fi
 fi
 
@@ -123,7 +123,7 @@ if [ -f "$cursor_auth_file" ]; then
         cursor_body="$(printf '%s' "$cursor_resp" | sed '$d')"
 
         if [ "$cursor_http" = "401" ]; then
-            cursor_summary="token expired - reopen cursor to refresh"
+            cursor_summary="token expired, reopen cursor to refresh"
             cursor_available=true
         elif [ "$cursor_http" = "200" ] && [ -n "$cursor_body" ]; then
             cursor_parsed="$(printf '%s' "$cursor_body" | python3 -c "
@@ -147,9 +147,9 @@ try:
         m = (diff.seconds % 3600) // 60
         countdown = f'in {h}h {m}m'
     if pct >= 100:
-        print(f'limit reached - resets {countdown}')
+        print(f'limit reached, resets {countdown}')
     else:
-        print(f'{pct}% used - resets {countdown}')
+        print(f'{pct}% used, resets {countdown}')
 except Exception as e:
     print(f'parse error: {e}')
 " 2>/dev/null)"
@@ -189,7 +189,7 @@ if [ -n "$copilot_token" ]; then
     copilot_body="$(printf '%s' "$copilot_resp" | sed '$d')"
 
     if [ "$copilot_http" = "401" ] || [ "$copilot_http" = "403" ]; then
-        copilot_summary="auth expired - re-run copilot-setup"
+        copilot_summary="auth expired, re-run copilot-setup"
         copilot_available=true
     elif [ "$copilot_http" = "200" ] && [ -n "$copilot_body" ]; then
         copilot_parsed="$(printf '%s' "$copilot_body" | python3 -c "
@@ -224,11 +224,11 @@ try:
     else:
         countdown = 'unknown'
     if entitlement == 0:
-        print(f'no quota - resets {countdown}')
+        print(f'no quota, resets {countdown}')
     elif remaining <= 0:
-        print(f'limit reached - resets {countdown}')
+        print(f'limit reached, resets {countdown}')
     else:
-        print(f'{used}/{entitlement} used - resets {countdown}')
+        print(f'{used}/{entitlement} used, resets {countdown}')
 except Exception as e:
     print(f'parse error: {e}')
 " 2>/dev/null)"
