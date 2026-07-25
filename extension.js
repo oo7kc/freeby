@@ -94,7 +94,7 @@ class FreebyIndicator extends PanelMenu.Button {
                 Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
             );
         } catch (e) {
-            this._label.text = '\u26A0';
+            this._label.text = 'ai';
             logError(e, 'freeby: failed to spawn script');
             return;
         }
@@ -104,13 +104,13 @@ class FreebyIndicator extends PanelMenu.Button {
             try {
                 [, stdout, stderr] = proc_.communicate_utf8_finish(res);
             } catch (e) {
-                this._label.text = '\u26A0';
-                logError(e, 'freeby: subprocess communication failed');
+            this._label.text = 'ai';
+            logError(e, 'freeby: subprocess communication failed');
                 return;
             }
 
             if (!proc_.get_successful()) {
-                this._label.text = '\u26A0';
+                this._label.text = 'ai';
                 log(`freeby: script exited with error: ${stderr}`);
                 return;
             }
@@ -124,13 +124,13 @@ class FreebyIndicator extends PanelMenu.Button {
         try {
             data = JSON.parse(stdout);
         } catch (e) {
-            this._label.text = '\u26A0';
+            this._label.text = 'ai';
             log(`freeby: could not parse script output as JSON: ${stdout}`);
             return;
         }
 
         const activeCount = PROVIDERS.filter(k => data[k]?.available).length;
-        this._label.text = activeCount > 0 ? `${activeCount}` : '\u2014';
+        this._label.text = activeCount > 0 ? `ai\u00B7${activeCount}` : 'ai';
 
         for (const key of PROVIDERS) {
             const d = data[key];
