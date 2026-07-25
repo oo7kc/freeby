@@ -4,3 +4,4 @@ build/
 *~
 .cache/
 meson-private/
+plan.md

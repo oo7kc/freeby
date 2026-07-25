@@ -64,24 +64,53 @@ codex_available=false
 codex_has_remaining=false
 codex_summary="not detected"
 if [ -f "$HOME/.codex/auth.json" ]; then
-    codex_raw="$(npx --yes codex-check --auth "$HOME/.codex/auth.json" 2>/dev/null)"
-    codex_raw="$(strip_ansi "$codex_raw")"
-    if [ -n "$codex_raw" ]; then
-        limit_reached="$(printf '%s' "$codex_raw" | grep -oP 'Limit Reached\s*:\s*\K\S+')"
-        five_h_pct="$(printf '%s' "$codex_raw" | grep -oP '5h limit\s*:\s*\K[0-9.]+%')"
-        five_h_resets="$(printf '%s' "$codex_raw" | grep -oP '5h resets\s*:\s*\K[^│]+' | xargs)"
-
-        if [ "$limit_reached" = "YES" ]; then
-            codex_summary="limit reached, resets $(printf '%s' "${five_h_resets:-unknown}" | countdown)"
-            codex_has_remaining=false
-        elif [ -n "$five_h_pct" ]; then
-            codex_summary="${five_h_pct} used, resets $(printf '%s' "${five_h_resets:-unknown}" | countdown)"
-            codex_has_remaining=true
+    codex_json="$(npx --yes codex-check --auth "$HOME/.codex/auth.json" --json 2>/dev/null)"
+    if [ -n "$codex_json" ]; then
+        codex_parsed="$(printf '%s' "$codex_json" | python3 -c "
+import json, sys
+from datetime import datetime, timezone
+try:
+    data = json.load(sys.stdin)
+    if isinstance(data, list):
+        data = data[0]
+    account = data.get('account', {})
+    windows = data.get('windows', {})
+    primary = windows.get('primary', {})
+    pct = primary.get('percentUsed', 0)
+    resets_at = primary.get('resetsAt', '')
+    window_label = primary.get('label', 'window')
+    if resets_at:
+        dt = datetime.fromisoformat(resets_at.replace('Z', '+00:00'))
+        now = datetime.now(timezone.utc)
+        diff = dt - now
+        if diff.total_seconds() <= 0:
+            countdown = 'now'
+        elif diff.days > 0:
+            h = diff.seconds // 3600
+            countdown = f'in {diff.days}d {h}h'
+        else:
+            h = diff.seconds // 3600
+            m = (diff.seconds % 3600) // 60
+            countdown = f'in {h}h {m}m'
+    else:
+        countdown = 'unknown'
+    has = 'false' if pct >= 100 else 'true'
+    if pct >= 100:
+        print(f'limit reached, resets {countdown}')
+    else:
+        print(f'{pct}% used, resets {countdown}')
+    print(has)
+except Exception as e:
+    print(f'parse error: {e}')
+    print('false')
+" 2>/dev/null)"
+        if [ -n "$codex_parsed" ]; then
+            codex_summary="$(echo "$codex_parsed" | head -1)"
+            codex_has_remaining="$(echo "$codex_parsed" | tail -1)"
+            codex_available=true
         else
-            codex_summary="$(strip_box_lines "$codex_raw")"
-            codex_has_remaining=false
+            codex_summary="unexpected response"
         fi
-        codex_available=true
     else
         codex_summary="auth.json found, codex-check produced no output"
     fi
