@@ -1,0 +1,6 @@
+build/
+*.swp
+*.swo
+*~
+.cache/
+meson-private/
