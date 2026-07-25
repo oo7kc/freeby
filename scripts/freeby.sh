@@ -135,20 +135,24 @@ import json, sys
 from datetime import datetime, timezone
 try:
     d = json.load(sys.stdin)
-    quota = d.get('quota_snapshots', {})
-    premium = quota.get('premium_interactions', {})
-    remaining = premium.get('remaining', '?')
-    total = premium.get('total', '?')
-    resets = premium.get('resets_at', '')
-    if resets:
-        reset_date = datetime.fromisoformat(resets.replace('Z', '+00:00')).strftime('%b %d')
+    reset_str = d.get('quota_reset_date_utc', '')
+    if reset_str:
+        reset_date = datetime.fromisoformat(reset_str.replace('Z', '+00:00')).strftime('%b %d')
     else:
         reset_date = 'unknown'
-    if remaining == 0:
+    quota = d.get('quota_snapshots', {})
+    premium = quota.get('premium_interactions', {})
+    completions = quota.get('completions', {})
+    # Use whichever quota has an entitlement > 0
+    q = premium if premium.get('entitlement', 0) > 0 else completions
+    remaining = q.get('remaining', 0)
+    entitlement = q.get('entitlement', 0)
+    if entitlement == 0:
+        print(f'no quota — resets {reset_date}')
+    elif remaining <= 0:
         print(f'LIMIT REACHED — resets {reset_date}')
     else:
-        used = int(total) - int(remaining) if isinstance(total, int) and isinstance(remaining, int) else '?'
-        print(f'{used}/{total} premium used, resets {reset_date}')
+        print(f'{remaining}/{entitlement} remaining, resets {reset_date}')
 except Exception as e:
     print(f'parse error: {e}')
 " 2>/dev/null)"

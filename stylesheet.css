@@ -1,4 +1,66 @@
+.freeby-panel {
+    spacing: 4px;
+}
+
+.freeby-panel-label {
+    font-weight: bold;
+    font-size: 10pt;
+    min-width: 16px;
+}
+
+.freeby-item-box {
+    spacing: 8px;
+}
+
+.freeby-dot {
+    font-size: 8pt;
+    min-width: 10px;
+}
+
+.freeby-dot-off {
+    color: #888;
+}
+
+.freeby-dot-green {
+    color: #4ade80;
+}
+
+.freeby-dot-yellow {
+    color: #facc15;
+}
+
+.freeby-dot-red {
+    color: #f87171;
+}
+
+.freeby-item-name {
+    font-weight: bold;
+    font-size: 9pt;
+    min-width: 52px;
+}
+
+.freeby-item-summary {
+    font-size: 9pt;
+    color: #ccc;
+}
+
+.freeby-dim {
+    color: #888;
+}
+
+.freeby-green {
+    color: #4ade80;
+}
+
+.freeby-yellow {
+    color: #facc15;
+}
+
+.freeby-red {
+    color: #f87171;
+}
+
 .freeby-status {
-    font-size: 0.85em;
-    opacity: 0.6;
+    font-size: 8pt;
+    color: #888;
 }
