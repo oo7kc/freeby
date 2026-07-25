@@ -10,7 +10,7 @@ The panel indicator shows `ai` with a count of providers that still have quota (
 
 | Provider | How it's detected | Data source |
 |---|---|---|
-| Codex | `~/.codex/auth.json` | `codex-check` CLI |
+| Codex | `~/.codex/auth.json` | `codex-check` CLI (JSON output) |
 | Cursor | `~/.config/cursor/auth.json` | Cursor API |
 | Copilot | `gh` CLI or `~/.config/freeby/copilot-token` | GitHub API |
 
