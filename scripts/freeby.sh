@@ -40,9 +40,9 @@ if [ -f "$HOME/.codex/auth.json" ]; then
         five_h_resets="$(printf '%s' "$codex_raw" | grep -oP '5h resets\s*:\s*\K[^│]+' | xargs)"
 
         if [ "$limit_reached" = "YES" ]; then
-            codex_summary="LIMIT REACHED — resets ${five_h_resets:-unknown}"
+            codex_summary="limit reached — resets ${five_h_resets:-unknown}"
         elif [ -n "$five_h_pct" ]; then
-            codex_summary="5h: ${five_h_pct} used, resets ${five_h_resets:-unknown}"
+            codex_summary="${five_h_pct} used, resets ${five_h_resets:-unknown}"
         else
             codex_summary="$(strip_box_lines "$codex_raw")"
         fi
@@ -69,7 +69,7 @@ if [ -f "$cursor_auth_file" ]; then
         cursor_body="$(printf '%s' "$cursor_resp" | sed '$d')"
 
         if [ "$cursor_http" = "401" ]; then
-            cursor_summary="token expired — open Cursor to refresh"
+            cursor_summary="token expired — reopen cursor to refresh"
             cursor_available=true
         elif [ "$cursor_http" = "200" ] && [ -n "$cursor_body" ]; then
             cursor_parsed="$(printf '%s' "$cursor_body" | python3 -c "
@@ -81,11 +81,8 @@ try:
     pct = pu.get('totalPercentUsed', 0)
     end_ms = int(d.get('billingCycleEnd', '0'))
     reset = datetime.fromtimestamp(end_ms/1000, tz=timezone.utc).strftime('%b %d')
-    msg = d.get('displayMessage', '')
     if pct >= 100:
-        print(f'LIMIT REACHED — resets {reset}')
-    elif msg:
-        print(f'{msg}, resets {reset}')
+        print(f'limit reached — resets {reset}')
     else:
         print(f'{pct}% used, resets {reset}')
 except Exception as e:
@@ -143,7 +140,6 @@ try:
     quota = d.get('quota_snapshots', {})
     chat = quota.get('chat', {})
     completions = quota.get('completions', {})
-    # Show chat if it has an entitlement, otherwise completions
     q = chat if chat.get('entitlement', 0) > 0 else completions
     remaining = q.get('remaining', 0)
     entitlement = q.get('entitlement', 0)
@@ -151,7 +147,7 @@ try:
     if entitlement == 0:
         print(f'no quota — resets {reset_date}')
     elif remaining <= 0:
-        print(f'LIMIT REACHED — resets {reset_date}')
+        print(f'limit reached — resets {reset_date}')
     else:
         print(f'{used}/{entitlement} used, resets {reset_date}')
 except Exception as e:

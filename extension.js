@@ -145,7 +145,7 @@ class FreebyIndicator extends PanelMenu.Button {
                 dot.style_class = 'freeby-dot freeby-dot-off';
                 summary.text = d.summary || 'not available';
                 summary.style_class = 'freeby-item-summary freeby-dim';
-            } else if (d.summary && d.summary.includes('LIMIT REACHED')) {
+            } else if (d.summary && d.summary.includes('limit reached')) {
                 dot.text = '\u25CF';
                 dot.style_class = 'freeby-dot freeby-dot-red';
                 summary.text = d.summary;
