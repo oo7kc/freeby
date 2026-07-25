@@ -40,9 +40,63 @@ if [ -f "$HOME/.codex/auth.json" ]; then
         five_h_resets="$(printf '%s' "$codex_raw" | grep -oP '5h resets\s*:\s*\K[^│]+' | xargs)"
 
         if [ "$limit_reached" = "YES" ]; then
-            codex_summary="limit reached — resets ${five_h_resets:-unknown}"
+            codex_summary="limit reached, resets $(printf '%s' "${five_h_resets:-unknown}" | python3 -c "
+from datetime import datetime, timezone
+import sys
+raw = sys.stdin.read().strip()
+for fmt in ('%Y-%m-%d %H:%M UTC', '%Y-%m-%d %H:%M:%S %Z'):
+    try:
+        dt = datetime.strptime(raw, fmt).replace(tzinfo=timezone.utc)
+        break
+    except ValueError:
+        continue
+else:
+    try:
+        dt = datetime.fromisoformat(raw.replace('Z', '+00:00'))
+    except:
+        print('unknown')
+        sys.exit()
+now = datetime.now(timezone.utc)
+diff = dt - now
+if diff.total_seconds() <= 0:
+    print('now')
+elif diff.days > 0:
+    h = diff.seconds // 3600
+    print(f'in {diff.days}d {h}h')
+else:
+    h = diff.seconds // 3600
+    m = (diff.seconds % 3600) // 60
+    print(f'in {h}h {m}m')
+" 2>/dev/null)"
         elif [ -n "$five_h_pct" ]; then
-            codex_summary="${five_h_pct} used, resets ${five_h_resets:-unknown}"
+            codex_summary="${five_h_pct} used, resets $(printf '%s' "${five_h_resets:-unknown}" | python3 -c "
+from datetime import datetime, timezone
+import sys
+raw = sys.stdin.read().strip()
+for fmt in ('%Y-%m-%d %H:%M UTC', '%Y-%m-%d %H:%M:%S %Z'):
+    try:
+        dt = datetime.strptime(raw, fmt).replace(tzinfo=timezone.utc)
+        break
+    except ValueError:
+        continue
+else:
+    try:
+        dt = datetime.fromisoformat(raw.replace('Z', '+00:00'))
+    except:
+        print('unknown')
+        sys.exit()
+now = datetime.now(timezone.utc)
+diff = dt - now
+if diff.total_seconds() <= 0:
+    print('now')
+elif diff.days > 0:
+    h = diff.seconds // 3600
+    print(f'in {diff.days}d {h}h')
+else:
+    h = diff.seconds // 3600
+    m = (diff.seconds % 3600) // 60
+    print(f'in {h}h {m}m')
+" 2>/dev/null)"
         else
             codex_summary="$(strip_box_lines "$codex_raw")"
         fi
@@ -69,22 +123,33 @@ if [ -f "$cursor_auth_file" ]; then
         cursor_body="$(printf '%s' "$cursor_resp" | sed '$d')"
 
         if [ "$cursor_http" = "401" ]; then
-            cursor_summary="token expired — reopen cursor to refresh"
+            cursor_summary="token expired, reopen cursor to refresh"
             cursor_available=true
         elif [ "$cursor_http" = "200" ] && [ -n "$cursor_body" ]; then
             cursor_parsed="$(printf '%s' "$cursor_body" | python3 -c "
 import json, sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 try:
     d = json.load(sys.stdin)
     pu = d.get('planUsage', {})
     pct = pu.get('totalPercentUsed', 0)
     end_ms = int(d.get('billingCycleEnd', '0'))
-    reset = datetime.fromtimestamp(end_ms/1000, tz=timezone.utc).strftime('%b %d')
-    if pct >= 100:
-        print(f'limit reached — resets {reset}')
+    dt = datetime.fromtimestamp(end_ms/1000, tz=timezone.utc)
+    now = datetime.now(timezone.utc)
+    diff = dt - now
+    if diff.total_seconds() <= 0:
+        countdown = 'now'
+    elif diff.days > 0:
+        h = diff.seconds // 3600
+        countdown = f'in {diff.days}d {h}h'
     else:
-        print(f'{pct}% used, resets {reset}')
+        h = diff.seconds // 3600
+        m = (diff.seconds % 3600) // 60
+        countdown = f'in {h}h {m}m'
+    if pct >= 100:
+        print(f'limit reached, resets {countdown}')
+    else:
+        print(f'{pct}% used, resets {countdown}')
 except Exception as e:
     print(f'parse error: {e}')
 " 2>/dev/null)"
@@ -124,19 +189,19 @@ if [ -n "$copilot_token" ]; then
     copilot_body="$(printf '%s' "$copilot_resp" | sed '$d')"
 
     if [ "$copilot_http" = "401" ] || [ "$copilot_http" = "403" ]; then
-        copilot_summary="auth expired — re-run copilot-setup"
+        copilot_summary="auth expired, re-run copilot-setup"
         copilot_available=true
     elif [ "$copilot_http" = "200" ] && [ -n "$copilot_body" ]; then
         copilot_parsed="$(printf '%s' "$copilot_body" | python3 -c "
 import json, sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 try:
     d = json.load(sys.stdin)
     reset_str = d.get('quota_reset_date_utc', '')
     if reset_str:
-        reset_date = datetime.fromisoformat(reset_str.replace('Z', '+00:00')).strftime('%b %d')
+        dt = datetime.fromisoformat(reset_str.replace('Z', '+00:00'))
     else:
-        reset_date = 'unknown'
+        dt = None
     quota = d.get('quota_snapshots', {})
     chat = quota.get('chat', {})
     completions = quota.get('completions', {})
@@ -144,12 +209,26 @@ try:
     remaining = q.get('remaining', 0)
     entitlement = q.get('entitlement', 0)
     used = q.get('credits_used', 0)
-    if entitlement == 0:
-        print(f'no quota — resets {reset_date}')
-    elif remaining <= 0:
-        print(f'limit reached — resets {reset_date}')
+    if dt:
+        now = datetime.now(timezone.utc)
+        diff = dt - now
+        if diff.total_seconds() <= 0:
+            countdown = 'now'
+        elif diff.days > 0:
+            h = diff.seconds // 3600
+            countdown = f'in {diff.days}d {h}h'
+        else:
+            h = diff.seconds // 3600
+            m = (diff.seconds % 3600) // 60
+            countdown = f'in {h}h {m}m'
     else:
-        print(f'{used}/{entitlement} used, resets {reset_date}')
+        countdown = 'unknown'
+    if entitlement == 0:
+        print(f'no quota, resets {countdown}')
+    elif remaining <= 0:
+        print(f'limit reached, resets {countdown}')
+    else:
+        print(f'{used}/{entitlement} used, resets {countdown}')
 except Exception as e:
     print(f'parse error: {e}')
 " 2>/dev/null)"
