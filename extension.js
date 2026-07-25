@@ -129,7 +129,7 @@ class FreebyIndicator extends PanelMenu.Button {
             return;
         }
 
-        const activeCount = PROVIDERS.filter(k => data[k]?.available).length;
+        const activeCount = PROVIDERS.filter(k => data[k]?.has_remaining).length;
         this._label.text = activeCount > 0 ? `ai\u00B7${activeCount}` : 'ai';
 
         for (const key of PROVIDERS) {

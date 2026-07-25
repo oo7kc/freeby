@@ -28,8 +28,40 @@ strip_box_lines() {
         | cut -c1-140
 }
 
+countdown() {
+    python3 -c "
+from datetime import datetime, timezone
+import sys
+raw = sys.stdin.read().strip()
+for fmt in ('%Y-%m-%d %H:%M UTC', '%Y-%m-%d %H:%M:%S %Z'):
+    try:
+        dt = datetime.strptime(raw, fmt).replace(tzinfo=timezone.utc)
+        break
+    except ValueError:
+        continue
+else:
+    try:
+        dt = datetime.fromisoformat(raw.replace('Z', '+00:00'))
+    except:
+        print('unknown')
+        sys.exit()
+now = datetime.now(timezone.utc)
+diff = dt - now
+if diff.total_seconds() <= 0:
+    print('now')
+elif diff.days > 0:
+    h = diff.seconds // 3600
+    print(f'in {diff.days}d {h}h')
+else:
+    h = diff.seconds // 3600
+    m = (diff.seconds % 3600) // 60
+    print(f'in {h}h {m}m')
+" 2>/dev/null
+}
+
 # --- codex -------------------------------------------------------------------
 codex_available=false
+codex_has_remaining=false
 codex_summary="not detected"
 if [ -f "$HOME/.codex/auth.json" ]; then
     codex_raw="$(npx --yes codex-check --auth "$HOME/.codex/auth.json" 2>/dev/null)"
@@ -40,65 +72,14 @@ if [ -f "$HOME/.codex/auth.json" ]; then
         five_h_resets="$(printf '%s' "$codex_raw" | grep -oP '5h resets\s*:\s*\K[^│]+' | xargs)"
 
         if [ "$limit_reached" = "YES" ]; then
-            codex_summary="limit reached, resets $(printf '%s' "${five_h_resets:-unknown}" | python3 -c "
-from datetime import datetime, timezone
-import sys
-raw = sys.stdin.read().strip()
-for fmt in ('%Y-%m-%d %H:%M UTC', '%Y-%m-%d %H:%M:%S %Z'):
-    try:
-        dt = datetime.strptime(raw, fmt).replace(tzinfo=timezone.utc)
-        break
-    except ValueError:
-        continue
-else:
-    try:
-        dt = datetime.fromisoformat(raw.replace('Z', '+00:00'))
-    except:
-        print('unknown')
-        sys.exit()
-now = datetime.now(timezone.utc)
-diff = dt - now
-if diff.total_seconds() <= 0:
-    print('now')
-elif diff.days > 0:
-    h = diff.seconds // 3600
-    print(f'in {diff.days}d {h}h')
-else:
-    h = diff.seconds // 3600
-    m = (diff.seconds % 3600) // 60
-    print(f'in {h}h {m}m')
-" 2>/dev/null)"
+            codex_summary="limit reached, resets $(printf '%s' "${five_h_resets:-unknown}" | countdown)"
+            codex_has_remaining=false
         elif [ -n "$five_h_pct" ]; then
-            codex_summary="${five_h_pct} used, resets $(printf '%s' "${five_h_resets:-unknown}" | python3 -c "
-from datetime import datetime, timezone
-import sys
-raw = sys.stdin.read().strip()
-for fmt in ('%Y-%m-%d %H:%M UTC', '%Y-%m-%d %H:%M:%S %Z'):
-    try:
-        dt = datetime.strptime(raw, fmt).replace(tzinfo=timezone.utc)
-        break
-    except ValueError:
-        continue
-else:
-    try:
-        dt = datetime.fromisoformat(raw.replace('Z', '+00:00'))
-    except:
-        print('unknown')
-        sys.exit()
-now = datetime.now(timezone.utc)
-diff = dt - now
-if diff.total_seconds() <= 0:
-    print('now')
-elif diff.days > 0:
-    h = diff.seconds // 3600
-    print(f'in {diff.days}d {h}h')
-else:
-    h = diff.seconds // 3600
-    m = (diff.seconds % 3600) // 60
-    print(f'in {h}h {m}m')
-" 2>/dev/null)"
+            codex_summary="${five_h_pct} used, resets $(printf '%s' "${five_h_resets:-unknown}" | countdown)"
+            codex_has_remaining=true
         else
             codex_summary="$(strip_box_lines "$codex_raw")"
+            codex_has_remaining=false
         fi
         codex_available=true
     else
@@ -108,6 +89,7 @@ fi
 
 # --- cursor ------------------------------------------------------------------
 cursor_available=false
+cursor_has_remaining=false
 cursor_summary="not detected"
 cursor_auth_file="$HOME/.config/cursor/auth.json"
 if [ -f "$cursor_auth_file" ]; then
@@ -125,6 +107,7 @@ if [ -f "$cursor_auth_file" ]; then
         if [ "$cursor_http" = "401" ]; then
             cursor_summary="token expired, reopen cursor to refresh"
             cursor_available=true
+            cursor_has_remaining=false
         elif [ "$cursor_http" = "200" ] && [ -n "$cursor_body" ]; then
             cursor_parsed="$(printf '%s' "$cursor_body" | python3 -c "
 import json, sys
@@ -146,15 +129,19 @@ try:
         h = diff.seconds // 3600
         m = (diff.seconds % 3600) // 60
         countdown = f'in {h}h {m}m'
+    has = 'true' if pct < 100 else 'false'
     if pct >= 100:
         print(f'limit reached, resets {countdown}')
     else:
         print(f'{pct}% used, resets {countdown}')
+    print(has)
 except Exception as e:
     print(f'parse error: {e}')
+    print('false')
 " 2>/dev/null)"
             if [ -n "$cursor_parsed" ]; then
-                cursor_summary="$cursor_parsed"
+                cursor_summary="$(echo "$cursor_parsed" | head -1)"
+                cursor_has_remaining="$(echo "$cursor_parsed" | tail -1)"
                 cursor_available=true
             else
                 cursor_summary="unexpected response"
@@ -169,6 +156,7 @@ fi
 
 # --- copilot -----------------------------------------------------------------
 copilot_available=false
+copilot_has_remaining=false
 copilot_summary="not detected"
 copilot_token=""
 
@@ -191,6 +179,7 @@ if [ -n "$copilot_token" ]; then
     if [ "$copilot_http" = "401" ] || [ "$copilot_http" = "403" ]; then
         copilot_summary="auth expired, re-run copilot-setup"
         copilot_available=true
+        copilot_has_remaining=false
     elif [ "$copilot_http" = "200" ] && [ -n "$copilot_body" ]; then
         copilot_parsed="$(printf '%s' "$copilot_body" | python3 -c "
 import json, sys
@@ -223,17 +212,21 @@ try:
             countdown = f'in {h}h {m}m'
     else:
         countdown = 'unknown'
+    has = 'true' if remaining > 0 else 'false'
     if entitlement == 0:
         print(f'no quota, resets {countdown}')
     elif remaining <= 0:
         print(f'limit reached, resets {countdown}')
     else:
         print(f'{used}/{entitlement} used, resets {countdown}')
+    print(has)
 except Exception as e:
     print(f'parse error: {e}')
+    print('false')
 " 2>/dev/null)"
         if [ -n "$copilot_parsed" ]; then
-            copilot_summary="$copilot_parsed"
+            copilot_summary="$(echo "$copilot_parsed" | head -1)"
+            copilot_has_remaining="$(echo "$copilot_parsed" | tail -1)"
             copilot_available=true
         else
             copilot_summary="unexpected response"
@@ -248,8 +241,8 @@ fi
 # --- output ------------------------------------------------------------------
 cat <<EOF
 {
-  "codex":    {"available": $codex_available,    "summary": "$(json_escape "$codex_summary")"},
-  "cursor":   {"available": $cursor_available,    "summary": "$(json_escape "$cursor_summary")"},
-  "copilot":  {"available": $copilot_available,   "summary": "$(json_escape "$copilot_summary")"}
+  "codex":    {"available": $codex_available, "has_remaining": $codex_has_remaining, "summary": "$(json_escape "$codex_summary")"},
+  "cursor":   {"available": $cursor_available, "has_remaining": $cursor_has_remaining, "summary": "$(json_escape "$cursor_summary")"},
+  "copilot":  {"available": $copilot_available, "has_remaining": $copilot_has_remaining, "summary": "$(json_escape "$copilot_summary")"}
 }
 EOF
