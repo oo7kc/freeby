@@ -37,6 +37,14 @@ class FreebyIndicator extends PanelMenu.Button {
         this._panelBox.add_child(this._label);
         this.add_child(this._panelBox);
 
+        this.has_tooltip = true;
+        this.tooltip_text = 'Loading...';
+
+        this.connect('button-press-event', () => {
+            this._refresh();
+            return false;
+        });
+
         this._items = {};
         for (const key of PROVIDERS) {
             const box = new St.BoxLayout({ style_class: 'freeby-item-box' });
@@ -95,6 +103,8 @@ class FreebyIndicator extends PanelMenu.Button {
             );
         } catch (e) {
             this._label.text = 'ai';
+            this._label.style_class = 'freeby-panel-label';
+            this.tooltip_text = 'Error loading data';
             logError(e, 'freeby: failed to spawn script');
             return;
         }
@@ -104,13 +114,17 @@ class FreebyIndicator extends PanelMenu.Button {
             try {
                 [, stdout, stderr] = proc_.communicate_utf8_finish(res);
             } catch (e) {
-            this._label.text = 'ai';
-            logError(e, 'freeby: subprocess communication failed');
+                this._label.text = 'ai';
+                this._label.style_class = 'freeby-panel-label';
+                this.tooltip_text = 'Error loading data';
+                logError(e, 'freeby: subprocess communication failed');
                 return;
             }
 
             if (!proc_.get_successful()) {
                 this._label.text = 'ai';
+                this._label.style_class = 'freeby-panel-label';
+                this.tooltip_text = 'Error loading data';
                 log(`freeby: script exited with error: ${stderr}`);
                 return;
             }
@@ -125,12 +139,38 @@ class FreebyIndicator extends PanelMenu.Button {
             data = JSON.parse(stdout);
         } catch (e) {
             this._label.text = 'ai';
+            this._label.style_class = 'freeby-panel-label';
+            this.tooltip_text = 'Error parsing data';
             log(`freeby: could not parse script output as JSON: ${stdout}`);
             return;
         }
 
         const activeCount = PROVIDERS.filter(k => data[k]?.has_remaining).length;
+        const totalCount = PROVIDERS.filter(k => data[k]?.available).length;
+
         this._label.text = activeCount > 0 ? `ai\u00B7${activeCount}` : 'ai';
+
+        let panelClass = 'freeby-panel-label';
+        if (activeCount === totalCount && totalCount > 0) {
+            panelClass += ' freeby-panel-green';
+        } else if (activeCount > 0) {
+            panelClass += ' freeby-panel-yellow';
+        } else if (totalCount > 0) {
+            panelClass += ' freeby-panel-red';
+        }
+        this._label.style_class = panelClass;
+
+        const tooltipParts = [];
+        for (const key of PROVIDERS) {
+            const d = data[key];
+            if (d?.available) {
+                const status = d.has_remaining ? 'available' : 'at limit';
+                tooltipParts.push(`${PROVIDER_LABELS[key]}: ${status}`);
+            }
+        }
+        this.tooltip_text = tooltipParts.length > 0
+            ? tooltipParts.join('\n')
+            : 'No providers detected';
 
         for (const key of PROVIDERS) {
             const d = data[key];

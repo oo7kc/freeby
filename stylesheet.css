@@ -8,6 +8,18 @@
     min-width: 16px;
 }
 
+.freeby-panel-green {
+    color: #4ade80;
+}
+
+.freeby-panel-yellow {
+    color: #facc15;
+}
+
+.freeby-panel-red {
+    color: #f87171;
+}
+
 .freeby-item-box {
     spacing: 8px;
 }
