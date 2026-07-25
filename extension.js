@@ -9,7 +9,6 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-const REFRESH_SECONDS = 120;
 const PROVIDERS = ['codex', 'cursor', 'copilot'];
 
 const PROVIDER_LABELS = {
@@ -25,8 +24,11 @@ const SCRIPT_PATH = GLib.build_filenamev([
 
 const FreebyIndicator = GObject.registerClass(
 class FreebyIndicator extends PanelMenu.Button {
-    _init() {
+    _init(settings) {
         super._init(0.0, 'Freeby', false);
+
+        this._settings = settings;
+        this._previousState = {};
 
         this._panelBox = new St.BoxLayout({ style_class: 'panel-status-menu-box freeby-panel' });
         this._label = new St.Label({
@@ -84,11 +86,68 @@ class FreebyIndicator extends PanelMenu.Button {
         this.menu.addMenuItem(this._statusItem);
 
         this._timeoutId = null;
+        this._setupTimer();
         this._refresh();
+        this._monitorWake();
+    }
+
+    _getInterval() {
+        return this._settings.get_int('refresh-interval');
+    }
+
+    _setupTimer() {
+        if (this._timeoutId) {
+            GLib.source_remove(this._timeoutId);
+            this._timeoutId = null;
+        }
+        const seconds = Math.max(30, this._getInterval());
         this._timeoutId = GLib.timeout_add_seconds(
-            GLib.PRIORITY_DEFAULT, REFRESH_SECONDS,
+            GLib.PRIORITY_DEFAULT, seconds,
             () => { this._refresh(); return GLib.SOURCE_CONTINUE; }
         );
+    }
+
+    _monitorWake() {
+        try {
+            const bus = Gio.DBus.system;
+            this._sleepSignalId = bus.signal_subscribe(
+                'org.freedesktop.login1',
+                'org.freedesktop.login1.Manager',
+                'PrepareForSleep',
+                '/org/freedesktop/login1',
+                null,
+                Gio.DBusSignalFlags.NONE,
+                (conn, sender, path, iface, signal, params) => {
+                    const waking = params.get_child_value(0).get_boolean();
+                    if (waking) {
+                        log('freeby: woke from sleep, refreshing');
+                        this._refresh();
+                    }
+                }
+            );
+        } catch (e) {
+            logError(e, 'freeby: could not monitor sleep/wake');
+        }
+    }
+
+    _notify(title, body) {
+        if (!this._settings.get_boolean('notifications-enabled'))
+            return;
+        try {
+            const source = Main.messageTray.get_source('Freeby');
+            if (!source) {
+                source = new Main.messageTray.Source('Freeby', 'dialog-information-symbolic');
+                Main.messageTray.add(source);
+            }
+            const notification = new Main.messageTray.Notification({
+                source,
+                title,
+                body,
+            });
+            source.addNotification(notification);
+        } catch (e) {
+            logError(e, 'freeby: notification failed');
+        }
     }
 
     _refresh() {
@@ -169,6 +228,25 @@ class FreebyIndicator extends PanelMenu.Button {
             ? tooltipParts.join('\n')
             : 'No providers detected';
 
+        const hitLimits = [];
+        for (const key of PROVIDERS) {
+            const d = data[key];
+            const prev = this._previousState[key];
+            if (d?.available && !d.has_remaining && prev?.has_remaining !== false) {
+                hitLimits.push(PROVIDER_LABELS[key]);
+            }
+        }
+        this._previousState = {};
+        for (const key of PROVIDERS) {
+            this._previousState[key] = data[key] ? { has_remaining: data[key].has_remaining } : null;
+        }
+        if (hitLimits.length > 0) {
+            this._notify(
+                'Usage limit reached',
+                `${hitLimits.join(', ')} ${hitLimits.length === 1 ? 'has' : 'have'} hit their limit`
+            );
+        }
+
         for (const key of PROVIDERS) {
             const d = data[key];
             const { dot, summary } = this._items[key];
@@ -209,18 +287,31 @@ class FreebyIndicator extends PanelMenu.Button {
             GLib.source_remove(this._timeoutId);
             this._timeoutId = null;
         }
+        if (this._sleepSignalId) {
+            Gio.DBus.system.signal_unsubscribe(this._sleepSignalId);
+            this._sleepSignalId = null;
+        }
         super.destroy();
     }
 });
 
 export default class FreebyExtension extends Extension {
     enable() {
-        this._indicator = new FreebyIndicator();
+        this._settings = this.getSettings();
+        this._intervalChangedId = this._settings.connect('changed::refresh-interval', () => {
+            this._indicator?._setupTimer();
+        });
+        this._indicator = new FreebyIndicator(this._settings);
         Main.panel.addToStatusArea(this.uuid, this._indicator);
     }
 
     disable() {
+        if (this._intervalChangedId) {
+            this._settings.disconnect(this._intervalChangedId);
+            this._intervalChangedId = null;
+        }
         this._indicator?.destroy();
         this._indicator = null;
+        this._settings = null;
     }
 }

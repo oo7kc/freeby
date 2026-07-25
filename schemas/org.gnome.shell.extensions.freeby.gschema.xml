@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="freeby">
+  <schema id="org.gnome.shell.extensions.freeby"
+          path="/org/gnome/shell/extensions/freeby/">
+    <key name="refresh-interval" type="i">
+      <default>120</default>
+      <summary>Refresh interval</summary>
+      <description>How often to refresh usage data, in seconds</description>
+    </key>
+    <key name="notifications-enabled" type="b">
+      <default>true</default>
+      <summary>Enable notifications</summary>
+      <description>Show desktop notifications when a provider hits its limit</description>
+    </key>
+  </schema>
+</schemalist>
