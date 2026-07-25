@@ -141,18 +141,19 @@ try:
     else:
         reset_date = 'unknown'
     quota = d.get('quota_snapshots', {})
-    premium = quota.get('premium_interactions', {})
+    chat = quota.get('chat', {})
     completions = quota.get('completions', {})
-    # Use whichever quota has an entitlement > 0
-    q = premium if premium.get('entitlement', 0) > 0 else completions
+    # Show chat if it has an entitlement, otherwise completions
+    q = chat if chat.get('entitlement', 0) > 0 else completions
     remaining = q.get('remaining', 0)
     entitlement = q.get('entitlement', 0)
+    used = q.get('credits_used', 0)
     if entitlement == 0:
         print(f'no quota — resets {reset_date}')
     elif remaining <= 0:
         print(f'LIMIT REACHED — resets {reset_date}')
     else:
-        print(f'{remaining}/{entitlement} remaining, resets {reset_date}')
+        print(f'{used}/{entitlement} used, resets {reset_date}')
 except Exception as e:
     print(f'parse error: {e}')
 " 2>/dev/null)"
