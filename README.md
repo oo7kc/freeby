@@ -1,12 +1,27 @@
-# Freeby
+<p align="center">
+  <h1 align="center">Freeby</h1>
+  <p align="center">GNOME Shell extension that tracks remaining usage across your free-tier AI coding tools.</p>
+</p>
 
-GNOME Shell extension that tracks remaining usage across your free-tier AI coding tools.
+<p align="center">
+  <img src="docs/s1.png" width="45%" />
+  &nbsp;&nbsp;
+  <img src="docs/s2.png" width="45%" />
+</p>
 
-![Panel indicator](docs/s1.png)
+<br>
 
-![Dropdown details](docs/s2.png)
+The panel indicator shows `ai` with a count of providers that still have quota (e.g., `ai·2`). Open the dropdown to see per-provider details and time until reset.
 
-> The panel indicator shows `ai` with a count of providers that still have quota (e.g., `ai·2`). Open the dropdown to see per-provider details and time until reset.
+---
+
+## Features
+
+- **Panel indicator** — colored `ai·N` shows available providers at a glance
+- **Dropdown** — per-provider usage, limits, and reset countdown
+- **Notifications** — alert when a provider hits its limit
+- **Auto-refresh** — refreshes on wake from sleep
+- **Configurable** — adjust refresh interval in settings
 
 ## Supported providers
 
@@ -15,15 +30,6 @@ GNOME Shell extension that tracks remaining usage across your free-tier AI codin
 | Codex | `~/.codex/auth.json` | `codex-check` CLI (JSON output) |
 | Cursor | `~/.config/cursor/auth.json` | Cursor API |
 | Copilot | `gh` CLI or `~/.config/freeby/copilot-token` | GitHub API |
-
-## Prerequisites
-
-- GNOME Shell 45+ (Wayland or X11)
-- bash
-- curl
-- python3
-- npx (for Codex provider)
-- gh CLI (optional, for Copilot provider)
 
 ## Install
 
@@ -40,8 +46,6 @@ cd freeby
 meson setup build --prefix=$HOME/.local
 meson install -C build
 ```
-
-This copies the extension files to `~/.local/share/gnome-shell/extensions/freeby@kelvin.local/` and the scripts to `~/.local/bin/`.
 
 ### 3. Restart GNOME Shell
 
@@ -68,19 +72,29 @@ This runs a device-flow auth and saves the token to `~/.config/freeby/copilot-to
 
 If `gh` CLI is already authenticated, skip this step.
 
-## Usage
+## Settings
 
-- **Panel** — shows `ai·N` where N is the number of providers with remaining quota
-- **Dropdown** — click to see per-provider usage, limits, and reset countdown
-- **Refresh** — data refreshes every 2 minutes, or click "Refresh now" in the dropdown
+Open Extension Manager → Freeby → Settings to configure:
+
+| Setting | Default | Description |
+|---|---|---|
+| Refresh interval | 120s | How often to check usage (min 30s) |
+| Notifications | On | Alert when a provider hits its limit |
+
+Or via command line:
+
+```bash
+gsettings --schemadir ~/.local/share/glib-2.0/schemas set org.gnome.shell.extensions.freeby refresh-interval 60
+gsettings --schemadir ~/.local/share/glib-2.0/schemas set org.gnome.shell.extensions.freeby notifications-enabled false
+```
 
 ## Debugging
 
 ```bash
-# Check raw output from the data script
+# Check raw output
 bash ~/.local/bin/freeby.sh | python3 -m json.tool
 
-# Watch extension logs in real time
+# Watch extension logs
 journalctl -f -o cat /usr/bin/gnome-shell
 ```
 
