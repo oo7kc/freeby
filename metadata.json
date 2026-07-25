@@ -3,5 +3,5 @@
   "name": "Freeby",
   "description": "Minimal panel indicator for local AI coding tool usage (Codex, Cursor, Copilot)",
   "shell-version": ["45", "46", "47", "48", "49", "50"],
-  "url": ""
+  "url": "https://github.com/kcnewman/freeby"
 }
