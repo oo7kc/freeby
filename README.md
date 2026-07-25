@@ -28,7 +28,7 @@ The panel indicator shows `ai` with a count of providers that still have quota (
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/freeby.git
+git clone https://github.com/kcnewman/freeby.git
 cd freeby
 ```
 
