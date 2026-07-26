@@ -21,26 +21,24 @@
 
 ### Features
 
-| | Feature | Description |
-|---|---|---|
-| ![#4ade80](https://via.placeholder.com/10/4ade80/000000?text=+) | **Panel indicator** | Colored `ai·N` shows available providers at a glance |
-| | **Dropdown** | Per-provider usage, limits, and reset countdown |
-| | **Notifications** | Desktop alert when a provider hits its limit |
-| | **Auto-refresh on wake** | Refreshes immediately after sleep |
-| | **Parallel fetches** | All providers queried in parallel (~2s) |
-| | **Configurable** | Adjust refresh interval and notifications in settings |
-| | **Accessible** | Screen reader support for all UI elements |
-| | **Theme-aware** | Works with light and dark GNOME themes |
+- **Panel indicator** — colored `ai·N` shows available providers at a glance
+- **Dropdown** — per-provider usage, limits, and reset countdown
+- **Notifications** — desktop alert when a provider hits its limit
+- **Auto-refresh on wake** — refreshes immediately after sleep
+- **Parallel fetches** — all providers queried in parallel (~2s)
+- **Configurable** — adjust refresh interval and notifications in settings
+- **Accessible** — screen reader support for all UI elements
+- **Theme-aware** — works with light and dark GNOME themes
 
 ---
 
 ### Supported providers
 
-| | Provider | Auth source | Data source |
-|---|---|---|---|
-| ![#f87171](https://via.placeholder.com/10/f87171/000000?text=+) | **Codex** | `~/.codex/auth.json` | `codex-check` CLI |
-| ![#4ade80](https://via.placeholder.com/10/4ade80/000000?text=+) | **Cursor** | `~/.config/cursor/auth.json` | Cursor API |
-| ![#facc15](https://via.placeholder.com/10/facc15/000000?text=+) | **Copilot** | `gh` CLI or `~/.config/freeby/copilot-token` | GitHub API |
+| Provider | Auth source | Data source |
+|---|---|---|
+| 🟡 **Codex** | `~/.codex/auth.json` | `codex-check` CLI |
+| 🟢 **Cursor** | `~/.config/cursor/auth.json` | Cursor API |
+| 🟠 **Copilot** | `gh` CLI or `~/.config/freeby/copilot-token` | GitHub API |
 
 ---
 
