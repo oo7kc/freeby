@@ -113,7 +113,7 @@ fetch_copilot() {
         token="$(gh auth token 2>/dev/null | tr -d '[:space:]')"
     fi
     if [ -z "$token" ] && [ -f "$HOME/.config/freeby/copilot-token" ]; then
-        token="$(cat "$HOME/.config/freeby/copilot-token" 2>/dev/null | tr -d '[:space:]')"
+        token="$(tr -d '[:space:]' < "$HOME/.config/freeby/copilot-token" 2>/dev/null)"
     fi
     if [ -z "$token" ]; then
         if [ ! -f "$HOME/.config/freeby/copilot-token" ] && ! command -v gh >/dev/null 2>&1; then
