@@ -23,8 +23,6 @@ class FreebyIndicator extends PanelMenu.Button {
         this._label = new St.Label({ text: 'AI', y_align: Clutter.ActorAlign.CENTER, style_class: 'freeby-panel-label' });
         this._panelBox.add_child(this._label);
         this.add_child(this._panelBox);
-        this.has_tooltip = true;
-        this.tooltip_text = 'Loading...';
         this.connect('button-press-event', () => { this._refresh(); return false; });
 
         this._items = {};
@@ -83,10 +81,9 @@ class FreebyIndicator extends PanelMenu.Button {
         } catch (e) { logError(e, 'freeby: notification failed'); }
     }
 
-    _setError(msg) {
+    _setError() {
         this._label.text = 'ai';
         this._label.style_class = 'freeby-panel-label';
-        this.tooltip_text = msg || 'Error';
     }
 
     _refresh() {
@@ -112,9 +109,6 @@ class FreebyIndicator extends PanelMenu.Button {
         const total = PROVIDERS.filter(k => data[k]?.available).length;
         this._label.text = active > 0 ? `ai\u00B7${active}` : 'ai';
         this._label.style_class = 'freeby-panel-label' + (active === total && total > 0 ? ' freeby-panel-green' : active > 0 ? ' freeby-panel-yellow' : total > 0 ? ' freeby-panel-red' : '');
-
-        const tips = PROVIDERS.filter(k => data[k]?.available).map(k => `${LABELS[k]}: ${data[k].has_remaining ? 'available' : 'at limit'}`);
-        this.tooltip_text = tips.length ? tips.join('\n') : 'No providers detected';
 
         const hit = PROVIDERS.filter(k => data[k]?.available && !data[k].has_remaining && this._prev[k]?.has_remaining !== false).map(k => LABELS[k]);
         this._prev = {};
