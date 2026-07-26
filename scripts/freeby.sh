@@ -4,23 +4,12 @@
 
 set -uo pipefail
 
-TMPDIR="$(mktemp -d)"
-trap 'rm -rf "$TMPDIR"' EXIT
-
-json_escape() {
-    local s="$1"
-    s="${s//\\/\\\\}"
-    s="${s//\"/\\\"}"
-    s="${s//$'\n'/ }"
-    s="${s//$'\t'/ }"
-    s="${s//$'\r'/ }"
-    s="$(printf '%s' "$s" | tr -d '[:cntrl:]')"
-    printf '%s' "$s"
-}
+FREEBY_TMP="$(mktemp -d)" || { echo '{"error":"failed to create temp dir"}'; exit 1; }
+trap 'rm -rf "$FREEBY_TMP"' EXIT
 
 # --- codex -------------------------------------------------------------------
 fetch_codex() {
-    local out="$TMPDIR/codex"
+    local out="$FREEBY_TMP/codex"
     if [ ! -f "$HOME/.codex/auth.json" ]; then
         echo '{"available":false,"has_remaining":false,"summary":"not detected"}' > "$out"
         return
@@ -36,9 +25,12 @@ import json, sys
 from datetime import datetime, timezone
 try:
     data = json.load(sys.stdin)
-    if isinstance(data, list): data = data[0]
+    if isinstance(data, list):
+        if not data:
+            raise ValueError('empty response from codex-check')
+        data = data[0]
     w = data.get('windows', {}).get('primary', {})
-    pct = w.get('percentUsed', 0)
+    pct = float(w.get('percentUsed', 0))
     resets_at = w.get('resetsAt', '')
     if resets_at:
         dt = datetime.fromisoformat(resets_at.replace('Z', '+00:00'))
@@ -48,9 +40,9 @@ try:
         elif diff.days > 0: cd = f'in {diff.days}d {diff.seconds//3600}h'
         else: cd = f'in {diff.seconds//3600}h {(diff.seconds%3600)//60}m'
     else: cd = 'unknown'
-    has = 'false' if pct >= 100 else 'true'
-    summary = f'limit reached, resets {cd}' if pct >= 100 else f'{pct}% used, resets {cd}'
-    print(json.dumps({'available': True, 'has_remaining': has == 'true', 'summary': summary}))
+    has = pct < 100
+    summary = f'limit reached, resets {cd}' if pct >= 100 else f'{min(100, pct):.0f}% used, resets {cd}'
+    print(json.dumps({'available': True, 'has_remaining': has, 'summary': summary}))
 except Exception as e:
     print(json.dumps({'available': True, 'has_remaining': False, 'summary': f'parse error: {e}'}))
 " > "$out" 2>/dev/null
@@ -58,20 +50,23 @@ except Exception as e:
 
 # --- cursor ------------------------------------------------------------------
 fetch_cursor() {
-    local out="$TMPDIR/cursor"
+    local out="$FREEBY_TMP/cursor"
     local auth_file="$HOME/.config/cursor/auth.json"
     if [ ! -f "$auth_file" ]; then
         echo '{"available":false,"has_remaining":false,"summary":"not detected"}' > "$out"
         return
     fi
     local token
-    token="$(python3 -c "import json; print(json.load(open('$auth_file')).get('accessToken',''))" 2>/dev/null)"
+    token="$(python3 -c "
+import json, sys
+print(json.load(open(sys.argv[1])).get('accessToken',''))
+" "$auth_file" 2>/dev/null)"
     if [ -z "$token" ]; then
         echo '{"available":true,"has_remaining":false,"summary":"auth.json found but no accessToken"}' > "$out"
         return
     fi
     local resp http body
-    resp="$(curl -s -w '\n%{http_code}' \
+    resp="$(curl -s -w '\n%{http_code}' --connect-timeout 5 --max-time 10 \
         -X POST 'https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage' \
         -H "Authorization: Bearer $token" \
         -H 'Content-Type: application/json' \
@@ -88,34 +83,37 @@ import json, sys
 from datetime import datetime, timezone
 try:
     d = json.load(sys.stdin)
-    pct = d.get('planUsage', {}).get('totalPercentUsed', 0)
+    pct = float(d.get('planUsage', {}).get('totalPercentUsed', 0))
     end_ms = int(d.get('billingCycleEnd', '0'))
-    dt = datetime.fromtimestamp(end_ms/1000, tz=timezone.utc)
-    now = datetime.now(timezone.utc)
-    diff = dt - now
-    if diff.total_seconds() <= 0: cd = 'now'
-    elif diff.days > 0: cd = f'in {diff.days}d {diff.seconds//3600}h'
-    else: cd = f'in {diff.seconds//3600}h {(diff.seconds%3600)//60}m'
-    has = pct < 100
-    summary = f'limit reached, resets {cd}' if pct >= 100 else f'{pct}% used, resets {cd}'
-    print(json.dumps({'available': True, 'has_remaining': has, 'summary': summary}))
+    if end_ms == 0:
+        print(json.dumps({'available': True, 'has_remaining': pct < 100, 'summary': f'{min(100, pct):.0f}% used, resets unknown'}))
+    else:
+        dt = datetime.fromtimestamp(end_ms/1000, tz=timezone.utc)
+        now = datetime.now(timezone.utc)
+        diff = dt - now
+        if diff.total_seconds() <= 0: cd = 'now'
+        elif diff.days > 0: cd = f'in {diff.days}d {diff.seconds//3600}h'
+        else: cd = f'in {diff.seconds//3600}h {(diff.seconds%3600)//60}m'
+        has = pct < 100
+        summary = f'limit reached, resets {cd}' if pct >= 100 else f'{min(100, pct):.0f}% used, resets {cd}'
+        print(json.dumps({'available': True, 'has_remaining': has, 'summary': summary}))
 except Exception as e:
     print(json.dumps({'available': True, 'has_remaining': False, 'summary': f'parse error: {e}'}))
 " > "$out" 2>/dev/null
     else
-        echo "{\"available\":true,\"has_remaining\":false,\"summary\":\"API returned HTTP $http\"}" > "$out"
+        printf '{"available":true,"has_remaining":false,"summary":"API returned HTTP %s"}' "$http" > "$out"
     fi
 }
 
 # --- copilot -----------------------------------------------------------------
 fetch_copilot() {
-    local out="$TMPDIR/copilot"
+    local out="$FREEBY_TMP/copilot"
     local token=""
     if command -v gh >/dev/null 2>&1; then
-        token="$(gh auth token 2>/dev/null)"
+        token="$(gh auth token 2>/dev/null | tr -d '[:space:]')"
     fi
     if [ -z "$token" ] && [ -f "$HOME/.config/freeby/copilot-token" ]; then
-        token="$(cat "$HOME/.config/freeby/copilot-token" 2>/dev/null)"
+        token="$(cat "$HOME/.config/freeby/copilot-token" 2>/dev/null | tr -d '[:space:]')"
     fi
     if [ -z "$token" ]; then
         if [ ! -f "$HOME/.config/freeby/copilot-token" ] && ! command -v gh >/dev/null 2>&1; then
@@ -126,7 +124,7 @@ fetch_copilot() {
         return
     fi
     local resp http body
-    resp="$(curl -s -w '\n%{http_code}' \
+    resp="$(curl -s -w '\n%{http_code}' --connect-timeout 5 --max-time 10 \
         'https://api.github.com/copilot_internal/user' \
         -H "Authorization: Bearer $token" \
         -H 'Content-Type: application/json' 2>/dev/null)"
@@ -159,13 +157,13 @@ try:
     has = remaining > 0
     if entitlement == 0: summary = f'no quota, resets {cd}'
     elif remaining <= 0: summary = f'limit reached, resets {cd}'
-    else: summary = f'{round(used/entitlement*100)}% used, resets {cd}'
+    else: summary = f'{min(100, round(used/entitlement*100))}% used, resets {cd}'
     print(json.dumps({'available': True, 'has_remaining': has, 'summary': summary}))
 except Exception as e:
     print(json.dumps({'available': True, 'has_remaining': False, 'summary': f'parse error: {e}'}))
 " > "$out" 2>/dev/null
     else
-        echo "{\"available\":true,\"has_remaining\":false,\"summary\":\"API returned HTTP $http\"}" > "$out"
+        printf '{"available":true,"has_remaining":false,"summary":"API returned HTTP %s"}' "$http" > "$out"
     fi
 }
 
@@ -181,9 +179,9 @@ import json, sys
 result = {}
 for name in ('codex', 'cursor', 'copilot'):
     try:
-        with open('$TMPDIR/' + name) as f:
+        with open('$FREEBY_TMP/' + name) as f:
             result[name] = json.load(f)
-    except:
+    except Exception:
         result[name] = {'available': False, 'has_remaining': False, 'summary': 'no data'}
 print(json.dumps(result))
 "

@@ -1,4 +1,5 @@
-project('freeby', version: '1', license: 'MIT',
+project('freeby', version: '1.0.0', license: 'MIT',
+  meson_version: '>= 0.56.0',
   default_options: ['warning_level=0'])
 
 uuid = 'freeby@kelvin.local'
@@ -16,3 +17,5 @@ install_data('scripts/freeby.sh', 'scripts/copilot-setup.sh',
 
 install_data('schemas/org.gnome.shell.extensions.freeby.gschema.xml',
   install_dir: schemadir)
+
+meson.add_install_script('build-aux/compile-schemas.sh', schemadir)

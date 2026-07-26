@@ -4,8 +4,9 @@
           path="/org/gnome/shell/extensions/freeby/">
     <key name="refresh-interval" type="i">
       <default>120</default>
+      <range min="30" max="3600"/>
       <summary>Refresh interval</summary>
-      <description>How often to refresh usage data, in seconds</description>
+      <description>How often to refresh usage data, in seconds (30–3600)</description>
     </key>
     <key name="notifications-enabled" type="b">
       <default>true</default>

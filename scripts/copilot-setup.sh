@@ -3,10 +3,19 @@
 # Saves token to ~/.config/freeby/copilot-token.
 set -euo pipefail
 
+# --- prereq checks -----------------------------------------------------------
+for cmd in curl python3; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "error: $cmd is required but not installed" >&2
+        exit 1
+    fi
+done
+
 CONFIG_DIR="$HOME/.config/freeby"
 TOKEN_FILE="$CONFIG_DIR/copilot-token"
 CLIENT_ID="Iv1.b507a08c87ecfe98"
 SCOPE="read:user"
+MAX_ATTEMPTS=60
 
 mkdir -p "$CONFIG_DIR"
 
@@ -36,9 +45,11 @@ echo ""
 echo "1. Go to: $VERIFICATION_URI"
 echo "2. Enter code: $USER_CODE"
 echo ""
-echo "Waiting for authentication..."
+echo "Waiting for authentication... (timeout after $MAX_ATTEMPTS attempts)"
 
-while true; do
+attempt=0
+while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
+    attempt=$((attempt + 1))
     sleep "$INTERVAL"
     TOKEN_RESP="$(curl -s -X POST 'https://github.com/login/oauth/access_token' \
         -H 'Accept: application/json' \
@@ -59,4 +70,10 @@ while true; do
         printf '%s\n' "$TOKEN_RESP"
         exit 1
     fi
+
+    printf '.'
 done
+
+echo ""
+echo "Timed out after $MAX_ATTEMPTS attempts. Try again when ready."
+exit 1

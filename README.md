@@ -32,6 +32,30 @@
 
 ---
 
+### Prerequisites
+
+- GNOME Shell 45+ (Wayland or X11)
+- `python3`
+- `curl`
+- `meson` and `ninja-build` (for building)
+- `glib-compile-schemas` (usually pre-installed)
+- `npx` (for Codex usage tracking)
+- `gh` CLI (for Copilot usage tracking, optional)
+
+Install build dependencies on Fedora:
+
+```bash
+sudo dnf install meson ninja-build python3 curl glib2-devel
+```
+
+On Ubuntu/Debian:
+
+```bash
+sudo apt install meson ninja-build python3 curl libglib2.0-dev-bin
+```
+
+---
+
 ### Install
 
 ```bash
@@ -46,7 +70,7 @@ Restart your session, then:
 gnome-extensions enable freeby@kelvin.local
 ```
 
-> **Copilot users:** If `gh` isn't installed, run `copilot-setup` first.
+> **Copilot users:** If `gh` isn't installed, run `copilot-setup.sh` first.
 
 ---
 
@@ -62,6 +86,18 @@ Configure via Extension Manager or CLI:
 ```bash
 gsettings --schemadir ~/.local/share/glib-2.0/schemas \
   set org.gnome.shell.extensions.freeby refresh-interval 60
+```
+
+---
+
+### Uninstall
+
+```bash
+gnome-extensions disable freeby@kelvin.local
+rm -rf ~/.local/share/gnome-shell/extensions/freeby@kelvin.local
+rm -f ~/.local/bin/freeby.sh ~/.local/bin/copilot-setup.sh
+rm -f ~/.local/share/glib-2.0/schemas/org.gnome.shell.extensions.freeby.gschema.xml
+rm -f ~/.local/share/glib-2.0/schemas/gschemas.compiled
 ```
 
 ---

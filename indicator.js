@@ -18,6 +18,8 @@ class FreebyIndicator extends PanelMenu.Button {
         super._init(0.0, 'Freeby', false);
         this._settings = settings;
         this._prev = {};
+        for (const k of PROVIDERS) this._prev[k] = null;
+        this._refreshSeq = 0;
 
         this._panelBox = new St.BoxLayout({ style_class: 'panel-status-menu-box freeby-panel' });
         this._label = new St.Label({ text: 'AI', y_align: Clutter.ActorAlign.CENTER, style_class: 'freeby-panel-label' });
@@ -87,11 +89,14 @@ class FreebyIndicator extends PanelMenu.Button {
     }
 
     _refresh() {
+        this._refreshSeq++;
+        const seq = this._refreshSeq;
         let proc;
         try { proc = Gio.Subprocess.new(['/bin/bash', SCRIPT], Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE); }
         catch (e) { this._setError(); logError(e, 'freeby: failed to spawn script'); return; }
 
         proc.communicate_utf8_async(null, null, (p, res) => {
+            if (seq !== this._refreshSeq) return;
             let stdout, stderr;
             try { [, stdout, stderr] = p.communicate_utf8_finish(res); }
             catch (e) { this._setError(); logError(e, 'freeby: subprocess failed'); return; }
@@ -103,7 +108,8 @@ class FreebyIndicator extends PanelMenu.Button {
     _apply(stdout) {
         let data;
         try { data = JSON.parse(stdout); }
-        catch (e) { this._setError(); log(`freeby: bad JSON: ${stdout}`); return; }
+        catch (e) { this._setError(); logError(e, 'freeby: bad JSON'); return; }
+        if (!data || typeof data !== 'object') { this._setError(); log('freeby: empty or invalid data'); return; }
 
         const active = PROVIDERS.filter(k => data[k]?.has_remaining).length;
         const total = PROVIDERS.filter(k => data[k]?.available).length;
