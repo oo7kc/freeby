@@ -23,7 +23,7 @@
 
 | | Feature | Description |
 |---|---|---|
-| ![#4ade80](https://via.placeholder.com/10/4ade80/000000?text=+) | **Panel indicator** | Colored `ai·N` shows available providers at a glance |
+| <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='5' fill='%234ade80'/%3E%3C/svg%3E" width="10" height="10" /> | **Panel indicator** | Colored `ai·N` shows available providers at a glance |
 | | **Dropdown** | Per-provider usage, limits, and reset countdown |
 | | **Notifications** | Desktop alert when a provider hits its limit |
 | | **Auto-refresh on wake** | Refreshes immediately after sleep |
@@ -38,9 +38,9 @@
 
 | | Provider | Auth source | Data source |
 |---|---|---|---|
-| ![#f87171](https://via.placeholder.com/10/f87171/000000?text=+) | **Codex** | `~/.codex/auth.json` | `codex-check` CLI |
-| ![#4ade80](https://via.placeholder.com/10/4ade80/000000?text=+) | **Cursor** | `~/.config/cursor/auth.json` | Cursor API |
-| ![#facc15](https://via.placeholder.com/10/facc15/000000?text=+) | **Copilot** | `gh` CLI or `~/.config/freeby/copilot-token` | GitHub API |
+| <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='5' fill='%23f87171'/%3E%3C/svg%3E" width="10" height="10" /> | **Codex** | `~/.codex/auth.json` | `codex-check` CLI |
+| <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='5' fill='%234ade80'/%3E%3C/svg%3E" width="10" height="10" /> | **Cursor** | `~/.config/cursor/auth.json` | Cursor API |
+| <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='5' fill='%23facc15'/%3E%3C/svg%3E" width="10" height="10" /> | **Copilot** | `gh` CLI or `~/.config/freeby/copilot-token` | GitHub API |
 
 ---
 
