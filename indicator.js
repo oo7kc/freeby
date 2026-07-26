@@ -45,11 +45,11 @@ export const FreebyIndicator = GObject.registerClass(
             this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
             this._statusItem = new PopupMenu.PopupMenuItem('\u21BB Last checked: never', { reactive: true, can_focus: false });
             this._statusItem.label.add_style_class_name('freeby-status');
-            this._statusItem.connect('activate', () => { this._refresh(); this.menu.open(); });
+            this._statusItem.connect('activate', () => { this._refresh(); GLib.idle_add(GLib.PRIORITY_DEFAULT, () => { this.menu.open(); return GLib.SOURCE_REMOVE; }); });
             this.menu.addMenuItem(this._statusItem);
 
             this._timerId = null;
-            this._setupTwimer();
+            this._setupTimer();
             this._refresh();
             this._monitorWake();
         }
