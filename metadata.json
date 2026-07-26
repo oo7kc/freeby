@@ -3,7 +3,7 @@
   "name": "Freeby",
   "description": "Minimal panel indicator for local AI coding tool usage (Codex, Cursor, Copilot)",
   "shell-version": ["45", "46", "47", "48"],
-  "version": 1,
+  "version": 2,
   "settings-schema": "org.gnome.shell.extensions.freeby",
   "url": "https://github.com/kcnewman/freeby"
 }

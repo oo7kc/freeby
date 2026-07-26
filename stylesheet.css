@@ -6,6 +6,7 @@
     font-weight: bold;
     font-size: 10pt;
     min-width: 16px;
+    color: currentColor;
 }
 
 .freeby-panel-green {
@@ -30,7 +31,8 @@
 }
 
 .freeby-dot-off {
-    color: #888;
+    color: currentColor;
+    opacity: 0.4;
 }
 
 .freeby-dot-green {
@@ -49,15 +51,17 @@
     font-weight: bold;
     font-size: 9pt;
     min-width: 52px;
+    color: currentColor;
 }
 
 .freeby-item-summary {
     font-size: 9pt;
-    color: #ccc;
+    color: currentColor;
+    opacity: 0.8;
 }
 
 .freeby-dim {
-    color: #888;
+    opacity: 0.4;
 }
 
 .freeby-green {
@@ -74,5 +78,6 @@
 
 .freeby-status {
     font-size: 9pt;
-    color: #bbb;
+    color: currentColor;
+    opacity: 0.7;
 }
