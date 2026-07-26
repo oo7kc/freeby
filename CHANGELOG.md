@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.2
+
+### Fixed
+- Added GNOME 49 and 50 to shell-version compatibility
+- Removed deprecated `version` field from metadata.json
+- Dropdown now stays open when clicking refresh (deferred reopen)
+- Removed invalid `accessible_name` from PopupMenuItem (caused extension to fail loading)
+
 ## v1.0.1
 
 ### Added
