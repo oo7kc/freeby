@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.0.1
+
+### Added
+- Accessible names for screen readers on panel indicator, dots, and summaries
+- System theme support in CSS (uses `currentColor` and opacity for better theme integration)
+- CONTRIBUTING.md with development setup and code style guidelines
+- GitHub Actions CI: shellcheck, meson build, bats tests
+- Bats test suite for shell script (JSON structure, required fields, cleanup)
+
+### Changed
+- CSS colors use `currentColor` where possible for better theme compatibility
+- Status dot and summary text use opacity for dimmed states instead of hardcoded colors
+
 ## v1.0.0
 
 ### Fixed

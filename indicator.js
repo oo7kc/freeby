@@ -21,18 +21,18 @@ class FreebyIndicator extends PanelMenu.Button {
         for (const k of PROVIDERS) this._prev[k] = null;
         this._refreshSeq = 0;
 
-        this._panelBox = new St.BoxLayout({ style_class: 'panel-status-menu-box freeby-panel' });
-        this._label = new St.Label({ text: 'AI', y_align: Clutter.ActorAlign.CENTER, style_class: 'freeby-panel-label' });
+        this._panelBox = new St.BoxLayout({ style_class: 'panel-status-menu-box freeby-panel', accessible_name: 'Freeby usage indicator' });
+        this._label = new St.Label({ text: 'AI', y_align: Clutter.ActorAlign.CENTER, style_class: 'freeby-panel-label', accessible_name: 'Usage count' });
         this._panelBox.add_child(this._label);
         this.add_child(this._panelBox);
         this.connect('button-press-event', () => { this._refresh(); return false; });
 
         this._items = {};
         for (const k of PROVIDERS) {
-            const box = new St.BoxLayout({ style_class: 'freeby-item-box' });
-            const dot = new St.Label({ text: '\u25CB', style_class: 'freeby-dot freeby-dot-off', y_align: Clutter.ActorAlign.CENTER });
+            const box = new St.BoxLayout({ style_class: 'freeby-item-box', accessible_name: `${LABELS[k]} usage` });
+            const dot = new St.Label({ text: '\u25CB', style_class: 'freeby-dot freeby-dot-off', y_align: Clutter.ActorAlign.CENTER, accessible_name: `${LABELS[k]} status` });
             const name = new St.Label({ text: LABELS[k], style_class: 'freeby-item-name', y_align: Clutter.ActorAlign.CENTER });
-            const summary = new St.Label({ text: '\u2014', style_class: 'freeby-item-summary', y_align: Clutter.ActorAlign.CENTER });
+            const summary = new St.Label({ text: '\u2014', style_class: 'freeby-item-summary', y_align: Clutter.ActorAlign.CENTER, accessible_name: `${LABELS[k]} summary` });
             box.add_child(dot);
             box.add_child(name);
             box.add_child(summary);
@@ -43,7 +43,7 @@ class FreebyIndicator extends PanelMenu.Button {
         }
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this._statusItem = new PopupMenu.PopupMenuItem('\u21BB Last checked: never', { reactive: true, can_focus: false });
+        this._statusItem = new PopupMenu.PopupMenuItem('\u21BB Last checked: never', { reactive: true, can_focus: false, accessible_name: 'Refresh status' });
         this._statusItem.label.add_style_class_name('freeby-status');
         this._statusItem.connect('activate', () => { this._refresh(); this.menu.open(); });
         this.menu.addMenuItem(this._statusItem);

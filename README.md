@@ -111,4 +111,10 @@ journalctl -f -o cat /usr/bin/gnome-shell
 
 ---
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+---
+
 [MIT](LICENSE)

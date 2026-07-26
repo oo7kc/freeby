@@ -1,4 +1,4 @@
-project('freeby', version: '1.0.0', license: 'MIT',
+project('freeby', version: '1.0.1', license: 'MIT',
   meson_version: '>= 0.56.0',
   default_options: ['warning_level=0'])
 
