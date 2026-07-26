@@ -43,7 +43,7 @@ class FreebyIndicator extends PanelMenu.Button {
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._statusItem = new PopupMenu.PopupMenuItem('\u21BB Last checked: never', { reactive: true, can_focus: false });
         this._statusItem.label.add_style_class_name('freeby-status');
-        this._statusItem.connect('activate', () => this._refresh());
+        this._statusItem.connect('activate', () => { this._refresh(); this.menu.open(); });
         this.menu.addMenuItem(this._statusItem);
 
         this._timerId = null;
