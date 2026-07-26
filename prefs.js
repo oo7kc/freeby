@@ -5,7 +5,7 @@ import { ExtensionPreferences, gettext as _ } from 'resource:///org/gnome/Shell/
 
 export default class FreebyPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
-        const settings = this.getSettings();
+        const settings = this.getSettings('org.gnome.shell.extensions.freeby');
 
         const page = new Adw.PreferencesPage();
         window.add(page);

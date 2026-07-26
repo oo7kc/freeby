@@ -4,7 +4,7 @@ import { FreebyIndicator } from './indicator.js';
 
 export default class FreebyExtension extends Extension {
     enable() {
-        this._settings = this.getSettings();
+        this._settings = this.getSettings('org.gnome.shell.extensions.freeby');
         this._settingsId = this._settings.connect('changed::refresh-interval', () => this._indicator?._setupTimer());
         this._indicator = new FreebyIndicator(this._settings);
         Main.panel.addToStatusArea(this.uuid, this._indicator);
