@@ -11,6 +11,17 @@
 
 ---
 
+### Features
+
+- **Panel indicator** — colored `ai·N` shows available providers at a glance
+- **Dropdown** — per-provider usage, limits, and reset countdown
+- **Notifications** — desktop alert when a provider hits its limit
+- **Auto-refresh on wake** — refreshes immediately after sleep
+- **Fast** — all providers queried in parallel (~2s)
+- **Configurable** — adjust refresh interval and notifications in settings
+
+---
+
 ### Providers
 
 | | Provider | Source |
