@@ -17,8 +17,6 @@
   <a href="https://github.com/kcnewman/freeby/releases">Releases</a>
 </p>
 
----
-
 ### Features
 
 - **Panel indicator** — colored `ai·N` shows available providers at a glance
@@ -30,8 +28,6 @@
 - **Accessible** — screen reader support for all UI elements
 - **Theme-aware** — works with light and dark GNOME themes
 
----
-
 ### Supported providers
 
 | Provider | Auth source | Data source |
@@ -39,8 +35,6 @@
 | 🟡 **Codex** | `~/.codex/auth.json` | `codex-check` CLI |
 | 🟢 **Cursor** | `~/.config/cursor/auth.json` | Cursor API |
 | 🟠 **Copilot** | `gh` CLI or `~/.config/freeby/copilot-token` | GitHub API |
-
----
 
 ### Install
 
@@ -83,8 +77,6 @@ gnome-extensions enable freeby@kelvin.local
 
 > **Copilot users:** If `gh` isn't installed, run `copilot-setup.sh` first.
 
----
-
 ### Settings
 
 | Setting | Default | Range | Description |
@@ -99,8 +91,6 @@ gsettings --schemadir ~/.local/share/glib-2.0/schemas \
   set org.gnome.shell.extensions.freeby refresh-interval 60
 ```
 
----
-
 ### Uninstall
 
 ```bash
@@ -110,8 +100,6 @@ rm -f ~/.local/bin/freeby.sh ~/.local/bin/copilot-setup.sh
 rm -f ~/.local/share/glib-2.0/schemas/org.gnome.shell.extensions.freeby.gschema.xml
 rm -f ~/.local/share/glib-2.0/schemas/gschemas.compiled
 ```
-
----
 
 ### Debug
 
@@ -123,13 +111,9 @@ bash ~/.local/bin/freeby.sh | python3 -m json.tool
 journalctl -f -o cat /usr/bin/gnome-shell
 ```
 
----
-
 ### Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
-
----
 
 ### License
 
