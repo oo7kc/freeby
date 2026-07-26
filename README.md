@@ -21,26 +21,24 @@
 
 ### Features
 
-| | Feature | Description |
-|---|---|---|
-| <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='5' fill='%234ade80'/%3E%3C/svg%3E" width="10" height="10" /> | **Panel indicator** | Colored `ai·N` shows available providers at a glance |
-| | **Dropdown** | Per-provider usage, limits, and reset countdown |
-| | **Notifications** | Desktop alert when a provider hits its limit |
-| | **Auto-refresh on wake** | Refreshes immediately after sleep |
-| | **Parallel fetches** | All providers queried in parallel (~2s) |
-| | **Configurable** | Adjust refresh interval and notifications in settings |
-| | **Accessible** | Screen reader support for all UI elements |
-| | **Theme-aware** | Works with light and dark GNOME themes |
+- **Panel indicator** — colored `ai·N` shows available providers at a glance
+- **Dropdown** — per-provider usage, limits, and reset countdown
+- **Notifications** — desktop alert when a provider hits its limit
+- **Auto-refresh on wake** — refreshes immediately after sleep
+- **Parallel fetches** — all providers queried in parallel (~2s)
+- **Configurable** — adjust refresh interval and notifications in settings
+- **Accessible** — screen reader support for all UI elements
+- **Theme-aware** — works with light and dark GNOME themes
 
 ---
 
 ### Supported providers
 
-| | Provider | Auth source | Data source |
-|---|---|---|---|
-| <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='5' fill='%23f87171'/%3E%3C/svg%3E" width="10" height="10" /> | **Codex** | `~/.codex/auth.json` | `codex-check` CLI |
-| <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='5' fill='%234ade80'/%3E%3C/svg%3E" width="10" height="10" /> | **Cursor** | `~/.config/cursor/auth.json` | Cursor API |
-| <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='5' fill='%23facc15'/%3E%3C/svg%3E" width="10" height="10" /> | **Copilot** | `gh` CLI or `~/.config/freeby/copilot-token` | GitHub API |
+| Provider | Auth source | Data source |
+|---|---|---|
+| 🟡 **Codex** | `~/.codex/auth.json` | `codex-check` CLI |
+| 🟢 **Cursor** | `~/.config/cursor/auth.json` | Cursor API |
+| 🟠 **Copilot** | `gh` CLI or `~/.config/freeby/copilot-token` | GitHub API |
 
 ---
 
