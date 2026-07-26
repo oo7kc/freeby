@@ -77,8 +77,8 @@ class FreebyIndicator extends PanelMenu.Button {
     _notify(title, body) {
         if (!this._settings.get_boolean('notifications-enabled')) return;
         try {
-            let src = Main.messageTray.get_source('Freeby');
-            if (!src) { src = new Main.messageTray.Source('Freeby', 'dialog-information-symbolic'); Main.messageTray.add(src); }
+            const src = new Main.messageTray.Source('Freeby', 'dialog-information-symbolic');
+            Main.messageTray.add(src);
             src.addNotification(new Main.messageTray.Notification({ source: src, title, body }));
         } catch (e) { logError(e, 'freeby: notification failed'); }
     }
