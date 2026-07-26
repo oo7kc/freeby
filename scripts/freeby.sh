@@ -159,7 +159,7 @@ try:
     has = remaining > 0
     if entitlement == 0: summary = f'no quota, resets {cd}'
     elif remaining <= 0: summary = f'limit reached, resets {cd}'
-    else: summary = f'{used}/{entitlement} used, resets {cd}'
+    else: summary = f'{round(used/entitlement*100)}% used, resets {cd}'
     print(json.dumps({'available': True, 'has_remaining': has, 'summary': summary}))
 except Exception as e:
     print(json.dumps({'available': True, 'has_remaining': False, 'summary': f'parse error: {e}'}))
