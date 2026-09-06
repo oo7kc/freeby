@@ -1,7 +1,7 @@
 # Freeby usage monitor roadmap
 
-Updated: 2026-09-06. Status: Claude Code implementation complete; alpha.2
-release publication pending.
+Updated: 2026-09-06. Status: alpha.2 released; Cursor is the active alpha.3
+milestone.
 
 ## Agreed direction
 
@@ -145,12 +145,16 @@ The downloaded 22,488-byte archive matched the tagged CI artifact at SHA-256
 - [x] Implement Claude detection, supported authentication/limits, and incremental usage history.
 - [x] Add provider switching and independent partial-data handling using the shared contract.
 - [x] Verify quota windows, daily/model totals, duplicate handling, missing credentials, and expired authentication.
-- [ ] Commit, tag, publish, and verify the installable alpha.2 prerelease.
+- [x] Commit, tag, publish, and verify the installable alpha.2 prerelease.
 
 Evidence: Claude Code 2.1.218 detection and missing-auth collection were checked
 locally. Synthetic quota, expired-auth, repeated-message, cache-token, and
 private-cache fixtures pass. An authenticated Claude account was not available,
 so the OAuth endpoint path is upstream- and fixture-validated rather than live.
+Released from commit `48b28ac` on `dev` as
+[`v2.0.0-alpha.2`](https://github.com/oo7kc/freeby/releases/tag/v2.0.0-alpha.2).
+The downloaded 25,249-byte archive matched the tagged CI artifact at SHA-256
+`04f8417dd0fd0cafdc636293134ce80bf1477a0e6b39342e9f3681bffbef6fae`.
 
 ### 3. Cursor — v2.0.0-alpha.3
 
