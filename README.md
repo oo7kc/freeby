@@ -4,16 +4,18 @@ Freeby is a native GNOME Shell usage monitor for AI coding tools. It keeps
 account limits, reset windows, recent local token activity, and model totals one
 click away in the top panel.
 
-Version 2 is being delivered provider by provider. `v2.0.0-alpha.1` is the Codex
-milestone: Codex limits and local activity are verified end to end. Cursor and
-Copilot adapters remain available as opt-in previews while their dedicated
-milestones are completed; Claude Code follows next.
+Version 2 is being delivered provider by provider. `v2.0.0-alpha.2` adds Claude
+Code to the Codex foundation. Cursor and Copilot adapters remain available as
+opt-in previews while their dedicated milestones are completed.
 
-## What the Codex milestone includes
+## What the current prerelease includes
 
 - Account quota windows from the installed Codex CLI's app-server interface.
+- Claude Code 5-hour, weekly, and model-scoped limits through its saved OAuth
+  sign-in, with clear missing/expired-authentication states.
 - Reset countdowns without guessing missing values.
-- Seven-day local token activity and per-model input, output, and cache totals.
+- Seven-day local Codex and Claude Code activity with per-model input, output,
+  cache-read, and cache-write totals.
 - Cached results shown as stale while a provider independently refreshes.
 - Explicit unavailable, unsupported, missing-authentication, and exhausted states.
 - Bounded collectors, refresh backoff, wake refresh, cancellation on disable, and
@@ -28,7 +30,9 @@ subscription usage.
 ## Requirements
 
 - GNOME Shell 50 (the version verified for this prerelease).
-- Codex CLI installed and signed in for account limits.
+- Codex CLI installed and signed in for Codex account limits.
+- Claude Code installed and signed in for Claude account limits; local Claude
+  transcripts remain useful independently.
 - GJS with Gio/GLib and Soup 3 introspection data.
 - Meson, Ninja, and `glib-compile-schemas` when installing from source.
 
@@ -49,12 +53,12 @@ Log out and back in if GNOME Shell has not discovered the extension. An archive
 from a GitHub release can instead be installed with:
 
 ```bash
-gnome-extensions install --force freeby@kelvin.local-2.0.0-alpha.1.zip
+gnome-extensions install --force freeby@kelvin.local-2.0.0-alpha.2.zip
 ```
 
 ## Settings
 
-The alpha.1 preferences window controls refresh frequency and notifications.
+The alpha.2 preferences window controls refresh frequency and notifications.
 The underlying schema also supports the default provider, ordered enabled
 providers, history retention, and notification threshold; these receive their
 full preferences interface in alpha.5.
@@ -62,10 +66,12 @@ full preferences interface in alpha.5.
 To opt into a preview adapter during development:
 
 ```bash
-gsettings set org.gnome.shell.extensions.freeby enabled-providers "['codex', 'cursor', 'copilot']"
+gsettings set org.gnome.shell.extensions.freeby enabled-providers "['codex', 'claude', 'cursor', 'copilot']"
 ```
 
-Preview providers are not part of the alpha.1 compatibility promise.
+Preview providers are not part of the alpha.2 compatibility promise. See the
+[Claude provider notes](docs/providers/claude.md) for scope and compatibility
+details.
 
 ## Verify a checkout
 

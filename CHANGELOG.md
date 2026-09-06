@@ -3,6 +3,31 @@
 All notable changes are documented here. Freeby uses semantic prerelease versions
 while version 2 is developed on the `dev` branch.
 
+## 2.0.0-alpha.2 - 2026-09-06
+
+### Added
+
+- Claude Code detection and saved OAuth sign-in handling, including explicit
+  missing, absent, and expired authentication states.
+- Anthropic 5-hour, weekly, and model-scoped quota parsing with both current
+  percentage and older fractional utilization normalization.
+- Incremental Claude Code transcript scanning with message deduplication and
+  per-model input, output, cache-read, and cache-write totals.
+- Provider switching between Codex and Claude Code using the shared native UI.
+
+### Changed
+
+- New installations enable Codex and Claude Code by default.
+- Expired cached quota windows are discarded instead of being displayed as stale
+  after their reset time.
+
+### Verification limits
+
+- Claude Code 2.1.218 detection and the unauthenticated path were exercised on
+  this machine. Quota responses, expired authentication, duplicates, and cache
+  semantics were verified with synthetic fixtures against the current upstream
+  interface; no signed-in Claude account was available for a live quota probe.
+
 ## 2.0.0-alpha.1 - 2026-09-06
 
 ### Added
