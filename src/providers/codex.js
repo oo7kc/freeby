@@ -13,8 +13,9 @@ export function codexLimits(response, now = Date.now()) {
             const mins = number(w.windowDurationMins);
             const duration = mins === 10080 ? 'Weekly' : mins === 300 ? 'Session · 5 hours'
                 : mins ? `${mins >= 60 ? `${mins / 60} hours` : `${mins} minutes`}` : key === 'primary' ? 'Primary window' : 'Secondary window';
+            const bucketName = bucket.limitName || (bucketId === 'codex' ? null : bucketId);
             const item = windowUsage({id: `${bucketId}:${key}`,
-                label: buckets.length > 1 ? `${bucket.limitName || bucketId} · ${duration}` : duration,
+                label: buckets.length > 1 && bucketName ? `${bucketName} · ${duration}` : duration,
                 usedPercent: w.usedPercent, durationMinutes: mins,
                 resetsAt: number(w.resetsAt) ? Number(w.resetsAt) * 1000 : null});
             if (item)

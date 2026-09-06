@@ -7,7 +7,7 @@ import {collectClaude} from '../providers/claude.js';
 import {collectCodex} from '../providers/codex.js';
 import {collectCopilot} from '../providers/copilot.js';
 import {collectCursor} from '../providers/cursor.js';
-import {fingerprint, findCommand, join, readJson} from '../services/files.js';
+import {fingerprint, findCommand, join, nodeCli, readJson} from '../services/files.js';
 import {scanHistory} from '../services/history.js';
 import {requestJson} from '../services/http.js';
 import {RpcClient, runCommand} from '../services/process.js';
@@ -42,7 +42,7 @@ const io = {
         }
         return null;
     },
-    codexClient: () => new RpcClient([findCommand('codex'), 'app-server'], cancellable),
+    codexClient: () => new RpcClient(nodeCli('codex', ['app-server']), cancellable),
     http: (url, options) => requestJson(url, {...options, cancellable}),
     async token(provider) {
         if (provider === 'cursor') {

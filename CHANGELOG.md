@@ -7,6 +7,11 @@ while version 2 is developed on the `dev` branch.
 
 ### Changed
 
+- Reworked the popup into a compact, sharp-edged, monospaced usage panel based
+  on the supplied Omarchy references, with equal-width `Claude`/`Codex` tabs,
+  visible provider status, and filled model-usage rows.
+- Reduced vertical density so the normal two-provider view fits the monitor;
+  scrolling remains an automatic fallback for smaller displays or extra data.
 - Consolidated agent rules, the active roadmap, archived planning notes, and
   visual implementation references under `.AGENTS/`, with a minimal root
   `AGENTS.md` discovery entrypoint.
@@ -14,6 +19,17 @@ while version 2 is developed on the `dev` branch.
   screenshots now live under `docs/assets/screenshots/v1/`.
 - Split the temporary combined provider module into dedicated Cursor and Copilot
   adapters without changing their preview behavior.
+
+### Fixed
+
+- Discover Codex installed through fnm, nvm, mise, asdf, Volta, and common
+  user-local binary directories even when GNOME Shell starts with a minimal
+  `PATH`.
+- Launch version-managed Codex installations with their matching sibling Node
+  runtime, restoring live account quota reads on systems without `/usr/bin/node`.
+- Anchor daily and model fills to the left edge and render human-readable model
+  names instead of centered or malformed bars.
+- Reset the popup to its top edge whenever it opens.
 
 ### Removed
 

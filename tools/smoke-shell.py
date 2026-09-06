@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Exercise the packaged extension in a private headless GNOME session."""
 import argparse
+from datetime import date, timedelta
+import json
 import os
 from pathlib import Path
 import signal
@@ -33,17 +35,59 @@ def install(source, archive, prefix, destination):
     subprocess.run(['meson', 'install', '-C', str(build)], check=True, stdout=subprocess.DEVNULL)
 
 
+def seed_usage(destination):
+    """Populate non-personal records so every primary popup widget is constructed."""
+    now = int(time.time() * 1000)
+    dates = [(date.today() - timedelta(days=offset)).isoformat() for offset in range(6, -1, -1)]
+
+    def record(provider, name, plan, percentages, models):
+        days = [{'date': day, 'total': (index + 1) * 125_000, 'sessions': index + 1, 'events': index + 2}
+                for index, day in enumerate(dates)]
+        return {
+            'schemaVersion': 1, 'id': provider, 'name': name, 'plan': plan, 'accountKey': 'smoke-fixture',
+            'capabilities': {'limits': True, 'history': True, 'models': True},
+            'limits': {'status': 'ready', 'message': '', 'updatedAt': now, 'scope': 'account',
+                       'windows': [
+                           {'id': f'{provider}:session', 'label': 'Session · 5 hours', 'usedPercent': percentages[0],
+                            'used': None, 'limit': None, 'unit': 'percent', 'unlimited': False, 'state': 'active',
+                            'durationMinutes': 300, 'resetsAt': now + 7_200_000},
+                           {'id': f'{provider}:weekly', 'label': 'Weekly', 'usedPercent': percentages[1],
+                            'used': None, 'limit': None, 'unit': 'percent', 'unlimited': False, 'state': 'active',
+                            'durationMinutes': 10_080, 'resetsAt': now + 172_800_000},
+                       ]},
+            'history': {'status': 'ready', 'message': '', 'updatedAt': now, 'scope': 'local',
+                        'period': {'start': dates[0], 'end': dates[-1]}, 'days': days, 'models': models,
+                        'source': 'Synthetic smoke fixture'},
+        }
+
+    models = [
+        {'model': 'gpt-5.6-sol', 'total': 1_550_000, 'input': 190_000, 'output': 68_000,
+         'cacheRead': 1_292_000, 'cacheWrite': 0},
+        {'model': 'codex-auto-review', 'total': 980_000, 'input': 97_000, 'output': 8_000,
+         'cacheRead': 875_000, 'cacheWrite': 0},
+        {'model': 'gpt-6-astra', 'total': 790_000, 'input': 42_000, 'output': 62_000,
+         'cacheRead': 686_000, 'cacheWrite': 0},
+    ]
+    target = destination / 'state' / 'freeby'
+    target.mkdir(parents=True, exist_ok=True)
+    (target / 'codex.json').write_text(json.dumps(record('codex', 'Codex', 'Pro', (24, 61), models)))
+    (target / 'claude.json').write_text(json.dumps(record('claude', 'Claude Code', 'Pro', (17, 43), models[:2])))
+
+
 def smoke(source, archive, destination):
     destination.mkdir(parents=True, exist_ok=True)
     prefix = destination / 'install'
     install(source, archive, prefix, destination)
-    env = {**os.environ, 'XDG_CONFIG_HOME': str(destination / 'config'),
+    isolated_home = destination / 'home'
+    isolated_home.mkdir(parents=True, exist_ok=True)
+    seed_usage(destination)
+    env = {**os.environ, 'HOME': str(isolated_home), 'PATH': '/usr/bin:/bin',
+           'XDG_CONFIG_HOME': str(destination / 'config'),
            'XDG_DATA_HOME': str(prefix / 'share'), 'XDG_CACHE_HOME': str(destination / 'cache'),
            'XDG_STATE_HOME': str(destination / 'state'), 'GSETTINGS_BACKEND': 'keyfile',
            'GSETTINGS_SCHEMA_DIR': str(prefix / 'share/gnome-shell/extensions/freeby@kelvin.local/schemas'),
            'LIBGL_ALWAYS_SOFTWARE': '1'}
-    # Empty provider list prevents personal authentication/data access during UI tests.
-    run(['gsettings', 'set', 'org.gnome.shell.extensions.freeby', 'enabled-providers', '[]'], env, check=True)
+    run(['gsettings', 'set', 'org.gnome.shell.extensions.freeby', 'enabled-providers', "['codex', 'claude']"], env, check=True)
     run(['gsettings', 'set', 'org.gnome.shell', 'enabled-extensions', "['freeby@kelvin.local']"], env, check=True)
     run(['gsettings', 'set', 'org.gnome.shell', 'welcome-dialog-last-shown-version', '999'], env)
     bus = subprocess.Popen(['dbus-daemon', '--session', '--nofork', '--print-address=1'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
@@ -72,6 +116,8 @@ def smoke(source, archive, destination):
         run(['gnome-extensions', 'disable', 'freeby@kelvin.local'], env, check=True)
         run(['gnome-extensions', 'enable', 'freeby@kelvin.local'], env, check=True)
         print('PASS: extension disable/re-enable')
+        # Leave no collector running while the private shell itself shuts down.
+        run(['gnome-extensions', 'disable', 'freeby@kelvin.local'], env, check=True)
     finally:
         if shell and shell.poll() is None:
             os.killpg(shell.pid, signal.SIGTERM)
@@ -83,6 +129,9 @@ def smoke(source, archive, destination):
         bus.terminate()
         bus.wait(timeout=5)
         print(f'GNOME log: {log_path}')
+    contents = log_path.read_text(errors='replace')
+    if 'Gjs-CRITICAL' in contents and 'freeby@kelvin.local' in contents:
+        raise RuntimeError(f'Extension emitted a GJS critical; inspect {log_path}')
 
 
 if __name__ == '__main__':

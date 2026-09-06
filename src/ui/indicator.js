@@ -5,8 +5,11 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {NAMES, highestUsage, recentDates} from '../core/usage.js';
-import {age, resetTime, tokens} from '../core/format.js';
-import {button, label, meter, row} from './widgets.js';
+import {age, modelName, resetTime, tokens} from '../core/format.js';
+import {button, label, meter, modelMeter, row} from './widgets.js';
+
+const TAB_NAMES = {claude: 'Claude'};
+const PROVIDER_MARKS = {codex: '>_', claude: '✦', cursor: '⌁', copilot: '◆'};
 
 export const FreebyIndicator = GObject.registerClass(class FreebyIndicator extends PanelMenu.Button {
     _init(settings, openPreferences) {
@@ -34,6 +37,9 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
                 this.resize();
                 this._service?.refreshAll();
                 this.render();
+                const adjustment = this._scroll.vscroll?.adjustment;
+                if (adjustment)
+                    adjustment.value = 0;
             }
         });
         this.render();
@@ -42,8 +48,8 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
     resize() {
         const monitor = Main.layoutManager.findMonitorForActor(this) ?? Main.layoutManager.primaryMonitor;
         const scale = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        this._scroll.style = `max-height: ${Math.max(180, Math.floor(monitor.height / scale) - 120)}px;`;
-        this._contentBox.style = `width: ${Math.min(420, Math.floor(monitor.width / scale) - 64)}px;`;
+        this._scroll.style = `max-height: ${Math.max(180, Math.floor(monitor.height / scale) - 72)}px;`;
+        this._contentBox.style = `width: ${Math.min(404, Math.floor(monitor.width / scale) - 48)}px;`;
     }
 
     attach(service) {
@@ -62,17 +68,27 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
         const id = enabled.includes(requested) ? requested : enabled[0];
         const record = this._service?.records[id];
         const percent = highestUsage(record);
-        this._panelLabel.text = percent === null ? 'AI' : `AI ${Math.round(percent)}%`;
+        const busy = this._service?.jobs.has(id);
+        this._panelLabel.text = percent === null ? 'AI' : `AI · ${Math.round(percent)}%`;
         this._panelLabel.style_class = `freeby-panel-label${percent >= 100 ? ' freeby-danger' : percent >= 90 ? ' freeby-warning' : ''}`;
         this.accessible_name = `Freeby, ${record?.name ?? 'usage monitor'}${percent === null ? '' : `, ${Math.round(percent)} percent used`}`;
-        const header = new St.BoxLayout({vertical: true, style_class: 'freeby-header'});
-        header.add_child(label(record?.name ?? 'Freeby', 'freeby-title'));
-        header.add_child(label(record?.plan ? String(record.plan).toUpperCase() : 'USAGE MONITOR', 'freeby-caption'));
+        const header = new St.BoxLayout({style_class: 'freeby-header', x_expand: true});
+        header.add_child(label(PROVIDER_MARKS[id] ?? 'AI', `freeby-provider-mark freeby-${id}-mark`));
+        const identity = new St.BoxLayout({vertical: true, style_class: 'freeby-identity', x_expand: true});
+        identity.add_child(label(record?.name ?? 'Freeby', 'freeby-title'));
+        identity.add_child(label(record?.plan ? String(record.plan).toUpperCase() : 'USAGE MONITOR', 'freeby-caption'));
+        header.add_child(identity);
+        const live = record && (['ready', 'partial', 'stale'].includes(record.limits.status) ||
+            ['ready', 'partial', 'stale'].includes(record.history.status));
+        const statusText = busy ? 'SYNC' : record?.limits.status === 'ready' ? 'LIVE' : live ? 'LOCAL' : 'SETUP';
+        header.add_child(label(`● ${statusText}`, `freeby-status freeby-status-${statusText.toLowerCase()}`));
         this._contentBox.add_child(header);
         if (enabled.length > 1) {
-            const selector = new St.BoxLayout({style_class: 'freeby-selector', x_expand: true});
+            const selector = new St.Widget({style_class: 'freeby-selector', x_expand: true,
+                layout_manager: new Clutter.BoxLayout({orientation: Clutter.Orientation.HORIZONTAL,
+                    homogeneous: true, spacing: 8})});
             for (const provider of enabled)
-                selector.add_child(button(NAMES[provider], () => this._settings.set_string('default-provider', provider),
+                selector.add_child(button(TAB_NAMES[provider] ?? NAMES[provider], () => this._settings.set_string('default-provider', provider),
                     {active: provider === id, name: `Show ${NAMES[provider]} usage`}));
             this._contentBox.add_child(selector);
         }
@@ -103,6 +119,8 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
                     const line = new St.BoxLayout({style_class: 'freeby-day-row', x_expand: true});
                     const dayName = day.date === today ? 'Today' : new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, {weekday: 'short'});
                     line.add_child(label(dayName, 'freeby-day'));
+                    if (day.date === today)
+                        line.add_style_class_name('freeby-today');
                     const bar = meter(day.total / max, `${day.date}: ${tokens(day.total)} tokens`);
                     bar.y_align = Clutter.ActorAlign.CENTER;
                     line.add_child(bar);
@@ -112,24 +130,26 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
                 }
             }
             if (record.history.models.length) {
-                this.heading('TOKENS BY MODEL');
-                this._contentBox.add_child(label('Same period as daily activity', 'freeby-caption'));
+                const modelScope = record.history.scope === 'account' ? 'ACCOUNT' : 'LOCAL';
+                this.heading(`TOKENS BY MODEL · 7D ${modelScope}`);
                 const max = Math.max(1, ...record.history.models.map(model => model.total));
-                for (const model of record.history.models) {
-                    const box = new St.BoxLayout({vertical: true, style_class: 'freeby-model'});
-                    box.add_child(row(model.model, tokens(model.total)));
-                    box.add_child(meter(model.total / max, `${model.model}: ${model.total} tokens`));
-                    box.add_child(label(`Input ${tokens(model.input)} · Output ${tokens(model.output)} · Cache ${tokens(model.cacheRead + model.cacheWrite)}`, 'freeby-caption'));
-                    this._contentBox.add_child(box);
+                const visibleModels = record.history.models.slice(0, 4);
+                for (const model of visibleModels) {
+                    const displayName = modelName(model.model);
+                    const accessible = `${displayName}, ${model.total} tokens. Input ${model.input}, output ${model.output}, cache ${model.cacheRead + model.cacheWrite}.`;
+                    this._contentBox.add_child(modelMeter(displayName, tokens(model.total), model.total / max, accessible));
                 }
+                if (record.history.models.length > visibleModels.length)
+                    this._contentBox.add_child(label(`Top ${visibleModels.length} of ${record.history.models.length} models`, 'freeby-caption'));
             }
-            if (record.history.message)
+            if (record.history.message && record.history.status !== 'ready')
                 this.message(record.history.message);
         }
-        this.heading('');
-        const busy = this._service?.jobs.has(id);
+        this._contentBox.add_child(new St.Widget({style_class: 'freeby-divider'}));
         this._contentBox.add_child(label(busy ? 'Refreshing…' : age(record?.limits.updatedAt || record?.history.updatedAt), 'freeby-caption'));
-        const actions = new St.BoxLayout({style_class: 'freeby-selector'});
+        const actions = new St.Widget({style_class: 'freeby-actions', x_expand: true,
+            layout_manager: new Clutter.BoxLayout({orientation: Clutter.Orientation.HORIZONTAL,
+                homogeneous: true, spacing: 8})});
         actions.add_child(button('Refresh', () => this._service?.refreshAll(true), {name: 'Refresh usage'}));
         actions.add_child(button('Preferences', () => { this.menu.close(); this._openPreferences(); }));
         this._contentBox.add_child(actions);

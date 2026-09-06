@@ -30,7 +30,9 @@ subscription usage.
 ## Requirements
 
 - GNOME Shell 50 (the version verified for this prerelease).
-- Codex CLI installed and signed in for Codex account limits.
+- Codex CLI installed and signed in for Codex account limits. System installs
+  and common user-local/version-manager layouts (including fnm, nvm, mise,
+  asdf, and Volta) are detected from GNOME Shell's restricted environment.
 - Claude Code installed and signed in for Claude account limits; local Claude
   transcripts remain useful independently.
 - GJS with Gio/GLib and Soup 3 introspection data.

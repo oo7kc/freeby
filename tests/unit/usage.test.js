@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {aggregateEvents, highestUsage, mergeRecord, number, recentDates, record, validTime, validateRecord, windowUsage} from '../../src/core/usage.js';
-import {resetTime, tokens} from '../../src/core/format.js';
+import {modelName, resetTime, tokens} from '../../src/core/format.js';
 import {ThresholdTracker} from '../../src/core/notifications.js';
 
 test('unknown metrics are not coerced to zero', () => {
@@ -93,4 +93,6 @@ test('formatting preserves unknown/reset-due states', () => {
     assert.equal(tokens(23000000), '23.0M');
     assert.equal(resetTime(null), 'Reset time unavailable');
     assert.match(resetTime(100, 200), /awaiting update/);
+    assert.equal(modelName('gpt-5.6-sol'), 'GPT 5.6 Sol');
+    assert.equal(modelName('codex_auto-review'), 'Codex Auto Review');
 });

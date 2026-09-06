@@ -29,3 +29,9 @@ export function age(time, now = Date.now()) {
         return 'Updated just now';
     return minutes < 60 ? `Updated ${minutes}m ago` : `Updated ${Math.floor(minutes / 60)}h ago`;
 }
+
+export function modelName(value) {
+    const acronyms = new Map([['gpt', 'GPT'], ['api', 'API']]);
+    return String(value || 'Unknown model').replaceAll(/[-_/]+/g, ' ').split(/\s+/).filter(Boolean)
+        .map(word => acronyms.get(word.toLowerCase()) ?? word[0].toUpperCase() + word.slice(1)).join(' ');
+}

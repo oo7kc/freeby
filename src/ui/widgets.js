@@ -17,11 +17,36 @@ export function row(left, right, style = 'freeby-row') {
 export function meter(fraction, name, style = '') {
     const ratio = Math.max(0, Math.min(1, Number(fraction) || 0));
     const track = new St.Widget({style_class: `freeby-track ${style}`, x_expand: true,
-        layout_manager: new Clutter.BinLayout(), accessible_name: name, accessible_role: Atk.Role.PROGRESS_BAR});
-    const fill = new St.Widget({style_class: 'freeby-fill', x_align: Clutter.ActorAlign.START,
-        y_expand: true, y_align: Clutter.ActorAlign.FILL});
+        layout_manager: new Clutter.FixedLayout(), accessible_name: name, accessible_role: Atk.Role.PROGRESS_BAR});
+    const fill = new St.Widget({style_class: 'freeby-fill'});
+    fill.set_position(0, 0);
     track.add_child(fill);
-    track.connect('notify::allocation', () => { fill.width = Math.round(track.width * ratio); });
+    track.connect('notify::allocation', () => {
+        fill.set_size(Math.round(Math.max(0, track.width) * ratio), Math.max(0, track.height));
+    });
+    return track;
+}
+
+export function modelMeter(left, right, fraction, name) {
+    const ratio = Math.max(0, Math.min(1, Number(fraction) || 0));
+    const track = new St.Widget({style_class: 'freeby-model-meter', x_expand: true,
+        layout_manager: new Clutter.FixedLayout(), accessible_name: name,
+        accessible_role: Atk.Role.PROGRESS_BAR});
+    const fill = new St.Widget({style_class: 'freeby-model-fill'});
+    const content = new St.BoxLayout({style_class: 'freeby-model-content'});
+    content.add_child(label(left, 'freeby-model-name'));
+    content.add_child(new St.Widget({x_expand: true}));
+    content.add_child(label(right, 'freeby-number'));
+    track.add_child(fill);
+    track.add_child(content);
+    track.connect('notify::allocation', () => {
+        const width = Math.max(0, track.width);
+        const height = Math.max(0, track.height);
+        fill.set_position(0, 0);
+        fill.set_size(Math.round(width * ratio), height);
+        content.set_position(0, 0);
+        content.set_size(width, height);
+    });
     return track;
 }
 

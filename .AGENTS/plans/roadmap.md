@@ -1,7 +1,7 @@
 # Freeby usage monitor roadmap
 
-Updated: 2026-09-06. Status: post-alpha.2 repository organization complete;
-Cursor is the active alpha.3 milestone.
+Updated: 2026-09-06. Status: post-alpha.2 interface/runtime correction complete;
+Cursor remains the next alpha.3 milestone.
 
 ## Agreed direction
 
@@ -165,6 +165,24 @@ Evidence: `npm run verify` passed 20 unit tests, the Codex/Claude GJS history
 and subprocess integration suite, strict schema/layout/link validation, and a
 deterministic alpha.3-dev package. The exact archive loaded, disabled, and
 re-enabled without extension errors in an isolated GNOME Shell 50 session.
+
+### Interface and local-runtime correction checkpoint
+
+- [x] Match the supplied Omarchy hierarchy with a compact monospaced panel,
+  visible data status, equal provider tabs, and left-anchored usage graphics.
+- [x] Keep the common view within the monitor work area while retaining
+  automatic scrolling as a small-display and overflow fallback.
+- [x] Detect user-local and version-managed Codex installations from GNOME
+  Shell's minimal environment and use the installation's matching Node runtime.
+- [x] Exercise all primary popup widgets with synthetic records and reject GJS
+  criticals in the isolated lifecycle smoke test.
+
+Evidence: 20 unit tests and the GJS integration suite pass, including newest
+version-manager selection and sibling-runtime launch coverage. A sanitized live
+probe with Codex CLI 0.145.0, an fnm-only binary path, no `/usr/bin/node`, and a
+GNOME-equivalent minimal `PATH` returned the signed-in Plus plan with three live
+quota windows. The populated two-provider popup loaded, disabled, and re-enabled
+without extension GJS criticals in a private GNOME Shell 50 session.
 
 ### 3. Cursor — v2.0.0-alpha.3
 

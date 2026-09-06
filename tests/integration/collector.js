@@ -4,7 +4,7 @@ import System from 'system';
 import {scanHistory} from '../../src/services/history.js';
 import {parseCodexEvent} from '../../src/providers/codex.js';
 import {parseClaudeEvent} from '../../src/providers/claude.js';
-import {readJson, writeJson, join} from '../../src/services/files.js';
+import {findCommand, nodeCli, readJson, writeJson, join} from '../../src/services/files.js';
 import {runCommand} from '../../src/services/process.js';
 
 function assert(value, message) {
@@ -47,6 +47,23 @@ assert(claude.days.at(-1).total === 50, 'duplicate Claude messages must count on
 assert(claude.models[0].cacheRead === 40 && claude.models[0].cacheWrite === 5, 'Claude cache categories');
 assert(!JSON.stringify(readJson(claudeCache)).includes('claude-session'), 'Claude session identity must be sanitized');
 print('PASS: GJS Claude history deduplication, model totals, and private cache');
+
+for (const version of ['v20.12.0', 'v24.16.0']) {
+    const bin = join(scratch, '.local', 'share', 'fnm', 'node-versions', version, 'installation', 'bin');
+    GLib.mkdir_with_parents(bin, 0o700);
+    const command = join(bin, 'fixture-cli');
+    GLib.file_set_contents(command, `#!/bin/sh\nprintf '${version}'\n`);
+    GLib.chmod(command, 0o700);
+    const runtime = join(bin, 'node');
+    GLib.file_set_contents(runtime, '#!/bin/sh\nexit 0\n');
+    GLib.chmod(runtime, 0o700);
+}
+assert(findCommand('fixture-cli', {home: scratch, usePath: false}).includes('v24.16.0'),
+    'version-manager lookup must choose the newest installed runtime');
+const fixtureArgv = nodeCli('fixture-cli', ['status'], {home: scratch, usePath: false});
+assert(fixtureArgv[0].endsWith('/node') && fixtureArgv[1].endsWith('/fixture-cli') && fixtureArgv[2] === 'status',
+    'version-managed Node CLI must use its sibling runtime');
+print('PASS: GJS version-manager command discovery');
 
 const loop = new GLib.MainLoop(null, false);
 let failed = false;
