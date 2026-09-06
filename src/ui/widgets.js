@@ -62,3 +62,34 @@ export function button(text, callback, {active = false, name = text} = {}) {
     actor.connect('clicked', callback);
     return actor;
 }
+
+export function disclosureButton(summary, expanded, callback) {
+    const actor = new St.Button({
+        accessible_name: 'Activity details',
+        accessible_role: Atk.Role.TOGGLE_BUTTON,
+        can_focus: true,
+        checked: expanded,
+        reactive: true,
+        style_class: 'freeby-disclosure',
+        toggle_mode: true,
+        track_hover: true,
+        x_expand: true,
+    });
+    const content = new St.BoxLayout({style_class: 'freeby-disclosure-content', x_expand: true});
+    content.add_child(label('Activity', 'freeby-disclosure-title', true));
+    content.add_child(label(summary, 'freeby-disclosure-summary'));
+    content.add_child(new St.Icon({
+        icon_name: expanded ? 'pan-up-symbolic' : 'pan-down-symbolic',
+        style_class: 'freeby-disclosure-icon',
+    }));
+    actor.set_child(content);
+    actor.connect('clicked', callback);
+    return actor;
+}
+
+export function actionButton(text, callback, name = text) {
+    const actor = button(text, callback, {name});
+    actor.x_expand = false;
+    actor.add_style_class_name('freeby-action-button');
+    return actor;
+}

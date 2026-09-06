@@ -16,11 +16,15 @@ while version 2 is developed on the `dev` branch.
   status, and footer paths backed by unit-testable presentation decisions.
 - Hardened deterministic packaging to reject symlinked or out-of-tree inputs and
   verify the archive against its exact runtime allowlist.
-- Reworked the popup into a compact, sharp-edged, monospaced usage panel based
-  on the supplied Omarchy references, with equal-width `Claude`/`Codex` tabs,
-  visible provider status, and filled model-usage rows.
-- Reduced vertical density so the normal two-provider view fits the monitor;
-  scrolling remains an automatic fallback for smaller displays or extra data.
+- Reworked the popup into a compact, theme-integrated usage panel based on the
+  supplied Omarchy references, with equal-width `Claude`/`Codex` tabs, visible
+  provider status, and filled model-usage rows.
+- Inherit the user's Shell font and accent color, with a restrained accent on
+  the popup's actual perimeter instead of a nested hard-coded blue frame.
+- Keep limits and freshness visible in the default view while placing seven-day
+  and model activity behind an accessible disclosure control; scrolling remains
+  an automatic fallback for the expanded view and smaller displays.
+- Consolidate freshness, refresh, and settings into a single compact footer.
 - Consolidated agent rules, the active roadmap, archived planning notes, and
   visual implementation references under `.AGENTS/`, with a minimal root
   `AGENTS.md` discovery entrypoint.

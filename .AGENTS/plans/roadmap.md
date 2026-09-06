@@ -1,7 +1,7 @@
 # Freeby usage monitor roadmap
 
-Updated: 2026-09-06. Status: post-alpha.2 interface/runtime and production
-hardening complete; Cursor remains the next alpha.3 milestone.
+Updated: 2026-09-06. Status: post-alpha.2 compact interface/runtime and
+production hardening complete; Cursor remains the next alpha.3 milestone.
 
 ## Agreed direction
 
@@ -168,10 +168,13 @@ re-enabled without extension errors in an isolated GNOME Shell 50 session.
 
 ### Interface and local-runtime correction checkpoint
 
-- [x] Match the supplied Omarchy hierarchy with a compact monospaced panel,
-  visible data status, equal provider tabs, and left-anchored usage graphics.
-- [x] Keep the common view within the monitor work area while retaining
-  automatic scrolling as a small-display and overflow fallback.
+- [x] Match the supplied Omarchy hierarchy with a compact, theme-integrated
+  panel, visible data status, equal provider tabs, and left-anchored graphics.
+- [x] Keep limits and freshness in the default view, move daily/model activity
+  behind an accessible disclosure, and retain scrolling only as a constrained
+  display or expanded-content fallback.
+- [x] Inherit the user's Shell font and accent, place the subtle accent on the
+  popup perimeter, and consolidate actions into a compact footer.
 - [x] Detect user-local and version-managed Codex installations from GNOME
   Shell's minimal environment and use the installation's matching Node runtime.
 - [x] Exercise all primary popup widgets with synthetic records and reject GJS
@@ -182,7 +185,10 @@ version-manager selection and sibling-runtime launch coverage. A sanitized live
 probe with Codex CLI 0.145.0, an fnm-only binary path, no `/usr/bin/node`, and a
 GNOME-equivalent minimal `PATH` returned the signed-in Plus plan with three live
 quota windows. The populated two-provider popup loaded, disabled, and re-enabled
-without extension GJS criticals in a private GNOME Shell 50 session.
+without extension GJS criticals in a private GNOME Shell 50 session. A follow-up
+compactness pass retained that lifecycle coverage, added deterministic activity
+summary tests, and smoke-tested the exact packaged archive with the theme-derived
+perimeter and collapsed details structure.
 
 ### Runtime and contract hardening checkpoint
 

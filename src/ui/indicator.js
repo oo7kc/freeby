@@ -6,8 +6,8 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {NAMES, highestUsage, recentDates} from '../core/usage.js';
 import {age, modelName, resetTime, tokens} from '../core/format.js';
-import {latestUpdate, periodDays, providerStatus} from './presentation.js';
-import {button, label, meter, modelMeter, row} from './widgets.js';
+import {historyOverview, latestUpdate, periodDays, providerStatus} from './presentation.js';
+import {actionButton, button, disclosureButton, label, meter, modelMeter, row} from './widgets.js';
 
 const TAB_NAMES = {claude: 'Claude'};
 const PROVIDER_MARKS = {codex: '>_', claude: '✦', cursor: '⌁', copilot: '◆'};
@@ -18,6 +18,7 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
         this._settings = settings;
         this._openPreferences = openPreferences;
         this._service = null;
+        this._detailsExpanded = false;
         this._panelLabel = label('AI', 'freeby-panel-label');
         this.add_child(this._panelLabel);
         this.menu.actor.add_style_class_name('freeby-menu');
@@ -41,6 +42,8 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
                 const adjustment = this._scroll.vscroll?.adjustment;
                 if (adjustment)
                     adjustment.value = 0;
+            } else {
+                this._detailsExpanded = false;
             }
         });
         this.render();
@@ -49,8 +52,10 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
     resize() {
         const monitor = Main.layoutManager.findMonitorForActor(this) ?? Main.layoutManager.primaryMonitor;
         const scale = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        this._scroll.style = `max-height: ${Math.max(180, Math.floor(monitor.height / scale) - 72)}px;`;
-        this._contentBox.style = `width: ${Math.min(404, Math.floor(monitor.width / scale) - 48)}px;`;
+        const availableHeight = Math.max(240, Math.floor(monitor.height / scale) - 96);
+        const availableWidth = Math.max(240, Math.floor(monitor.width / scale) - 32);
+        this._scroll.style = `max-height: ${Math.min(600, availableHeight)}px;`;
+        this._contentBox.style = `width: ${Math.min(348, availableWidth)}px;`;
     }
 
     attach(service) {
@@ -135,18 +140,33 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
     }
 
     _renderHistory(history) {
-        if (history.days.length)
-            this._renderDays(history);
-        if (history.models.length)
-            this._renderModels(history);
+        const overview = historyOverview(history);
+        if (overview) {
+            const summary = [overview.days ? `${overview.days} days` : null,
+                tokens(overview.total), overview.scope].filter(Boolean).join(' · ');
+            this._contentBox.add_child(disclosureButton(summary, this._detailsExpanded, () => {
+                this._detailsExpanded = !this._detailsExpanded;
+                this.render();
+            }));
+
+            // Construct the complete view even while collapsed so lifecycle smoke
+            // coverage continues to exercise every primary widget.
+            const details = new St.BoxLayout({vertical: true, style_class: 'freeby-details',
+                x_expand: true, visible: this._detailsExpanded});
+            if (history.days.length)
+                this._renderDays(history, details);
+            if (history.models.length)
+                this._renderModels(history, details);
+            this._contentBox.add_child(details);
+        }
         if (history.message && history.status !== 'ready')
             this._message(history.message);
     }
 
-    _renderDays(history) {
-        this._heading('TOKENS BY DAY');
+    _renderDays(history, parent = this._contentBox) {
+        this._heading('TOKENS BY DAY', parent);
         const scope = history.scope === 'account' ? 'Account activity' : 'This device';
-        this._contentBox.add_child(label(`${scope} · ${history.period.start} – ${history.period.end}`, 'freeby-caption'));
+        parent.add_child(label(`${scope} · ${history.period.start} – ${history.period.end}`, 'freeby-caption'));
         const max = Math.max(1, ...history.days.map(day => day.total));
         const today = recentDates(Date.now(), 1)[0];
         for (const day of history.days) {
@@ -161,34 +181,32 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
             line.add_child(bar);
             line.add_child(label(tokens(day.total), 'freeby-day-total'));
             line.accessible_name = `${dayName}, ${day.total} tokens, ${day.sessions ?? 0} sessions`;
-            this._contentBox.add_child(line);
+            parent.add_child(line);
         }
     }
 
-    _renderModels(history) {
+    _renderModels(history, parent = this._contentBox) {
         const modelScope = history.scope === 'account' ? 'ACCOUNT' : 'LOCAL';
         const days = periodDays(history.period);
-        this._heading(`TOKENS BY MODEL${days ? ` · ${days}D` : ''} ${modelScope}`);
+        this._heading(`TOKENS BY MODEL${days ? ` · ${days}D` : ''} ${modelScope}`, parent);
         const max = Math.max(1, ...history.models.map(model => model.total));
         const visibleModels = history.models.slice(0, 4);
         for (const model of visibleModels) {
             const displayName = modelName(model.model);
             const cache = model.cacheRead + model.cacheWrite;
             const accessible = `${displayName}, ${model.total} tokens. Input ${model.input}, output ${model.output}, cache ${cache}.`;
-            this._contentBox.add_child(modelMeter(displayName, tokens(model.total), model.total / max, accessible));
+            parent.add_child(modelMeter(displayName, tokens(model.total), model.total / max, accessible));
         }
         if (history.models.length > visibleModels.length)
-            this._contentBox.add_child(label(`Top ${visibleModels.length} of ${history.models.length} models`, 'freeby-caption'));
+            parent.add_child(label(`Top ${visibleModels.length} of ${history.models.length} models`, 'freeby-caption'));
     }
 
     _renderFooter(record, busy) {
-        this._contentBox.add_child(new St.Widget({style_class: 'freeby-divider'}));
-        this._contentBox.add_child(label(busy ? 'Refreshing…' : age(latestUpdate(record)), 'freeby-caption'));
-        const actions = new St.Widget({style_class: 'freeby-actions', x_expand: true,
-            layout_manager: new Clutter.BoxLayout({orientation: Clutter.Orientation.HORIZONTAL,
-                homogeneous: true, spacing: 8})});
-        actions.add_child(button('Refresh', () => this._service?.refreshAll(true), {name: 'Refresh usage'}));
-        actions.add_child(button('Preferences', () => { this.menu.close(); this._openPreferences(); }));
+        const actions = new St.BoxLayout({style_class: 'freeby-actions', x_expand: true});
+        actions.add_child(label(busy ? 'Refreshing…' : age(latestUpdate(record)), 'freeby-caption', true));
+        actions.add_child(actionButton('Refresh', () => this._service?.refreshAll(true), 'Refresh usage'));
+        actions.add_child(actionButton('Settings', () => { this.menu.close(); this._openPreferences(); },
+            'Open extension settings'));
         this._contentBox.add_child(actions);
     }
 
@@ -204,8 +222,8 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
         visit(this._contentBox);
     }
 
-    _heading(text) {
-        this._contentBox.add_child(label(text, 'freeby-section-title'));
+    _heading(text, parent = this._contentBox) {
+        parent.add_child(label(text, 'freeby-section-title'));
     }
 
     _message(text) {

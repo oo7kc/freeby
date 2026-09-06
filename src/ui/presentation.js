@@ -23,3 +23,19 @@ export function periodDays(period) {
         return null;
     return Math.round((end - start) / 86400000) + 1;
 }
+
+export function historyOverview(history) {
+    const days = Array.isArray(history?.days) ? history.days : [];
+    const models = Array.isArray(history?.models) ? history.models : [];
+    const values = days.length ? days : models;
+    if (!values.length)
+        return null;
+
+    const total = values.reduce((sum, item) => sum +
+        (Number.isFinite(item?.total) ? item.total : 0), 0);
+    return {
+        days: periodDays(history.period),
+        scope: history.scope === 'account' ? 'account' : 'local',
+        total,
+    };
+}
