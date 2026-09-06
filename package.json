@@ -1,0 +1,16 @@
+{
+  "name": "freeby",
+  "version": "2.0.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.js",
+    "lint": "node tools/check.js",
+    "test:integration": "gjs -m tests/integration/collector.js",
+    "check": "npm run lint && npm test && npm run test:integration",
+    "pack": "python3 tools/package.py",
+    "verify": "npm run check && npm run pack",
+    "smoke:shell": "python3 tools/smoke-shell.py"
+  },
+  "engines": { "node": ">=20" }
+}

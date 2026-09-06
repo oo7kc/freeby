@@ -1,19 +1,16 @@
-project('freeby', version: '1.0.2', license: 'MIT',
+project('freeby', version: '2.0.0-alpha.1', license: 'MIT',
   meson_version: '>= 0.56.0',
   default_options: ['warning_level=0'])
 
 uuid = 'freeby@kelvin.local'
 prefix = get_option('prefix')
 extdir = join_paths(prefix, 'share', 'gnome-shell', 'extensions', uuid)
-bindir = join_paths(prefix, 'bin')
-schemadir = join_paths(prefix, 'share', 'glib-2.0', 'schemas')
+schemadir = join_paths(extdir, 'schemas')
 
-install_data('extension.js', 'indicator.js', 'prefs.js', 'metadata.json', 'stylesheet.css',
+install_data('extension.js', 'prefs.js', 'metadata.json', 'stylesheet.css', 'LICENSE',
   install_dir: extdir)
 
-install_data('scripts/freeby.sh', 'scripts/copilot-setup.sh',
-  install_dir: bindir,
-  install_mode: 'rwxr-xr-x')
+install_subdir('src', install_dir: extdir)
 
 install_data('schemas/org.gnome.shell.extensions.freeby.gschema.xml',
   install_dir: schemadir)
