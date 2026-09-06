@@ -8,8 +8,16 @@ export async function collectCopilot(io) {
         result.limits = {...result.limits, ...section('missing-auth', 'Sign in to GitHub CLI to read Copilot usage.')};
         return result;
     }
-    const {status, data} = await io.http('https://api.github.com/copilot_internal/user',
-        {headers: {Authorization: `Bearer ${token}`, Accept: 'application/json'}});
+    result.accountKey = io.fingerprint(token);
+    let status;
+    let data;
+    try {
+        ({status, data} = await io.http('https://api.github.com/copilot_internal/user',
+            {headers: {Authorization: `Bearer ${token}`, Accept: 'application/json'}}));
+    } catch {
+        result.limits = {...result.limits, ...section('unavailable', 'Could not reach GitHub Copilot usage. Retry later.')};
+        return result;
+    }
     if (status !== 200 || !data || typeof data !== 'object') {
         result.limits = {...result.limits, ...section([401, 403].includes(status) ? 'missing-auth' : 'unavailable',
             [401, 403].includes(status) ? 'Reconnect GitHub CLI to read Copilot usage.' : `Usage endpoint unavailable (HTTP ${status}).`)};
@@ -27,7 +35,7 @@ export async function collectCopilot(io) {
     result.plan = data.copilot_plan ?? null;
     result.limits = {...result.limits, ...section(result.limits.windows.length ? 'ready' : 'unavailable',
         result.limits.windows.length ? '' : 'No supported allowance was reported. Check the GitHub Copilot dashboard.'),
-    updatedAt: result.limits.windows.length ? Date.now() : null};
-    result.accountKey = io.fingerprint(token);
+    updatedAt: result.limits.windows.length ? io.now?.() ?? Date.now() : null,
+    source: result.limits.windows.length ? 'GitHub Copilot entitlement' : null};
     return result;
 }

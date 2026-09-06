@@ -1,4 +1,4 @@
-import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {FreebyIndicator} from './src/ui/indicator.js';
 import {UsageService} from './src/services/usageService.js';
@@ -9,19 +9,28 @@ export default class FreebyExtension extends Extension {
         this._indicator = new FreebyIndicator(this._settings, () => this.openPreferences());
         Main.panel.addToStatusArea(this.uuid, this._indicator);
         this._service = new UsageService(this._settings, this.path, () => this._indicator?.render(), alerts => {
-            for (const alert of alerts)
-                Main.notify('Freeby usage alert', `${alert.provider}: ${alert.label} ${alert.threshold === 100 ? 'limit reached' : `reached ${alert.threshold}%`}.`);
+            for (const alert of alerts) {
+                const state = alert.threshold === 100 ? 'limit reached' : `reached ${alert.threshold}%`;
+                Main.notify('Freeby usage alert', `${alert.provider}: ${alert.label} ${state}.`);
+            }
         });
         this._indicator.attach(this._service);
-        this._settingsId = this._settings.connect('changed', () => {
+        this._settingsIds = [];
+        this._settingsIds.push(this._settings.connect('changed::enabled-providers', () => {
             this._service.configure();
             this._indicator.render();
             this._service.refreshAll();
-        });
+        }));
+        this._settingsIds.push(this._settings.connect('changed::default-provider', () => this._indicator.render()));
+        this._settingsIds.push(this._settings.connect('changed::history-retention-days', () =>
+            this._service.refreshAll(true)));
         this._service.refreshAll();
     }
+
     disable() {
-        if (this._settingsId) { this._settings.disconnect(this._settingsId); this._settingsId = null; }
+        for (const id of this._settingsIds ?? [])
+            this._settings.disconnect(id);
+        this._settingsIds = null;
         this._service?.destroy();
         this._service = null;
         this._indicator?.destroy();

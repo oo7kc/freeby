@@ -27,7 +27,10 @@ export function age(time, now = Date.now()) {
     const minutes = Math.max(0, Math.floor((now - time) / 60000));
     if (!minutes)
         return 'Updated just now';
-    return minutes < 60 ? `Updated ${minutes}m ago` : `Updated ${Math.floor(minutes / 60)}h ago`;
+    if (minutes < 60)
+        return `Updated ${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return hours < 24 ? `Updated ${hours}h ago` : `Updated ${Math.floor(hours / 24)}d ago`;
 }
 
 export function modelName(value) {

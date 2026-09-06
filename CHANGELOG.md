@@ -7,6 +7,15 @@ while version 2 is developed on the `dev` branch.
 
 ### Changed
 
+- Split command discovery from private file storage and launch discovered CLIs
+  with a process-local environment, explicit deadlines, cancellation reasons,
+  and output limits.
+- Upgraded the provider-neutral usage record to schema version 2 with strict
+  source, freshness, quota, date, token-component, and collection-bound checks.
+- Decomposed panel rendering into focused limit, daily activity, model activity,
+  status, and footer paths backed by unit-testable presentation decisions.
+- Hardened deterministic packaging to reject symlinked or out-of-tree inputs and
+  verify the archive against its exact runtime allowlist.
 - Reworked the popup into a compact, sharp-edged, monospaced usage panel based
   on the supplied Omarchy references, with equal-width `Claude`/`Codex` tabs,
   visible provider status, and filled model-usage rows.
@@ -22,6 +31,15 @@ while version 2 is developed on the `dev` branch.
 
 ### Fixed
 
+- Keep one stable private session identity across incremental history scans,
+  preventing resumed Codex records from inflating session counts.
+- Detect cumulative-token resets, same-size history replacements, stale source
+  removal, invalid cached events, and bounded directory-scan failures without
+  silently presenting incorrect totals.
+- Require HTTPS for provider requests, bound response sizes, and repair private
+  cache directory/file permissions on every atomic write.
+- Distinguish live account data, local-only activity, cached data, active sync,
+  and setup states while safely truncating long provider/model labels.
 - Discover Codex installed through fnm, nvm, mise, asdf, Volta, and common
   user-local binary directories even when GNOME Shell starts with a minimal
   `PATH`.

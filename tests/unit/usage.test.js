@@ -5,7 +5,7 @@ import {modelName, resetTime, tokens} from '../../src/core/format.js';
 import {ThresholdTracker} from '../../src/core/notifications.js';
 
 test('unknown metrics are not coerced to zero', () => {
-    for (const value of [null, undefined, '', false, -1, Infinity, 'bad'])
+    for (const value of [null, undefined, '', '  ', false, -1, Infinity, 'bad', [1], {value: 1}])
         assert.equal(number(value), null);
     assert.equal(number(0), 0);
     assert.equal(windowUsage({id: 'plan', label: 'Plan', used: 0, limit: 0}), null);
@@ -23,10 +23,47 @@ test('unknown, exhausted and unlimited windows remain distinct', () => {
 });
 
 test('contract rejects invalid provider IDs and quota values', () => {
+    assert.throws(() => record('toString'), /Unsupported provider/);
     assert.throws(() => validateRecord(record('codex'), 'cursor'));
     const value = record('codex');
     value.limits.windows.push({id: 'x', label: 'X', state: 'active', usedPercent: null});
     assert.throws(() => validateRecord(value, 'codex'));
+});
+
+test('contract accepts complete records and rejects unsafe cached shapes', () => {
+    const value = record('codex');
+    value.accountKey = 'a'.repeat(64);
+    value.capabilities = {limits: true, history: true, models: true};
+    value.limits = {status: 'ready', message: '', updatedAt: 100, scope: 'account', source: 'synthetic limits',
+        windows: [windowUsage({id: 'weekly', label: 'Weekly', usedPercent: 20})]};
+    value.history = {status: 'ready', message: '', updatedAt: 100, scope: 'local',
+        source: 'synthetic history', period: {start: '2026-09-05', end: '2026-09-06'},
+        days: [{date: '2026-09-05', total: 0, sessions: 0, events: 0},
+            {date: '2026-09-06', total: 10, sessions: 1, events: 1}],
+        models: [{model: 'test-model', total: 10, input: 6, output: 4, cacheRead: 0, cacheWrite: 0}]};
+    assert.equal(validateRecord(value, 'codex'), value);
+
+    const invalidDate = structuredClone(value);
+    invalidDate.history.days[1].date = '2026-99-99';
+    assert.throws(() => validateRecord(invalidDate, 'codex'), /daily date/);
+    const invalidTotal = structuredClone(value);
+    invalidTotal.history.models[0].total = 11;
+    assert.throws(() => validateRecord(invalidTotal, 'codex'), /model totals/);
+    const rawAccount = structuredClone(value);
+    rawAccount.accountKey = 'user@example.com';
+    assert.throws(() => validateRecord(rawAccount, 'codex'), /account key/);
+    const missingSource = structuredClone(value);
+    missingSource.limits.source = null;
+    assert.throws(() => validateRecord(missingSource, 'codex'), /limits source/);
+    const missingFreshness = structuredClone(value);
+    missingFreshness.history.updatedAt = 0;
+    assert.throws(() => validateRecord(missingFreshness, 'codex'), /history freshness/);
+    const unknownField = structuredClone(value);
+    unknownField.rawResponse = 'must not persist';
+    assert.throws(() => validateRecord(unknownField, 'codex'), /record shape/);
+    const duplicateQuota = structuredClone(value);
+    duplicateQuota.limits.windows.push(structuredClone(duplicateQuota.limits.windows[0]));
+    assert.throws(() => validateRecord(duplicateQuota, 'codex'), /duplicate quota/);
 });
 
 test('failure preserves last successful values as stale, account change discards them', () => {
@@ -43,17 +80,21 @@ test('failure preserves last successful values as stale, account change discards
     assert.equal(highestUsage(merged), null);
     next.accountKey = 'two';
     assert.equal(mergeRecord(old, next).limits.windows.length, 0);
+    next.accountKey = null;
+    next.limits.status = 'missing-auth';
+    assert.equal(mergeRecord(old, next).limits.windows.length, 0);
+    assert.equal(mergeRecord(old, next).accountKey, null);
 });
 
 test('stale quota windows are discarded after their reset', () => {
     const old = record('claude');
     old.limits = {status: 'ready', updatedAt: 100, windows: [
         {id: 'expired', resetsAt: 1},
-        {id: 'open', resetsAt: Date.now() + 60000},
+        {id: 'open', resetsAt: 2000},
     ]};
     const next = record('claude');
     next.limits.status = 'unavailable';
-    const result = mergeRecord(old, next);
+    const result = mergeRecord(old, next, 1000);
     assert.equal(result.limits.status, 'stale');
     assert.deepEqual(result.limits.windows.map(window => window.id), ['open']);
 });

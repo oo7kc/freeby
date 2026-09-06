@@ -1,7 +1,7 @@
 # Freeby usage monitor roadmap
 
-Updated: 2026-09-06. Status: post-alpha.2 interface/runtime correction complete;
-Cursor remains the next alpha.3 milestone.
+Updated: 2026-09-06. Status: post-alpha.2 interface/runtime and production
+hardening complete; Cursor remains the next alpha.3 milestone.
 
 ## Agreed direction
 
@@ -183,6 +183,28 @@ probe with Codex CLI 0.145.0, an fnm-only binary path, no `/usr/bin/node`, and a
 GNOME-equivalent minimal `PATH` returned the signed-in Plus plan with three live
 quota windows. The populated two-provider popup loaded, disabled, and re-enabled
 without extension GJS criticals in a private GNOME Shell 50 session.
+
+### Runtime and contract hardening checkpoint
+
+- [x] Enforce schema sources, freshness, typed fields, collection bounds, and
+  provider identity before records reach UI state or persistence.
+- [x] Keep subprocess environments scoped, failures classified, responses
+  bounded, and private cache permissions repaired on atomic writes.
+- [x] Make incremental history resilient to counter resets, replacement,
+  source removal, invalid cache data, and stable private session identities.
+- [x] Enforce runtime import boundaries and an exact, repository-owned package
+  allowlist in development tooling.
+- [x] Verify deterministic packaging and the exact archive lifecycle before
+  committing the checkpoint on `dev`.
+
+Evidence: `npm run verify` passed 25 deterministic unit tests, strict schema,
+layout, import-boundary, link, GJS history, process, HTTP-policy, and packaging
+checks. Two builds produced the same 35,916-byte archive at SHA-256
+`48a6a6ae7546db9634385388db5a8b1dcc5bcc81135e65e93376187c2ca30d18`.
+That exact archive loaded, disabled, and re-enabled without extension errors in
+an isolated GNOME Shell 50 session. A sanitized live check with Codex CLI
+0.145.0 returned the Plus plan, three account quota windows, seven-day local
+activity, and model totals under usage schema version 2.
 
 ### 3. Cursor — v2.0.0-alpha.3
 

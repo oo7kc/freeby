@@ -29,6 +29,29 @@ test('cumulative token deltas and cached input are counted once', () => {
     assert.equal(parseCodexEvent(tokenEvent(100, 20, 40, 120), state), null);
     const second = parseCodexEvent(tokenEvent(180, 35, 60, 215), state);
     assert.equal(second.input + second.output + second.cacheRead, 95);
+    const reset = parseCodexEvent(tokenEvent(20, 5, 8, 25), state);
+    assert.equal(reset.input + reset.output + reset.cacheRead, 25);
+    assert.equal(state.cumulativeEpoch, 1);
+    assert.deepEqual(Object.keys(state.cumulative).sort(), [
+        'cache_write_input_tokens', 'cached_input_tokens', 'input_tokens', 'output_tokens', 'total_tokens',
+    ]);
+});
+
+test('multi-bucket response falls back to the compatible quota view when empty', () => {
+    const result = codexLimits({rateLimitsByLimitId: {}, rateLimits: {
+        primary: {usedPercent: 12, windowDurationMins: 300},
+    }}, 100);
+    assert.equal(result.status, 'ready');
+    assert.equal(result.windows[0].label, 'Session · 5 hours');
+});
+
+test('primary Codex limits remain first when the app server reorders buckets', () => {
+    const result = codexLimits({rateLimitsByLimitId: {
+        reserve: {limitName: 'Reserve', primary: {usedPercent: 1, windowDurationMins: 10080}},
+        codex: {primary: {usedPercent: 2, windowDurationMins: 300}},
+    }});
+    assert.equal(result.windows[0].id, 'codex:primary');
+    assert.equal(result.windows[1].label, 'Reserve · Weekly');
 });
 
 test('record parsing tracks model and stable session identity', () => {

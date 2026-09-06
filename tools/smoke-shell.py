@@ -44,9 +44,10 @@ def seed_usage(destination):
         days = [{'date': day, 'total': (index + 1) * 125_000, 'sessions': index + 1, 'events': index + 2}
                 for index, day in enumerate(dates)]
         return {
-            'schemaVersion': 1, 'id': provider, 'name': name, 'plan': plan, 'accountKey': 'smoke-fixture',
+            'schemaVersion': 2, 'id': provider, 'name': name, 'plan': plan, 'accountKey': '0' * 64,
             'capabilities': {'limits': True, 'history': True, 'models': True},
             'limits': {'status': 'ready', 'message': '', 'updatedAt': now, 'scope': 'account',
+                       'source': 'Synthetic smoke fixture',
                        'windows': [
                            {'id': f'{provider}:session', 'label': 'Session · 5 hours', 'usedPercent': percentages[0],
                             'used': None, 'limit': None, 'unit': 'percent', 'unlimited': False, 'state': 'active',

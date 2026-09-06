@@ -10,6 +10,7 @@
 .freeby-status-live { color: #57e389; border-color: rgba(87, 227, 137, 0.5); background-color: rgba(87, 227, 137, 0.08); }
 .freeby-status-sync { color: #99c1f1; border-color: rgba(153, 193, 241, 0.5); }
 .freeby-status-local { color: #f6d32d; border-color: rgba(246, 211, 45, 0.45); }
+.freeby-status-cached { color: #c0bfbc; border-color: rgba(192, 191, 188, 0.4); }
 .freeby-selector { spacing: 8px; padding-bottom: 11px; }
 .freeby-actions { spacing: 8px; padding-top: 8px; }
 .freeby-button { padding: 7px 12px; min-height: 26px; border: 1px solid rgba(128, 128, 128, 0.38); border-radius: 1px; background-color: rgba(128, 128, 128, 0.06); }

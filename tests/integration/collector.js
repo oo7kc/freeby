@@ -4,8 +4,10 @@ import System from 'system';
 import {scanHistory} from '../../src/services/history.js';
 import {parseCodexEvent} from '../../src/providers/codex.js';
 import {parseClaudeEvent} from '../../src/providers/claude.js';
-import {findCommand, nodeCli, readJson, writeJson, join} from '../../src/services/files.js';
-import {runCommand} from '../../src/services/process.js';
+import {commandSpec, findCommand} from '../../src/services/commands.js';
+import {readJson, writeJson, join} from '../../src/services/files.js';
+import {requestJson} from '../../src/services/http.js';
+import {RpcClient, runCommand} from '../../src/services/process.js';
 
 function assert(value, message) {
     if (!value)
@@ -29,11 +31,36 @@ GLib.file_set_contents(fixture, `${text}${event(180)}\n{"partial":`);
 const third = scanHistory('codex', [sessions], parseCodexEvent, {now, cachePath});
 assert(third.days.at(-1).total === 180, 'append must count delta only');
 const cache = readJson(cachePath);
-assert(cache.version === 2, 'versioned cache');
+assert(cache.version === 4, 'versioned cache');
 assert(!JSON.stringify(cache).includes('synthetic'), 'session identity must be sanitized in cache');
-writeJson(join(scratch, 'record.json'), {safe: true});
-assert(readJson(join(scratch, 'record.json')).safe, 'atomic JSON roundtrip');
+assert(third.days.at(-1).sessions === 1, 'resumed scans must retain one stable private session identity');
+const privateDirectory = join(scratch, 'private-state');
+GLib.mkdir_with_parents(privateDirectory, 0o755);
+GLib.chmod(privateDirectory, 0o755);
+const privateRecord = join(privateDirectory, 'record.json');
+writeJson(privateRecord, {safe: true});
+assert(readJson(privateRecord).safe, 'atomic JSON roundtrip');
+const directoryInfo = Gio.File.new_for_path(privateDirectory).query_info('unix::mode', Gio.FileQueryInfoFlags.NONE, null);
+assert((directoryInfo.get_attribute_uint32('unix::mode') & 0o777) === 0o700, 'private JSON directory mode');
+const stateInfo = Gio.File.new_for_path(privateRecord).query_info('unix::mode', Gio.FileQueryInfoFlags.NONE, null);
+assert((stateInfo.get_attribute_uint32('unix::mode') & 0o777) === 0o600, 'private JSON file mode');
 print('PASS: GJS history initial scan, cached scan, append, partial line, and private JSON cache');
+
+const replacementRoot = join(scratch, 'replacement');
+GLib.mkdir_with_parents(replacementRoot, 0o700);
+const replacement = join(replacementRoot, 'same-size.jsonl');
+const replacementCache = join(scratch, 'replacement-cache.json');
+GLib.file_set_contents(replacement, `${event(100)}\n`);
+assert(scanHistory('codex', [replacementRoot], parseCodexEvent, {now, cachePath: replacementCache})
+    .days.at(-1).total === 100, 'same-size baseline');
+GLib.usleep(2000);
+GLib.file_set_contents(replacement, `${event(200)}\n`);
+assert(scanHistory('codex', [replacementRoot], parseCodexEvent, {now, cachePath: replacementCache})
+    .days.at(-1).total === 200, 'same-size replacement must invalidate the cache');
+Gio.File.new_for_path(replacement).delete(null);
+const saved = scanHistory('codex', [replacementRoot], parseCodexEvent, {now: now + 1000, cachePath: replacementCache});
+assert(saved.status === 'stale' && saved.days.at(-1).total === 200, 'missing source must retain recent cached history');
+print('PASS: GJS history replacement detection and stale-source recovery');
 
 const claudeProjects = join(scratch, 'claude-projects');
 GLib.mkdir_with_parents(claudeProjects, 0o700);
@@ -52,17 +79,31 @@ for (const version of ['v20.12.0', 'v24.16.0']) {
     const bin = join(scratch, '.local', 'share', 'fnm', 'node-versions', version, 'installation', 'bin');
     GLib.mkdir_with_parents(bin, 0o700);
     const command = join(bin, 'fixture-cli');
-    GLib.file_set_contents(command, `#!/bin/sh\nprintf '${version}'\n`);
+    GLib.file_set_contents(command, '#!/usr/bin/env fixture-runtime\n');
     GLib.chmod(command, 0o700);
-    const runtime = join(bin, 'node');
-    GLib.file_set_contents(runtime, '#!/bin/sh\nexit 0\n');
+    const runtime = join(bin, 'fixture-runtime');
+    GLib.file_set_contents(runtime, `#!/bin/sh\nprintf '${version}'\n`);
     GLib.chmod(runtime, 0o700);
 }
 assert(findCommand('fixture-cli', {home: scratch, usePath: false}).includes('v24.16.0'),
     'version-manager lookup must choose the newest installed runtime');
-const fixtureArgv = nodeCli('fixture-cli', ['status'], {home: scratch, usePath: false});
-assert(fixtureArgv[0].endsWith('/node') && fixtureArgv[1].endsWith('/fixture-cli') && fixtureArgv[2] === 'status',
-    'version-managed Node CLI must use its sibling runtime');
+let invalidName = false;
+try { findCommand('..'); } catch { invalidName = true; }
+assert(invalidName, 'command discovery must reject path-like command names');
+const fixtureSpec = commandSpec('fixture-cli', ['status'], {home: scratch, usePath: false});
+assert(fixtureSpec.argv[0].endsWith('/fixture-cli') && fixtureSpec.argv[1] === 'status',
+    'version-managed command must retain its native entry point');
+assert(fixtureSpec.environment.PATH.split(':')[0].endsWith('/v24.16.0/installation/bin'),
+    'version-managed command directory must lead the child search path');
+const npmBin = join(scratch, '.npm-global', 'bin');
+GLib.mkdir_with_parents(npmBin, 0o700);
+const runtimeCli = join(npmBin, 'runtime-cli');
+GLib.file_set_contents(runtimeCli, '#!/usr/bin/env fixture-runtime\n');
+GLib.chmod(runtimeCli, 0o700);
+const runtimeSpec = commandSpec('runtime-cli', [],
+    {home: scratch, usePath: false, runtimes: ['fixture-runtime']});
+assert(runtimeSpec.environment.PATH.includes('/v24.16.0/installation/bin'),
+    'user-local commands must receive a discovered runtime path');
 print('PASS: GJS version-manager command discovery');
 
 const loop = new GLib.MainLoop(null, false);
@@ -70,9 +111,50 @@ let failed = false;
 (async () => {
     try {
         assert((await runCommand(['/bin/echo', 'fixture'])).trim() === 'fixture', 'subprocess output');
+        assert((await runCommand(fixtureSpec)).trim() === 'v24.16.0',
+            'command environment must resolve its sibling runtime');
+        assert((await runCommand(runtimeSpec)).trim() === 'v24.16.0',
+            'user-local command environment must resolve a version-managed runtime');
+        let invalidEnvironment = false;
+        try {
+            await runCommand({argv: ['/bin/echo', 'fixture'], environment: {PATH: 10}});
+        } catch (error) {
+            invalidEnvironment = error.code === 'INVALID_COMMAND';
+        }
+        assert(invalidEnvironment, 'subprocess environments must contain only strings');
         let timedOut = false;
-        try { await runCommand(['/bin/sleep', '5'], {timeout: 50}); } catch { timedOut = true; }
+        try {
+            await runCommand(['/bin/sleep', '5'], {timeout: 50});
+        } catch (error) {
+            timedOut = error.code === 'TIMED_OUT';
+        }
         assert(timedOut, 'subprocess timeout');
+        let limited = false;
+        try {
+            await runCommand(['/bin/echo', 'too-large'], {maxOutputBytes: 3});
+        } catch (error) {
+            limited = error.code === 'OUTPUT_LIMIT';
+        }
+        assert(limited, 'subprocess output limit');
+        const cancelled = new Gio.Cancellable();
+        cancelled.cancel();
+        let cancellationReported = false;
+        try {
+            await runCommand(['/bin/sleep', '5'], {cancellable: cancelled});
+        } catch (error) {
+            cancellationReported = error.code === 'CANCELLED';
+        }
+        assert(cancellationReported, 'pre-cancelled subprocess must report cancellation');
+        const rpc = new RpcClient(['/bin/cat'], cancelled);
+        assert(rpc.closed, 'pre-cancelled RPC client must close during construction');
+        rpc.close();
+        let insecureEndpoint = false;
+        try {
+            await requestJson('http://example.invalid');
+        } catch (error) {
+            insecureEndpoint = error.message.includes('HTTPS');
+        }
+        assert(insecureEndpoint, 'provider requests must reject insecure endpoints before network access');
         print('PASS: GJS subprocess communication, deadline and termination');
     } catch (error) {
         printerr(error.message);

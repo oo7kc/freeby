@@ -3,34 +3,64 @@
 import argparse
 import json
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import zipfile
 
 
+def checked_file(source, path):
+    """Return a regular, repository-owned packaging input."""
+    if path.is_symlink() or not path.is_file():
+        raise RuntimeError(f'Invalid packaging input: {path}')
+    try:
+        path.resolve().relative_to(source)
+    except ValueError as error:
+        raise RuntimeError(f'Packaging input escapes the source tree: {path}') from error
+    return path
+
+
 def package(source, output):
-    metadata = json.loads((source / 'metadata.json').read_text())
-    version = json.loads((source / 'package.json').read_text())['version']
+    source = source.resolve()
+    metadata_file = checked_file(source, source / 'metadata.json')
+    package_file = checked_file(source, source / 'package.json')
+    metadata = json.loads(metadata_file.read_text())
+    version = json.loads(package_file.read_text())['version']
+    uuid = metadata.get('uuid')
+    if not isinstance(uuid, str) or not re.fullmatch(r'[A-Za-z0-9._-]+@[A-Za-z0-9._-]+', uuid):
+        raise RuntimeError('metadata.json contains an invalid extension UUID')
+    if not isinstance(version, str) or not re.fullmatch(r'[0-9A-Za-z][0-9A-Za-z.+-]*', version):
+        raise RuntimeError('package.json contains an invalid release version')
     files = [source / name for name in ('extension.js', 'prefs.js', 'metadata.json', 'stylesheet.css', 'LICENSE')]
     files.extend(sorted((source / 'src').rglob('*.js')))
-    files.extend(sorted((source / 'schemas').glob('*.xml')))
+    files.append(source / 'schemas' / 'org.gnome.shell.extensions.freeby.gschema.xml')
+    files = [checked_file(source, file) for file in files]
     output.mkdir(parents=True, exist_ok=True)
-    archive = output / f'{metadata["uuid"]}-{version}.zip'
+    archive = output / f'{uuid}-{version}.zip'
+    if archive.is_symlink():
+        raise RuntimeError(f'Refusing to overwrite archive symlink: {archive}')
     with tempfile.TemporaryDirectory(prefix='freeby-schemas-') as scratch:
         subprocess.run(['glib-compile-schemas', '--strict', '--targetdir', scratch, str(source / 'schemas')], check=True)
         payloads = [(file.relative_to(source).as_posix(), file.read_bytes()) for file in files]
         payloads.append(('schemas/gschemas.compiled', (Path(scratch) / 'gschemas.compiled').read_bytes()))
-        with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as target:
+        expected = {name for name, _payload in payloads}
+        if len(expected) != len(payloads):
+            raise RuntimeError('Duplicate paths in extension package')
+        with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as target:
             for name, payload in sorted(payloads):
                 info = zipfile.ZipInfo(name, date_time=(2020, 1, 1, 0, 0, 0))
+                info.create_system = 3
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = 0o100644 << 16
                 target.writestr(info, payload)
         with zipfile.ZipFile(archive) as check:
-            assert check.testzip() is None
-            assert 'schemas/gschemas.compiled' in check.namelist()
-            assert all(not name.startswith(('.AGENTS/', '.github/', 'docs/', 'tests/', 'tools/'))
-                       for name in check.namelist())
+            names = check.namelist()
+            if check.testzip() is not None:
+                raise RuntimeError('Extension archive failed its integrity check')
+            if set(names) != expected:
+                raise RuntimeError('Extension archive contents differ from the runtime allowlist')
+            if any(name.startswith(('.AGENTS/', '.github/', 'docs/', 'tests/', 'tools/')) for name in names):
+                raise RuntimeError('Development-only content entered the extension archive')
     print(archive.resolve())
     return archive
 

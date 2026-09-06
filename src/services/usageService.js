@@ -1,30 +1,35 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
-import {NAMES, mergeRecord, record, section, validateRecord} from '../core/usage.js';
+import {isProvider, mergeRecord, record, section, validateRecord} from '../core/usage.js';
 import {ThresholdTracker} from '../core/notifications.js';
-import {findCommand, join, readJson, stateDirectory, writeJson} from './files.js';
+import {commandSpec} from './commands.js';
+import {join, readJson, stateDirectory, writeJson} from './files.js';
 import {runCommand} from './process.js';
+
+const SCHEDULER_TICK_SECONDS = 15;
+const MANUAL_REFRESH_COOLDOWN_MS = 2000;
+const MAX_BACKOFF_SECONDS = 3600;
 
 export class UsageService {
     constructor(settings, directory, changed, alerts) {
-        this.settings = settings;
-        this.directory = directory;
-        this.changed = changed;
-        this.alerts = alerts;
-        this.records = {};
-        this.jobs = new Map();
-        this.attempts = new Map();
-        this.failures = new Map();
-        this.thresholds = new ThresholdTracker();
-        this.closed = false;
-        this.enabled = [];
+        this._settings = settings;
+        this._directory = directory;
+        this._changed = changed;
+        this._alerts = alerts;
+        this._records = {};
+        this._jobs = new Map();
+        this._attempts = new Map();
+        this._failures = new Map();
+        this._thresholds = new ThresholdTracker();
+        this._closed = false;
+        this._enabled = [];
         this.configure();
-        this.timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 15, () => {
-            for (const id of this.enabled)
+        this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, SCHEDULER_TICK_SECONDS, () => {
+            for (const id of this._enabled)
                 this.refresh(id);
             return GLib.SOURCE_CONTINUE;
         });
-        this.sleepId = Gio.DBus.system.signal_subscribe('org.freedesktop.login1', 'org.freedesktop.login1.Manager',
+        this._sleepId = Gio.DBus.system.signal_subscribe('org.freedesktop.login1', 'org.freedesktop.login1.Manager',
             'PrepareForSleep', '/org/freedesktop/login1', null, Gio.DBusSignalFlags.NONE,
             (_connection, _sender, _path, _interface, _signal, params) => {
                 if (!params.get_child_value(0).get_boolean())
@@ -32,84 +37,136 @@ export class UsageService {
             });
     }
 
+    get enabledProviders() {
+        return [...this._enabled];
+    }
+
+    recordFor(id) {
+        return this._records[id] ?? null;
+    }
+
+    isRefreshing(id) {
+        return this._jobs.has(id);
+    }
+
+    _emitChanged() {
+        try {
+            this._changed();
+        } catch (error) {
+            console.error('Freeby could not update its panel', error);
+        }
+    }
+
+    _emitAlerts(alerts) {
+        try {
+            this._alerts(alerts);
+        } catch (error) {
+            console.error('Freeby could not display a usage alert', error);
+        }
+    }
+
     configure() {
-        this.enabled = [...new Set(this.settings.get_strv('enabled-providers'))].filter(id => NAMES[id]);
-        for (const [id, job] of this.jobs) {
-            if (!this.enabled.includes(id)) {
+        if (this._closed)
+            return;
+        this._enabled = [...new Set(this._settings.get_strv('enabled-providers'))].filter(isProvider);
+        for (const [id, job] of this._jobs) {
+            if (!this._enabled.includes(id)) {
                 job.cancel();
-                this.jobs.delete(id);
+                this._jobs.delete(id);
             }
         }
-        for (const id of this.enabled) {
-            if (this.records[id])
+        for (const id of Object.keys(this._records)) {
+            if (!this._enabled.includes(id)) {
+                delete this._records[id];
+                this._attempts.delete(id);
+                this._failures.delete(id);
+            }
+        }
+        for (const id of this._enabled) {
+            if (this._records[id])
                 continue;
             try {
                 const cached = validateRecord(readJson(join(stateDirectory(), `${id}.json`)), id);
                 for (const key of ['limits', 'history']) {
-                    if (cached[key].updatedAt)
+                    if (['ready', 'partial', 'stale'].includes(cached[key].status))
                         cached[key] = {...cached[key], ...section('stale', 'Showing saved usage while refreshing.'), updatedAt: cached[key].updatedAt};
                 }
-                this.records[id] = cached;
-            } catch { this.records[id] = record(id); }
+                this._records[id] = cached;
+            } catch {
+                this._records[id] = record(id);
+            }
         }
     }
 
     refreshAll(force = false) {
-        for (const id of this.enabled)
+        for (const id of this._enabled)
             this.refresh(id, force);
     }
 
     async refresh(id, force = false) {
-        if (this.closed || !this.enabled.includes(id) || this.jobs.has(id))
+        if (this._closed || !this._enabled.includes(id) || this._jobs.has(id))
             return;
         const now = Date.now();
-        const elapsed = now - (this.attempts.get(id) ?? 0);
-        const wait = Math.min(3600, this.settings.get_int('refresh-interval') * 2 ** (this.failures.get(id) ?? 0));
-        if (elapsed >= 0 && elapsed < (force ? 15000 : wait * 1000))
+        const elapsed = now - (this._attempts.get(id) ?? 0);
+        const wait = Math.min(MAX_BACKOFF_SECONDS,
+            this._settings.get_int('refresh-interval') * 2 ** (this._failures.get(id) ?? 0));
+        if (elapsed >= 0 && elapsed < (force ? MANUAL_REFRESH_COOLDOWN_MS : wait * 1000))
             return;
         const job = new Gio.Cancellable();
-        this.jobs.set(id, job);
-        this.attempts.set(id, now);
-        this.changed();
+        this._jobs.set(id, job);
+        this._attempts.set(id, now);
+        this._emitChanged();
         try {
-            const stdout = await runCommand([findCommand('gjs'), '-m', join(this.directory, 'src', 'collector', 'main.js'),
-                id, String(this.settings.get_int('history-retention-days'))], {cancellable: job, timeout: 45000});
-            if (this.closed || job.is_cancelled() || this.jobs.get(id) !== job)
+            const collector = commandSpec('gjs', ['-m', join(this._directory, 'src', 'collector', 'main.js'),
+                id, String(this._settings.get_int('history-retention-days'))]);
+            const stdout = await runCommand(collector, {cancellable: job, timeout: 45000});
+            if (this._closed || job.is_cancelled() || this._jobs.get(id) !== job)
                 return;
             const result = validateRecord(JSON.parse(stdout), id);
             const failed = ['unavailable', 'missing-auth'].includes(result.limits.status);
-            this.failures.set(id, failed ? Math.min(4, (this.failures.get(id) ?? 0) + 1) : 0);
-            const alerts = this.thresholds.update(result, this.settings.get_int('notification-threshold'));
-            this.records[id] = mergeRecord(this.records[id], result);
-            try { writeJson(join(stateDirectory(), `${id}.json`), this.records[id]); } catch { /* Cache failure must not hide current usage. */ }
-            if (this.settings.get_boolean('notifications-enabled') && alerts.length)
-                this.alerts(alerts);
+            this._failures.set(id, failed ? Math.min(4, (this._failures.get(id) ?? 0) + 1) : 0);
+            const alerts = this._thresholds.update(result, this._settings.get_int('notification-threshold'));
+            this._records[id] = mergeRecord(this._records[id], result);
+            try {
+                writeJson(join(stateDirectory(), `${id}.json`), this._records[id]);
+            } catch {
+                // Cache failure must not hide current usage.
+            }
+            if (this._settings.get_boolean('notifications-enabled') && alerts.length)
+                this._emitAlerts(alerts);
         } catch {
-            if (!this.closed && !job.is_cancelled()) {
-                const failed = record(id);
-                failed.limits = {...failed.limits, ...section('unavailable', 'Collection failed or timed out. Retry from the panel.')};
-                failed.history = {...failed.history, ...section('unavailable', 'History could not be refreshed.')};
-                this.records[id] = mergeRecord(this.records[id], failed);
-                this.failures.set(id, Math.min(4, (this.failures.get(id) ?? 0) + 1));
+            if (!this._closed && !job.is_cancelled()) {
+                const failure = record(id);
+                failure.limits = {...failure.limits,
+                    ...section('unavailable', 'Collection failed or timed out. Retry from the panel.')};
+                failure.history = {...failure.history, ...section('unavailable', 'History could not be refreshed.')};
+                this._records[id] = mergeRecord(this._records[id], failure);
+                this._failures.set(id, Math.min(4, (this._failures.get(id) ?? 0) + 1));
             }
         } finally {
-            if (this.jobs.get(id) === job)
-                this.jobs.delete(id);
-            if (!this.closed)
-                this.changed();
+            if (this._jobs.get(id) === job)
+                this._jobs.delete(id);
+            if (!this._closed)
+                this._emitChanged();
         }
     }
 
     destroy() {
-        this.closed = true;
-        if (this.timer)
-            GLib.source_remove(this.timer);
-        if (this.sleepId)
-            Gio.DBus.system.signal_unsubscribe(this.sleepId);
-        for (const job of this.jobs.values())
+        if (this._closed)
+            return;
+        this._closed = true;
+        if (this._timer) {
+            GLib.source_remove(this._timer);
+            this._timer = 0;
+        }
+        if (this._sleepId) {
+            Gio.DBus.system.signal_unsubscribe(this._sleepId);
+            this._sleepId = 0;
+        }
+        for (const job of this._jobs.values())
             job.cancel();
-        this.jobs.clear();
-        this.changed = () => {};
-        this.alerts = () => {};
+        this._jobs.clear();
+        this._changed = () => {};
+        this._alerts = () => {};
     }
 }

@@ -1,12 +1,20 @@
 import {localDate, number, record, section, validTime, windowUsage} from '../core/usage.js';
 
 const USAGE_URL = 'https://api.anthropic.com/api/oauth/usage';
+const MAX_WINDOWS = 32;
+
+function shortText(value, fallback = null, max = 160) {
+    if (typeof value !== 'string')
+        return fallback;
+    const text = value.trim();
+    return text && !/[\u0000-\u001f\u007f]/.test(text) ? text.slice(0, max) : fallback;
+}
 
 function planLabel(tier, subscription) {
-    const match = String(tier || '').match(/max_(\d+x)/i);
+    const match = shortText(tier, '')?.match(/max_(\d+x)/i);
     if (match)
         return `Max ${match[1]}`;
-    const value = String(subscription || '').trim();
+    const value = shortText(subscription, '', 79);
     return value ? value[0].toUpperCase() + value.slice(1) : null;
 }
 
@@ -14,7 +22,7 @@ export function claudeLogin(credentials) {
     const login = credentials?.claudeAiOauth;
     if (!login || typeof login !== 'object')
         return {token: null, expiresAt: null, plan: null};
-    return {token: String(login.accessToken || '') || null,
+    return {token: shortText(login.accessToken, null, 8192),
         expiresAt: number(login.expiresAt),
         plan: planLabel(login.rateLimitTier, login.subscriptionType)};
 }
@@ -46,7 +54,8 @@ function scopedDuration(kind) {
 
 export function claudeLimits(payload, now = Date.now()) {
     if (!payload || typeof payload !== 'object')
-        return {...section('unavailable', 'Claude did not report any quota windows.'), scope: 'account', windows: []};
+        return {...section('unavailable', 'Claude did not report any quota windows.'),
+            scope: 'account', source: 'Anthropic OAuth usage', windows: []};
     const session = payload.five_hour;
     const weekly = payload.seven_day_oauth_apps ?? payload.seven_day;
     const scoped = Array.isArray(payload.limits) ? payload.limits : [];
@@ -54,6 +63,7 @@ export function claudeLimits(payload, now = Date.now()) {
         ...scoped.map(item => item?.percent)].map(rawUtilization).filter(value => value !== null);
     const percentScale = raw.some(value => value >= 1);
     const windows = [];
+    let truncated = false;
     const add = (id, label, bucket, durationMinutes) => {
         if (!bucket || typeof bucket !== 'object')
             return;
@@ -66,9 +76,13 @@ export function claudeLimits(payload, now = Date.now()) {
     add('weekly', 'Weekly', weekly, 10080);
     const seen = new Set();
     for (const item of scoped) {
+        if (windows.length >= MAX_WINDOWS) {
+            truncated = true;
+            break;
+        }
         const model = item?.scope?.model;
-        const name = String(model?.display_name || model?.id || '').trim();
-        const kind = String(item?.kind || '').trim();
+        const name = shortText(model?.display_name ?? model?.id, '', 100);
+        const kind = shortText(item?.kind, '', 40);
         const key = `${name}:${kind}`;
         if (!name || seen.has(key))
             continue;
@@ -82,8 +96,11 @@ export function claudeLimits(payload, now = Date.now()) {
         }
     }
     return windows.length
-        ? {...section('ready'), updatedAt: now, scope: 'account', source: 'Anthropic OAuth usage', windows}
-        : {...section('unavailable', 'Claude did not report any supported quota windows.'), scope: 'account', windows: []};
+        ? {...section(truncated ? 'partial' : 'ready',
+            truncated ? 'Some Claude quota windows were omitted to keep the response bounded.' : ''),
+        updatedAt: now, scope: 'account', source: 'Anthropic OAuth usage', windows}
+        : {...section('unavailable', 'Claude did not report any supported quota windows.'),
+            scope: 'account', source: 'Anthropic OAuth usage', windows: []};
 }
 
 export function parseClaudeEvent(entry, state) {
@@ -93,7 +110,7 @@ export function parseClaudeEvent(entry, state) {
     const usage = message.usage ?? entry.usage;
     if (!usage || typeof usage !== 'object')
         return null;
-    if (entry.sessionId)
+    if (typeof entry.sessionId === 'string' && entry.sessionId)
         state.session = entry.sessionId;
     const timestamp = entry.timestamp ?? message.timestamp;
     const date = localDate(timestamp);
@@ -105,7 +122,7 @@ export function parseClaudeEvent(entry, state) {
     const cacheWrite = number(usage.cache_creation_input_tokens ?? usage.cacheCreationInputTokens) ?? 0;
     if (input + output + cacheRead + cacheWrite === 0)
         return null;
-    const model = message.model ?? entry.model ?? state.model ?? 'Unknown model';
+    const model = shortText(message.model ?? entry.model ?? state.model, 'Unknown model');
     state.model = model;
     const identity = message.id ?? entry.messageId ?? entry.uuid ?? entry.requestId ?? `${timestamp}:${JSON.stringify(usage)}`;
     return {id: `${state.session}:${identity}`, session: state.session, date, model,
@@ -113,6 +130,7 @@ export function parseClaudeEvent(entry, state) {
 }
 
 export async function collectClaude(io) {
+    const now = io.now?.() ?? Date.now();
     const result = record('claude');
     result.capabilities = {limits: true, history: true, models: true};
     result.history = io.scan('claude', ['projects'], parseClaudeEvent);
@@ -125,7 +143,7 @@ export async function collectClaude(io) {
         return result;
     }
     result.accountKey = io.fingerprint(login.token);
-    if (login.expiresAt && login.expiresAt <= Date.now()) {
+    if (login.expiresAt && login.expiresAt <= now) {
         result.limits = {...result.limits, ...section('missing-auth', 'Claude Code sign-in expired. Start Claude Code or run claude auth login.')};
         return result;
     }
@@ -136,7 +154,7 @@ export async function collectClaude(io) {
             Accept: 'application/json',
         }});
         if (response.status === 200) {
-            result.limits = claudeLimits(response.data);
+            result.limits = claudeLimits(response.data, now);
         } else {
             result.limits = {...result.limits, ...section([401, 403].includes(response.status) ? 'missing-auth' : 'unavailable',
                 [401, 403].includes(response.status) ? 'Reconnect Claude Code to read account limits.' :

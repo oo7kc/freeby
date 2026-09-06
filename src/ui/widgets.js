@@ -1,5 +1,6 @@
 import Atk from 'gi://Atk';
 import Clutter from 'gi://Clutter';
+import Pango from 'gi://Pango';
 import St from 'gi://St';
 
 export function label(text, style = '', expand = false) {
@@ -9,7 +10,9 @@ export function label(text, style = '', expand = false) {
 
 export function row(left, right, style = 'freeby-row') {
     const box = new St.BoxLayout({style_class: style, x_expand: true});
-    box.add_child(label(left, '', true));
+    const title = label(left, '', true);
+    title.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+    box.add_child(title);
     box.add_child(label(right, 'freeby-number'));
     return box;
 }
@@ -34,8 +37,9 @@ export function modelMeter(left, right, fraction, name) {
         accessible_role: Atk.Role.PROGRESS_BAR});
     const fill = new St.Widget({style_class: 'freeby-model-fill'});
     const content = new St.BoxLayout({style_class: 'freeby-model-content'});
-    content.add_child(label(left, 'freeby-model-name'));
-    content.add_child(new St.Widget({x_expand: true}));
+    const title = label(left, 'freeby-model-name', true);
+    title.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+    content.add_child(title);
     content.add_child(label(right, 'freeby-number'));
     track.add_child(fill);
     track.add_child(content);
