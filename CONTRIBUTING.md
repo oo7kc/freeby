@@ -10,7 +10,7 @@ Install Node.js 20 or newer, GJS, Soup 3 introspection data, Meson, Ninja, and t
 GLib schema compiler. Then run:
 
 ```bash
-git clone https://github.com/kcnewman/freeby.git
+git clone https://github.com/oo7kc/freeby.git
 cd freeby
 git switch dev
 npm run check

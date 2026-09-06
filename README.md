@@ -37,7 +37,7 @@ subscription usage.
 Development happens on the `dev` branch:
 
 ```bash
-git clone https://github.com/kcnewman/freeby.git
+git clone https://github.com/oo7kc/freeby.git
 cd freeby
 git switch dev
 meson setup build --prefix="$HOME/.local"
