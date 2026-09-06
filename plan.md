@@ -1,7 +1,7 @@
 # Freeby usage monitor roadmap
 
-Updated: 2026-09-06. Status: foundation and Codex implementation complete;
-alpha.1 release publication pending.
+Updated: 2026-09-06. Status: alpha.1 released; Claude Code is the active
+alpha.2 milestone.
 
 ## Agreed direction
 
@@ -129,12 +129,16 @@ coverage during the foundation work:
 - [x] Build the native provider header, quota meters, activity/model views, status footer, and loading/error/setup states.
 - [x] Keep existing provider behavior working until deliberately migrated; document any verified data limitations.
 - [x] Verify the complete Codex path, temporary installation, disable/re-enable cleanup, and offline/partial behavior.
-- [ ] Commit, tag, publish, and verify the installable alpha.1 prerelease.
+- [x] Commit, tag, publish, and verify the installable alpha.1 prerelease.
 
 Evidence: 13 deterministic unit tests, GJS incremental-history and process
 integration checks, strict schema validation, deterministic packaging, an
 isolated GNOME Shell 50 load/disable/re-enable smoke test, and a redacted live
 Codex CLI check confirming account quota, seven-day activity, and model data.
+Released from commit `ce64146` on `dev` as
+[`v2.0.0-alpha.1`](https://github.com/oo7kc/freeby/releases/tag/v2.0.0-alpha.1).
+The downloaded 22,488-byte archive matched the tagged CI artifact at SHA-256
+`eef63b1978b13f2adda9fe3c172cebfe7584835461f1b07f2b8ffd8b887b56fb`.
 
 ### 2. Claude Code — v2.0.0-alpha.2
 
