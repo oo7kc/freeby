@@ -1,7 +1,7 @@
 # Freeby usage monitor roadmap
 
-Updated: 2026-09-06. Status: alpha.2 released; Cursor is the active alpha.3
-milestone.
+Updated: 2026-09-06. Status: post-alpha.2 repository organization complete;
+Cursor is the active alpha.3 milestone.
 
 ## Agreed direction
 
@@ -21,8 +21,8 @@ cover all four providers; earlier prereleases introduce them incrementally.
 
 ## Reference analysis and interface
 
-The [Claude reference](reference-images/1.jpeg) and
-[Codex reference](reference-images/2.png) share this structure:
+The [Claude reference](../references/claude-usage.jpeg) and
+[Codex reference](../references/codex-usage.png) share this structure:
 
 1. Provider mark, name, and reported plan.
 2. A selector for connected/enabled providers; omit the selector when only one exists.
@@ -52,35 +52,31 @@ process. Avoid a persistent background daemon in this first iteration.
 
 ```text
 freeby/
-├── AGENTS.md
-├── plan.md
+├── .AGENTS/                    # Rules, roadmap, archive, design references
+├── AGENTS.md                   # Tool-discovery entrypoint
 ├── extension.js                 # GNOME lifecycle entry
 ├── prefs.js                     # Preferences entry
 ├── metadata.json
 ├── stylesheet.css
 ├── src/
 │   ├── core/                    # Contract, validation, aggregation, formatting
-│   ├── providers/               # Codex, Claude, Cursor, Copilot adapters
+│   ├── providers/               # One adapter per provider
 │   ├── services/                # Scheduling, cache, processes, notifications
 │   ├── collector/               # Managed GJS collection entry
 │   ├── ui/                      # Indicator, selector, meters, charts
-│   └── preferences/             # Configuration pages
 ├── schemas/
-├── assets/
 ├── tests/
 │   ├── unit/
-│   ├── integration/
-│   └── fixtures/
+│   └── integration/
 ├── tools/                       # Development and packaging commands
-├── docs/                        # Architecture, provider contracts, release guide
-├── reference-images/            # Development references, excluded from archives
+├── docs/                        # Architecture, provider docs, historical screenshots
 ├── meson.build
 └── .github/workflows/
 ```
 
-This is a target layout, not a claim that these modules already exist. Move code
-in reviewable steps and preserve existing behavior until its replacement is
-verified. Keep transitional scripts only while needed; do not ship unused code.
+Keep this layout current as modules land. Add a directory only when it owns real
+content, preserve existing behavior during moves, and do not retain superseded
+runtime implementations.
 
 ### Usage contract
 
@@ -156,6 +152,20 @@ Released from commit `48b28ac` on `dev` as
 The downloaded 25,249-byte archive matched the tagged CI artifact at SHA-256
 `04f8417dd0fd0cafdc636293134ce80bf1477a0e6b39342e9f3681bffbef6fae`.
 
+### Repository organization checkpoint
+
+- [x] Consolidate agent rules, active/historical plans, and visual references
+  under `.AGENTS/` while retaining the root discovery entrypoint.
+- [x] Remove obsolete v1 runtime/test files and split provider ownership cleanly.
+- [x] Add architecture/documentation indexes and enforce the intended layout in
+  development checks.
+- [x] Verify and commit the organization checkpoint on `dev` before alpha.3.
+
+Evidence: `npm run verify` passed 20 unit tests, the Codex/Claude GJS history
+and subprocess integration suite, strict schema/layout/link validation, and a
+deterministic alpha.3-dev package. The exact archive loaded, disabled, and
+re-enabled without extension errors in an isolated GNOME Shell 50 session.
+
 ### 3. Cursor — v2.0.0-alpha.3
 
 - [ ] Revalidate current Cursor authentication and usage sources for free and paid accounts.
@@ -222,7 +232,7 @@ Documentation setup is preparatory work and does not trigger a product prereleas
 - [Omarchy Agents architecture and panel behavior](https://github.com/omacom/omarchy/blob/quattro/shell/plugins/agents/README.md)
 - [Codex app-server documentation](https://learn.chatgpt.com/docs/app-server)
 - [GNOME extension review guidelines](https://gjs.guide/extensions/review-guidelines/review-guidelines.html)
-- [Archived v1 planning notes](docs/planning/v1-notes.md), including a Cursor no-subscription investigation that requires revalidation.
+- [Archived v1 planning notes](archive/v1-notes.md), including a Cursor no-subscription investigation that requires revalidation.
 
 Sources describe the state inspected during planning; verify them again before
 depending on a provider interface or publishing compatibility claims. If upstream

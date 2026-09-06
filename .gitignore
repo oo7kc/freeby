@@ -1,7 +1,11 @@
-build/
+/build/
+/dist/
+/.cache/
+meson-private/
+
+__pycache__/
+*.py[cod]
 *.swp
 *.swo
 *~
-.cache/
-meson-private/
-plan.md
+.DS_Store

@@ -23,5 +23,35 @@ if (metadata.uuid !== 'freeby@kelvin.local')
 const version = JSON.parse(readFileSync('package.json', 'utf8')).version;
 if (!readFileSync('meson.build', 'utf8').includes(`version: '${version}'`))
     throw new Error('Meson and package versions differ');
+
+const required = ['AGENTS.md', '.AGENTS/README.md', '.AGENTS/plans/roadmap.md',
+    '.AGENTS/rules/architecture.md', '.AGENTS/rules/quality.md', '.AGENTS/rules/releases.md',
+    'docs/README.md', 'docs/architecture.md'];
+for (const file of required) {
+    if (!existsSync(file))
+        throw new Error(`Missing repository guidance: ${file}`);
+}
+const obsolete = ['plan.md', 'indicator.js', 'src/providers/legacy.js', 'scripts/freeby.sh',
+    'scripts/copilot-setup.sh', 'tests/freeby.bats', 'docs/s1.png', 'docs/s2.png', 'reference-images'];
+for (const file of obsolete) {
+    if (existsSync(file))
+        throw new Error(`Obsolete repository path returned: ${file}`);
+}
+for (const file of walk('.AGENTS/rules')) {
+    if (readFileSync(file, 'utf8').split('\n').length > 50)
+        throw new Error(`${file}: agent rules must stay focused and under 50 lines`);
+}
+const markdown = ['README.md', 'CONTRIBUTING.md', 'AGENTS.md', ...walk('.AGENTS'), ...walk('docs')]
+    .filter(file => file.endsWith('.md'));
+for (const file of markdown) {
+    const text = readFileSync(file, 'utf8');
+    for (const [, target] of text.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
+        if (/^(?:https?:|#|mailto:)/.test(target))
+            continue;
+        const path = target.split('#')[0];
+        if (path && !existsSync(resolve(dirname(file), path)))
+            throw new Error(`${file}: broken relative link ${target}`);
+    }
+}
 execFileSync('glib-compile-schemas', ['--strict', '--dry-run', 'schemas']);
-console.log(`Syntax, imports, formatting, release metadata and schema checks passed (${files.length} JavaScript files).`);
+console.log(`Syntax, imports, formatting, repository layout, links, release metadata and schema checks passed (${files.length} JavaScript files).`);

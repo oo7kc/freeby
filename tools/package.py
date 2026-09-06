@@ -29,7 +29,8 @@ def package(source, output):
         with zipfile.ZipFile(archive) as check:
             assert check.testzip() is None
             assert 'schemas/gschemas.compiled' in check.namelist()
-            assert all(not name.startswith(('tests/', 'tools/', 'reference-images/')) for name in check.namelist())
+            assert all(not name.startswith(('.AGENTS/', '.github/', 'docs/', 'tests/', 'tools/'))
+                       for name in check.namelist())
     print(archive.resolve())
     return archive
 

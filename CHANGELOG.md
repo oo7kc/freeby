@@ -3,6 +3,23 @@
 All notable changes are documented here. Freeby uses semantic prerelease versions
 while version 2 is developed on the `dev` branch.
 
+## Unreleased
+
+### Changed
+
+- Consolidated agent rules, the active roadmap, archived planning notes, and
+  visual implementation references under `.AGENTS/`, with a minimal root
+  `AGENTS.md` discovery entrypoint.
+- Added documentation indexes and a runtime architecture guide; historical v1
+  screenshots now live under `docs/assets/screenshots/v1/`.
+- Split the temporary combined provider module into dedicated Cursor and Copilot
+  adapters without changing their preview behavior.
+
+### Removed
+
+- Removed the superseded v1 indicator, Bash collector/setup scripts, and their
+  obsolete Bats suite. These files were no longer installed after alpha.1.
+
 ## 2.0.0-alpha.2 - 2026-09-06
 
 ### Added

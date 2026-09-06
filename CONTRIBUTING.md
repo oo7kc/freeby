@@ -40,5 +40,6 @@ private headless GNOME Shell session when GNOME Shell is available locally.
 - Preserve GNOME theme behavior, keyboard focus, accessible names, and readable
   scaling when changing the panel UI.
 
-The authoritative milestone gates and release process are in [plan.md](plan.md).
-Project-wide agent guidance is in [AGENTS.md](AGENTS.md).
+The authoritative milestone gates and release process are in
+[.AGENTS/plans/roadmap.md](.AGENTS/plans/roadmap.md). Project-wide agent guidance
+starts in [AGENTS.md](AGENTS.md), with the substantive rules under `.AGENTS/`.

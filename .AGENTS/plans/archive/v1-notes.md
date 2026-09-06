@@ -4,7 +4,7 @@ Preserved from the original local `plan.md` on 2026-09-06. These are historical
 investigation notes, not verified descriptions of the current implementation.
 Some claims about disabled providers, completed fixes, quota periods, and
 packaging differ from the current code. Revalidate any provider-specific
-assumptions before using them. The active roadmap is [../../plan.md](../../plan.md).
+assumptions before using them. The active roadmap is [../roadmap.md](../roadmap.md).
 
 ---
 

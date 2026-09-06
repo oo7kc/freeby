@@ -5,7 +5,8 @@ import System from 'system';
 import {record, section} from '../core/usage.js';
 import {collectClaude} from '../providers/claude.js';
 import {collectCodex} from '../providers/codex.js';
-import {collectLegacy} from '../providers/legacy.js';
+import {collectCopilot} from '../providers/copilot.js';
+import {collectCursor} from '../providers/cursor.js';
 import {fingerprint, findCommand, join, readJson} from '../services/files.js';
 import {scanHistory} from '../services/history.js';
 import {requestJson} from '../services/http.js';
@@ -63,7 +64,8 @@ const io = {
 (async () => {
     try {
         const result = id === 'codex' ? await collectCodex(io)
-            : id === 'claude' ? await collectClaude(io) : await collectLegacy(id, io);
+            : id === 'claude' ? await collectClaude(io)
+                : id === 'cursor' ? await collectCursor(io) : await collectCopilot(io);
         if (!cancellable.is_cancelled())
             print(JSON.stringify(result));
     } catch {

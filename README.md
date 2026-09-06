@@ -97,5 +97,6 @@ artifacts are never deleted. To downgrade, install an older release archive with
 `gnome-extensions install --force` and restart the session.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development practices and
-[plan.md](plan.md) for the ordered provider milestones. Freeby is licensed under
-the [MIT License](LICENSE).
+[.AGENTS/plans/roadmap.md](.AGENTS/plans/roadmap.md) for the ordered provider
+milestones. Architecture and provider documentation is indexed in
+[docs/README.md](docs/README.md). Freeby is licensed under the [MIT License](LICENSE).
