@@ -1,6 +1,7 @@
 # Freeby usage monitor roadmap
 
-Updated: 2026-09-06. Status: roadmap agreed; implementation milestones have not started.
+Updated: 2026-09-06. Status: foundation and Codex implementation complete;
+alpha.1 release publication pending.
 
 ## Agreed direction
 
@@ -122,13 +123,18 @@ coverage during the foundation work:
 
 ### 1. Foundation and Codex — v2.0.0-alpha.1
 
-- [ ] Establish the target module boundaries, versioned contract, development commands, and fixture-based tests.
-- [ ] Repair the known lifecycle, notification, quota-state, and install/uninstall regressions.
-- [ ] Implement bounded Codex collection, cached results, available quota windows, daily activity, and model totals.
-- [ ] Build the native provider header, quota meters, activity/model views, status footer, and loading/error/setup states.
-- [ ] Keep existing provider behavior working until deliberately migrated; document any verified data limitations.
-- [ ] Verify the complete Codex path, temporary installation, disable/re-enable cleanup, and offline/partial behavior.
+- [x] Establish the target module boundaries, versioned contract, development commands, and fixture-based tests.
+- [x] Repair the known lifecycle, notification, quota-state, and install/uninstall regressions.
+- [x] Implement bounded Codex collection, cached results, available quota windows, daily activity, and model totals.
+- [x] Build the native provider header, quota meters, activity/model views, status footer, and loading/error/setup states.
+- [x] Keep existing provider behavior working until deliberately migrated; document any verified data limitations.
+- [x] Verify the complete Codex path, temporary installation, disable/re-enable cleanup, and offline/partial behavior.
 - [ ] Commit, tag, publish, and verify the installable alpha.1 prerelease.
+
+Evidence: 13 deterministic unit tests, GJS incremental-history and process
+integration checks, strict schema validation, deterministic packaging, an
+isolated GNOME Shell 50 load/disable/re-enable smoke test, and a redacted live
+Codex CLI check confirming account quota, seven-day activity, and model data.
 
 ### 2. Claude Code — v2.0.0-alpha.2
 

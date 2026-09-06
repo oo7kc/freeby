@@ -1,120 +1,95 @@
-<p align="center">
-  <h1 align="center">Freeby</h1>
-  <p align="center">Track your free-tier AI coding tool usage at a glance.</p>
-</p>
+# Freeby
 
-<p align="center">
-  <img src="docs/s1.png" width="400" alt="Panel indicator" />
-  <img src="docs/s2.png" width="400" alt="Dropdown menu" />
-</p>
+Freeby is a native GNOME Shell usage monitor for AI coding tools. It keeps
+account limits, reset windows, recent local token activity, and model totals one
+click away in the top panel.
 
-<p align="center">
-  <a href="#features">Features</a> ·
-  <a href="#supported-providers">Providers</a> ·
-  <a href="#install">Install</a> ·
-  <a href="#settings">Settings</a> ·
-  <a href="#contributing">Contributing</a> ·
-  <a href="https://github.com/kcnewman/freeby/releases">Releases</a>
-</p>
+Version 2 is being delivered provider by provider. `v2.0.0-alpha.1` is the Codex
+milestone: Codex limits and local activity are verified end to end. Cursor and
+Copilot adapters remain available as opt-in previews while their dedicated
+milestones are completed; Claude Code follows next.
 
-### Features
+## What the Codex milestone includes
 
-- **Panel indicator** — colored `ai·N` shows available providers at a glance
-- **Dropdown** — per-provider usage, limits, and reset countdown
-- **Notifications** — desktop alert when a provider hits its limit
-- **Auto-refresh on wake** — refreshes immediately after sleep
-- **Parallel fetches** — all providers queried in parallel (~2s)
-- **Configurable** — adjust refresh interval and notifications in settings
-- **Accessible** — screen reader support for all UI elements
-- **Theme-aware** — works with light and dark GNOME themes
+- Account quota windows from the installed Codex CLI's app-server interface.
+- Reset countdowns without guessing missing values.
+- Seven-day local token activity and per-model input, output, and cache totals.
+- Cached results shown as stale while a provider independently refreshes.
+- Explicit unavailable, unsupported, missing-authentication, and exhausted states.
+- Bounded collectors, refresh backoff, wake refresh, cancellation on disable, and
+  threshold-crossing notifications.
+- A native, theme-aware, keyboard-focusable GNOME panel interface.
 
-### Supported providers
+Freeby stores only derived usage metadata under the standard XDG state/cache
+directories. It does not copy prompts, responses, transcripts, or credentials.
+Local activity covers this device only and must not be interpreted as billing or
+subscription usage.
 
-| Provider | Auth source | Data source |
-|---|---|---|
-| 🟡 **Codex** | `~/.codex/auth.json` | `codex-check` CLI |
-| 🟢 **Cursor** | `~/.config/cursor/auth.json` | Cursor API |
-| 🟠 **Copilot** | `gh` CLI or `~/.config/freeby/copilot-token` | GitHub API |
+## Requirements
 
-### Install
+- GNOME Shell 50 (the version verified for this prerelease).
+- Codex CLI installed and signed in for account limits.
+- GJS with Gio/GLib and Soup 3 introspection data.
+- Meson, Ninja, and `glib-compile-schemas` when installing from source.
 
-**Prerequisites**
+## Install from source
 
-- GNOME Shell 45+ (Wayland or X11)
-- `python3`, `curl`, `meson`, `ninja-build`
-- `npx` (for Codex)
-- `gh` CLI (for Copilot, optional)
-
-<details>
-<summary>Fedora</summary>
+Development happens on the `dev` branch:
 
 ```bash
-sudo dnf install meson ninja-build python3 curl glib2-devel
-```
-</details>
-
-<details>
-<summary>Ubuntu / Debian</summary>
-
-```bash
-sudo apt install meson ninja-build python3 curl libglib2.0-dev-bin
-```
-</details>
-
-**Build and install**
-
-```bash
-git clone https://github.com/kcnewman/freeby.git && cd freeby
-meson setup build --prefix=$HOME/.local
+git clone https://github.com/kcnewman/freeby.git
+cd freeby
+git switch dev
+meson setup build --prefix="$HOME/.local"
 meson install -C build
-```
-
-Then restart your session and enable:
-
-```bash
 gnome-extensions enable freeby@kelvin.local
 ```
 
-> **Copilot users:** If `gh` isn't installed, run `copilot-setup.sh` first.
-
-### Settings
-
-| Setting | Default | Range | Description |
-|---|---|---|---|
-| Refresh interval | `120s` | 30–3600s | How often to check usage |
-| Notifications | `on` | — | Alert when a provider hits its limit |
-
-Configure via Extension Manager or CLI:
+Log out and back in if GNOME Shell has not discovered the extension. An archive
+from a GitHub release can instead be installed with:
 
 ```bash
-gsettings --schemadir ~/.local/share/glib-2.0/schemas \
-  set org.gnome.shell.extensions.freeby refresh-interval 60
+gnome-extensions install --force freeby@kelvin.local-2.0.0-alpha.1.zip
 ```
 
-### Uninstall
+## Settings
+
+The alpha.1 preferences window controls refresh frequency and notifications.
+The underlying schema also supports the default provider, ordered enabled
+providers, history retention, and notification threshold; these receive their
+full preferences interface in alpha.5.
+
+To opt into a preview adapter during development:
+
+```bash
+gsettings set org.gnome.shell.extensions.freeby enabled-providers "['codex', 'cursor', 'copilot']"
+```
+
+Preview providers are not part of the alpha.1 compatibility promise.
+
+## Verify a checkout
+
+```bash
+npm run check
+npm run pack
+python3 tools/smoke-shell.py
+```
+
+The final command starts a private headless GNOME session and does not enable the
+extension in the active desktop. Live-provider checks are intentionally separate
+from credential-free automated fixtures.
+
+## Uninstall or downgrade
 
 ```bash
 gnome-extensions disable freeby@kelvin.local
-rm -rf ~/.local/share/gnome-shell/extensions/freeby@kelvin.local
-rm -f ~/.local/bin/freeby.sh ~/.local/bin/copilot-setup.sh
-rm -f ~/.local/share/glib-2.0/schemas/org.gnome.shell.extensions.freeby.gschema.xml
-rm -f ~/.local/share/glib-2.0/schemas/gschemas.compiled
+rm -rf "$HOME/.local/share/gnome-shell/extensions/freeby@kelvin.local"
 ```
 
-### Debug
+The extension-local schema is removed with that directory; shared system schema
+artifacts are never deleted. To downgrade, install an older release archive with
+`gnome-extensions install --force` and restart the session.
 
-```bash
-# test the data script
-bash ~/.local/bin/freeby.sh | python3 -m json.tool
-
-# watch extension logs
-journalctl -f -o cat /usr/bin/gnome-shell
-```
-
-### Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
-
-### License
-
-[MIT](LICENSE)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development practices and
+[plan.md](plan.md) for the ordered provider milestones. Freeby is licensed under
+the [MIT License](LICENSE).

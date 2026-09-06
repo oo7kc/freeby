@@ -1,89 +1,47 @@
 # Changelog
 
-## v1.0.2
+All notable changes are documented here. Freeby uses semantic prerelease versions
+while version 2 is developed on the `dev` branch.
 
-### Fixed
-- Added GNOME 49 and 50 to shell-version compatibility
-- Removed deprecated `version` field from metadata.json
-- Dropdown now stays open when clicking refresh (deferred reopen)
-- Removed invalid `accessible_name` from PopupMenuItem (caused extension to fail loading)
-
-## v1.0.1
+## 2.0.0-alpha.1 - 2026-09-06
 
 ### Added
-- Accessible names for screen readers on panel indicator, dots, and summaries
-- System theme support in CSS (uses `currentColor` and opacity for better theme integration)
-- CONTRIBUTING.md with development setup and code style guidelines
-- GitHub Actions CI: shellcheck, meson build, bats tests
-- Bats test suite for shell script (JSON structure, required fields, cleanup)
 
-### Changed
-- CSS colors use `currentColor` where possible for better theme compatibility
-- Status dot and summary text use opacity for dimmed states instead of hardcoded colors
-
-## v1.0.0
-
-### Fixed
-- Crash when subprocess returns empty/null output
-- Race condition from concurrent refresh calls (clicking during auto-refresh)
-- Stale async callback after extension disable
-- False "limit reached" notification on first refresh
-- Schema not compiled during install (gsettings now works out of the box)
-- Codex percentage parser using string instead of boolean for `has_remaining`
-- Copilot percentage exceeding 100% on overages
-- Cursor showing "resets now" when billing cycle end is unknown
-- `copilot-setup.sh` infinite loop (now times out after 5 minutes)
-- Shell script temp directory shadowing system `$TMPDIR`
-- Shell script hanging forever when curl or npx times out
-
-### Changed
-- Consistent percentage display across all providers
-- Metadata: added `version` and `settings-schema` fields
-- Metadata: removed unreleased GNOME shell versions from compatibility list
-- GSettings: enforced 30–3600s range on refresh interval
-- Build: schema compilation now runs automatically during `meson install`
-- README: added prerequisites, uninstall instructions, corrected copilot-setup path
-
-### Security
-- Fixed Python code injection risk when `$HOME` contains single quotes
-- Removed unused `json_escape` function
-
-## v0.5.0
+- Versioned provider-neutral usage contract with explicit capabilities, source
+  scope, freshness, quota states, reset timestamps, and token categories.
+- Bounded Codex app-server collection for account rate limits.
+- Incremental local Codex history scanning with seven-day and model aggregates.
+- Private XDG state/cache persistence, stale-data recovery, and refresh backoff.
+- Native provider header, quota meters, daily activity, model totals, status
+  footer, setup/error states, and accessible controls.
+- Deterministic archive packaging, unit tests, GJS integration tests, and an
+  isolated headless GNOME lifecycle smoke test.
 
 ### Fixed
-- Dropdown now stays open when clicking the refresh icon
-- Consistent percentage display for Copilot (was showing token counts)
 
-## v0.4.0
+- Refresh now occurs after resume rather than before suspend.
+- Provider jobs no longer overlap or update destroyed UI.
+- Notifications require a verified threshold crossing and are deduplicated per
+  account, quota window, and reset period.
+- Missing or empty provider responses are no longer reported as zero usage.
+- Runtime `npx` downloads and unbounded collection processes were removed.
+- Schemas install inside the extension and uninstall no longer requires deleting
+  a shared compiled schema file.
 
-### Added
-- Desktop notifications on provider limit hit
-- Auto-refresh on wake from sleep (systemd PrepareForSleep)
-- Configurable refresh interval via gsettings
-- Settings UI in Extension Manager (prefs.js)
-- Parallel provider fetches (4.6s → 1.9s)
+### Known limitations
 
-### Changed
-- Split extension.js into extension.js + indicator.js + prefs.js
+- GNOME Shell 50 is the only compatibility target verified for alpha.1.
+- Codex activity is local to this device. Account quota limits and local token
+  history intentionally remain separate scopes.
+- Cursor and Copilot adapters are preview-only until alpha.3 and alpha.4.
+- Claude Code support is scheduled for alpha.2.
 
-## v0.3.0
+## 1.0.2 - 2026-04-27
 
-### Added
-- Click panel to refresh
-- Clickable refresh icon in dropdown
-- `has_remaining` field for accurate provider count
+- Added GNOME 49 and 50 metadata compatibility and removed deprecated extension
+  version metadata.
+- Kept the dropdown open after manual refresh and fixed an invalid popup
+  accessibility property.
 
-### Fixed
-- Consistent comma separator and countdown format
-- Codex parsed via `--json` flag for reliable parsing
-
-## v0.2.0
-
-### Added
-- Real provider integrations: Codex, Cursor, Copilot
-- `copilot-setup.sh` device-flow auth script
-- Panel indicator with colored status
-
-## v0.1.0
-
-- Initial release with placeholder data
+Earlier release history remains available in the repository's Git tags and
+GitHub releases.
