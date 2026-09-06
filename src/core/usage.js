@@ -1,5 +1,5 @@
 export const SCHEMA_VERSION = 1;
-export const NAMES = {codex: 'Codex', cursor: 'Cursor', copilot: 'Copilot'};
+export const NAMES = {codex: 'Codex', claude: 'Claude Code', cursor: 'Cursor', copilot: 'Copilot'};
 export const STATES = new Set(['loading', 'ready', 'partial', 'stale', 'missing-auth', 'unsupported', 'unavailable']);
 export const WINDOW_STATES = new Set(['active', 'exhausted', 'unlimited']);
 
@@ -42,7 +42,8 @@ export function windowUsage({id, label, usedPercent, used, limit, unit = 'percen
 export function validTime(value) {
     if (value === null || value === undefined || value === '')
         return null;
-    const ms = typeof value === 'number' ? value : Date.parse(value);
+    const numeric = typeof value === 'number' || /^\d+(\.\d+)?$/.test(String(value).trim()) ? Number(value) : null;
+    const ms = numeric !== null ? (numeric < 1e12 ? numeric * 1000 : numeric) : Date.parse(value);
     return Number.isFinite(ms) && ms > 0 ? ms : null;
 }
 
@@ -78,7 +79,11 @@ export function mergeRecord(previous, next) {
         const current = next[key];
         if (['unavailable', 'missing-auth'].includes(current.status) && old?.updatedAt &&
             ['ready', 'partial', 'stale'].includes(old.status)) {
-            result[key] = {...old, status: 'stale', message: current.message};
+            const preserved = key === 'limits'
+                ? {...old, windows: old.windows.filter(window => !window.resetsAt || window.resetsAt > Date.now())}
+                : old;
+            if (key !== 'limits' || preserved.windows.length)
+                result[key] = {...preserved, status: 'stale', message: current.message};
         }
     }
     result.plan ??= previous.plan;

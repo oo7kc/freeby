@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {aggregateEvents, highestUsage, mergeRecord, number, recentDates, record, validateRecord, windowUsage} from '../../src/core/usage.js';
+import {aggregateEvents, highestUsage, mergeRecord, number, recentDates, record, validTime, validateRecord, windowUsage} from '../../src/core/usage.js';
 import {resetTime, tokens} from '../../src/core/format.js';
 import {ThresholdTracker} from '../../src/core/notifications.js';
 
@@ -45,6 +45,19 @@ test('failure preserves last successful values as stale, account change discards
     assert.equal(mergeRecord(old, next).limits.windows.length, 0);
 });
 
+test('stale quota windows are discarded after their reset', () => {
+    const old = record('claude');
+    old.limits = {status: 'ready', updatedAt: 100, windows: [
+        {id: 'expired', resetsAt: 1},
+        {id: 'open', resetsAt: Date.now() + 60000},
+    ]};
+    const next = record('claude');
+    next.limits.status = 'unavailable';
+    const result = mergeRecord(old, next);
+    assert.equal(result.limits.status, 'stale');
+    assert.deepEqual(result.limits.windows.map(window => window.id), ['open']);
+});
+
 test('daily and model totals use the same period and deduplicate events', () => {
     const event = {id: 'one', session: 'a', model: 'model-a', date: '2026-09-06', input: 20, output: 5, cacheRead: 10, cacheWrite: 0};
     const result = aggregateEvents([event, event, {...event, id: 'older', date: '2026-08-01'}], new Date('2026-09-06T12:00:00').getTime());
@@ -57,6 +70,7 @@ test('daily and model totals use the same period and deduplicate events', () => 
 
 test('calendar buckets are consecutive across month boundaries', () => {
     assert.deepEqual(recentDates(new Date('2026-03-02T12:00:00').getTime(), 3), ['2026-02-28', '2026-03-01', '2026-03-02']);
+    assert.equal(validTime('1800000000'), 1800000000000);
 });
 
 test('notifications require a verified crossing and deduplicate warning and limit separately', () => {

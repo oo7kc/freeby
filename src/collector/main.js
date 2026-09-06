@@ -3,6 +3,7 @@ import GLib from 'gi://GLib';
 import GLibUnix from 'gi://GLibUnix';
 import System from 'system';
 import {record, section} from '../core/usage.js';
+import {collectClaude} from '../providers/claude.js';
 import {collectCodex} from '../providers/codex.js';
 import {collectLegacy} from '../providers/legacy.js';
 import {fingerprint, findCommand, join, readJson} from '../services/files.js';
@@ -11,8 +12,8 @@ import {requestJson} from '../services/http.js';
 import {RpcClient, runCommand} from '../services/process.js';
 
 const id = ARGV[0];
-if (!['codex', 'cursor', 'copilot'].includes(id)) {
-    printerr('Usage: gjs -m src/collector/main.js <codex|cursor|copilot> [retention-days]');
+if (!['codex', 'claude', 'cursor', 'copilot'].includes(id)) {
+    printerr('Usage: gjs -m src/collector/main.js <codex|claude|cursor|copilot> [retention-days]');
     System.exit(2);
 }
 const retention = Math.max(7, Math.min(90, Number(ARGV[1]) || 30));
@@ -24,9 +25,21 @@ const signal = GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, 15, () => {
 });
 const io = {
     fingerprint,
+    hasCommand(name) {
+        try { findCommand(name); return true; } catch { return false; }
+    },
     scan(provider, suffixes, parser) {
-        const root = GLib.getenv('CODEX_HOME') || join(GLib.get_home_dir(), '.codex');
+        const root = provider === 'codex'
+            ? GLib.getenv('CODEX_HOME') || join(GLib.get_home_dir(), '.codex')
+            : GLib.getenv('CLAUDE_CONFIG_DIR') || join(GLib.get_home_dir(), '.claude');
         return scanHistory(provider, suffixes.map(suffix => join(root, suffix)), parser, {retention});
+    },
+    credentials(provider) {
+        if (provider === 'claude') {
+            const root = GLib.getenv('CLAUDE_CONFIG_DIR') || join(GLib.get_home_dir(), '.claude');
+            return readJson(join(root, '.credentials.json'));
+        }
+        return null;
     },
     codexClient: () => new RpcClient([findCommand('codex'), 'app-server'], cancellable),
     http: (url, options) => requestJson(url, {...options, cancellable}),
@@ -49,7 +62,8 @@ const io = {
 
 (async () => {
     try {
-        const result = id === 'codex' ? await collectCodex(io) : await collectLegacy(id, io);
+        const result = id === 'codex' ? await collectCodex(io)
+            : id === 'claude' ? await collectClaude(io) : await collectLegacy(id, io);
         if (!cancellable.is_cancelled())
             print(JSON.stringify(result));
     } catch {

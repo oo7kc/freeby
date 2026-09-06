@@ -3,6 +3,7 @@ import GLib from 'gi://GLib';
 import System from 'system';
 import {scanHistory} from '../../src/services/history.js';
 import {parseCodexEvent} from '../../src/providers/codex.js';
+import {parseClaudeEvent} from '../../src/providers/claude.js';
 import {readJson, writeJson, join} from '../../src/services/files.js';
 import {runCommand} from '../../src/services/process.js';
 
@@ -33,6 +34,19 @@ assert(!JSON.stringify(cache).includes('synthetic'), 'session identity must be s
 writeJson(join(scratch, 'record.json'), {safe: true});
 assert(readJson(join(scratch, 'record.json')).safe, 'atomic JSON roundtrip');
 print('PASS: GJS history initial scan, cached scan, append, partial line, and private JSON cache');
+
+const claudeProjects = join(scratch, 'claude-projects');
+GLib.mkdir_with_parents(claudeProjects, 0o700);
+const claudeLine = JSON.stringify({type: 'assistant', sessionId: 'claude-session', timestamp: '2026-09-06T11:00:00Z',
+    message: {id: 'claude-message', role: 'assistant', model: 'claude-test', usage: {input_tokens: 2,
+        output_tokens: 3, cache_read_input_tokens: 40, cache_creation_input_tokens: 5}}});
+GLib.file_set_contents(join(claudeProjects, 'session.jsonl'), `${claudeLine}\n${claudeLine}\n`);
+const claudeCache = join(scratch, 'claude-cache.json');
+const claude = scanHistory('claude', [claudeProjects], parseClaudeEvent, {now, cachePath: claudeCache});
+assert(claude.days.at(-1).total === 50, 'duplicate Claude messages must count once');
+assert(claude.models[0].cacheRead === 40 && claude.models[0].cacheWrite === 5, 'Claude cache categories');
+assert(!JSON.stringify(readJson(claudeCache)).includes('claude-session'), 'Claude session identity must be sanitized');
+print('PASS: GJS Claude history deduplication, model totals, and private cache');
 
 const loop = new GLib.MainLoop(null, false);
 let failed = false;

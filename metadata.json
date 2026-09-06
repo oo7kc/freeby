@@ -1,7 +1,7 @@
 {
   "uuid": "freeby@kelvin.local",
   "name": "Freeby",
-  "description": "AI coding usage monitor for account limits, reset windows, local token activity and model breakdowns. Codex is verified; additional providers arrive through version 2 prereleases.",
+  "description": "AI coding usage monitor for account limits, reset windows, local token activity and model breakdowns. Supports Codex and Claude Code; additional providers arrive through version 2 prereleases.",
   "shell-version": ["50"],
   "settings-schema": "org.gnome.shell.extensions.freeby",
   "url": "https://github.com/oo7kc/freeby"
