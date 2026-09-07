@@ -1,7 +1,23 @@
+.usagebeam-menu {
+  font-family: "SF Pro Text";
+  font-size: 10.5pt;
+  font-feature-settings: "tnum";
+  -arrow-background-color: transparent;
+  -arrow-border-color: transparent;
+  -arrow-border-width: 0px;
+  -arrow-rise: 6px;
+  -arrow-base: 0px;
+  background-color: transparent;
+  box-shadow: none;
+}
+
 .usagebeam-menu .popup-menu-content {
+  font-family: "SF Pro Text";
+  font-size: 10.5pt;
+  font-feature-settings: "tnum";
   border: 1px solid st-transparentize(st-lighten(-st-accent-color, 20%), 0.34);
-  border-radius: 16px;
-  box-shadow: 0 8px 24px 4px rgba(0, 0, 0, 0.34);
+  border-radius: 12px;
+  box-shadow: none;
 }
 
 .usagebeam-menu.usagebeam-dark .popup-menu-content {
@@ -16,9 +32,15 @@
 
 .usagebeam-panel-status {
   spacing: 5px;
-  font-family: monospace;
+  width: 15em;
+  font-family: "SF Pro Text";
+  font-size: 9.5pt;
   font-feature-settings: "tnum";
 }
+
+.usagebeam-panel-icon-slot { width: 16px; }
+.usagebeam-panel-value { min-width: 3.2em; text-align: right; }
+.usagebeam-panel-reset { min-width: 4.8em; text-align: right; }
 
 .usagebeam-provider-icon {
   icon-size: 20px;
@@ -72,28 +94,27 @@
   min-width: 29px;
   min-height: 29px;
   color: st-lighten(-st-accent-color, 22%);
-  font-family: monospace;
+  font-family: "SF Pro Text";
   font-size: 10pt;
   font-weight: 650;
   text-align: center;
 }
 
 .usagebeam-title {
+  font-family: "SF Pro Display";
   font-size: 14pt;
   font-weight: 700;
 }
 
 .usagebeam-caption {
-  font-family: monospace;
   font-feature-settings: "tnum";
-  font-size: 8.5pt;
+  font-size: 9.5pt;
   opacity: 0.76;
 }
 
 .usagebeam-status {
   padding: 2px 1px;
-  font-family: monospace;
-  font-size: 7.5pt;
+  font-size: 8.5pt;
   font-weight: 650;
   opacity: 0.94;
 }
@@ -120,8 +141,8 @@
 }
 
 .usagebeam-button {
-  min-height: 27px;
-  padding: 5px 10px;
+  min-height: 23px;
+  padding: 4px 10px;
   border: 1px solid rgba(128, 150, 160, 0.30);
   border-radius: 6px;
   background-color: rgba(128, 150, 160, 0.055);
@@ -145,10 +166,9 @@
 }
 
 .usagebeam-section-title {
-  padding: 10px 0 6px;
+  padding: 8px 0 6px;
   border-top: 1px solid rgba(128, 150, 160, 0.22);
-  font-family: monospace;
-  font-size: 8.5pt;
+  font-size: 9.5pt;
   font-weight: 700;
   opacity: 0.92;
 }
@@ -165,7 +185,6 @@
 
 .usagebeam-limit-metrics {
   spacing: 5px;
-  font-family: monospace;
   font-feature-settings: "tnum";
 }
 
@@ -173,31 +192,30 @@
 .usagebeam-limit-reset,
 .usagebeam-limit-value {
   color: st-mix(-st-accent-color, #d7e4eb, 28%);
-  font-size: 9.5pt;
+  font-size: 10.5pt;
   font-weight: 550;
   text-align: right;
 }
 
 .usagebeam-limit-percent {
-  width: 36px;
+  min-width: 3.2em;
 }
 
 .usagebeam-limit-separator {
-  width: 6px;
+  min-width: 0.6em;
   opacity: 0.48;
   text-align: center;
 }
 
 .usagebeam-limit-reset {
-  width: 62px;
+  min-width: 4.8em;
 }
 
 .usagebeam-limit-value {
-  width: 109px;
+  min-width: 8.6em;
 }
 
 .usagebeam-number {
-  font-family: monospace;
   font-feature-settings: "tnum";
   font-weight: 550;
 }
@@ -236,9 +254,9 @@
 }
 
 .usagebeam-disclosure {
-  min-height: 31px;
+  min-height: 25px;
   margin: 3px 0 4px;
-  padding: 7px 9px;
+  padding: 6px 9px;
   border: 1px solid rgba(128, 150, 160, 0.30);
   border-radius: 7px;
   background-color: rgba(128, 150, 160, 0.065);
@@ -265,9 +283,8 @@
 }
 
 .usagebeam-disclosure-summary {
-  font-family: monospace;
   font-feature-settings: "tnum";
-  font-size: 8.5pt;
+  font-size: 9.5pt;
   opacity: 0.82;
 }
 
@@ -282,8 +299,7 @@
 }
 
 .usagebeam-day-chart {
-  min-height: 100px;
-  padding: 7px 0 9px;
+  padding: 7px 0 8px;
 }
 
 .usagebeam-chart-column {
@@ -292,23 +308,22 @@
 
 .usagebeam-chart-value,
 .usagebeam-chart-day {
-  font-family: monospace;
   font-feature-settings: "tnum";
   text-align: center;
 }
 
 .usagebeam-chart-value {
-  font-size: 8pt;
+  font-size: 9pt;
   opacity: 0.79;
 }
 
 .usagebeam-chart-day {
-  font-size: 8.5pt;
+  font-size: 9.5pt;
   opacity: 0.72;
 }
 
 .usagebeam-chart-plot {
-  height: 64px;
+  height: 52px;
 }
 
 .usagebeam-chart-bar {
@@ -328,8 +343,8 @@
 }
 
 .usagebeam-model-meter {
-  min-height: 29px;
-  margin-bottom: 6px;
+  min-height: 27px;
+  margin-bottom: 5px;
   border: 1px solid rgba(128, 150, 160, 0.12);
   border-radius: 4px;
   background-color: rgba(128, 150, 160, 0.11);
@@ -341,7 +356,8 @@
 }
 
 .usagebeam-model-content {
-  padding: 5px 8px;
+  spacing: 10px;
+  padding: 4px 8px;
 }
 
 .usagebeam-model-name {
@@ -356,9 +372,9 @@
 }
 
 .usagebeam-action-button {
-  min-height: 23px;
+  min-height: 21px;
   padding: 3px 9px;
-  font-size: 8.5pt;
+  font-size: 9.5pt;
 }
 
 .usagebeam-message {
@@ -383,4 +399,13 @@
 
 .usagebeam-menu.usagebeam-light .usagebeam-chart-bar {
   background-color: st-mix(-st-accent-color, #6f8793, 28%);
+}
+
+.usagebeam-menu.usagebeam-light .usagebeam-today .usagebeam-chart-value,
+.usagebeam-menu.usagebeam-light .usagebeam-today .usagebeam-chart-day {
+  color: st-mix(-st-accent-color, #263b46, 38%);
+}
+
+.usagebeam-menu.usagebeam-light .usagebeam-status-live {
+  color: #167345;
 }

@@ -24,8 +24,16 @@ meson setup build --prefix=/tmp/usagebeam-install
 meson install -C build
 ```
 
-`python3 tools/smoke-shell.py` additionally verifies lifecycle behavior in a
-private headless GNOME Shell session when GNOME Shell is available locally.
+`python3 tools/smoke-shell.py` additionally verifies lifecycle and actual popup
+geometry in a private headless GNOME Shell session. The test-only companion under
+`tests/shell/` injects synthetic usage, exercises all five panel positions and
+provider changes, expands activity, and checks bar sizes, text alignment, and
+layout stability. JSON measurements and light/dark screenshots are saved in the
+printed temporary directory. The companion is never included in release archives;
+it requires no unsafe Shell evaluation or access to your live desktop.
+Use `--archive dist/ARCHIVE.zip` to test the exact packaged payload.
+Add `--scale 2` for a 2× virtual monitor or `--text-scale 1.25` for enlarged
+accessibility text. Physical/fractional monitor scaling still needs desktop QA.
 
 ## Design and architecture
 

@@ -25,7 +25,7 @@ while version 2 is developed on the `dev` branch.
 - Reworked the popup into a compact, theme-integrated usage panel based on the
   supplied Omarchy references, with equal-width `Claude`/`Codex` tabs, visible
   provider status, and filled model-usage rows.
-- Inherit the user's Shell font and accent color, with a restrained accent on
+- Inherit the user's Shell accent color, with a restrained accent on
   the popup's actual perimeter instead of a nested hard-coded blue frame.
 - Keep limits and freshness visible in the default view while placing seven-day
   and model activity behind an accessible disclosure control; the complete view
@@ -35,10 +35,11 @@ while version 2 is developed on the `dev` branch.
   its supplied icon, short name, highest current quota, and reset countdown.
 - Place quota reset countdowns inline, display Codex reserve usage as `Weekly
   reserve`, and render daily token history as a softly colored seven-column chart.
-- Add native preferences for immediate placement directly left or right of the
-  Shell calendar.
+- Add five immediate panel positions: left, center, right, left of calendar,
+  and right of calendar. Reserve a stable indicator width across providers and
+  quota states; center the combined clock/indicator group in the center box.
 - Refine the interface into an accent-tinted slate surface with an explicit
-  perimeter, mixed system/monospace typography, stronger hierarchy, and a
+  perimeter, locally installed SF Pro Text/Display typography, stronger hierarchy, and a
   bordered activity disclosure in both light and dark Shell color schemes.
 - Consolidated agent rules, the active roadmap, archived planning notes, and
   visual implementation references under `.AGENTS/`, with a minimal root
@@ -66,8 +67,16 @@ while version 2 is developed on the `dev` branch.
   runtime, restoring live account quota reads on systems without `/usr/bin/node`.
 - Anchor daily and model fills to the left edge and render human-readable model
   names instead of centered or malformed bars.
-- Preserve the user's Shell typeface while strengthening text contrast and
-  hierarchy for cleaner rendering.
+- Enlarge activity headings, dates, and summary text with proportional SF Pro
+  typography, falling back to a system font when SF Pro is unavailable.
+- Replace allocation-notification sizing loops with a native bar actor whose
+  fill never affects preferred size, preventing growing model rows and layout
+  flicker. Keep model rows compact and chart columns bottom aligned.
+- Remove the duplicate rectangular popup shadow, retaining the rounded outer
+  border. Prevent quota numbers and separators from ellipsizing and right-align
+  numeric text within stable columns.
+- Add private-Shell regression tests that open the actual popup, measure all five
+  positions, switch providers, verify repeated allocation, and capture both themes.
 - Allocate daily chart bars explicitly so non-zero days always receive visible
   width and bottom-aligned height.
 - Center the popup on the active-provider panel indicator instead of anchoring

@@ -23,12 +23,15 @@
     </key>
     <key name="panel-position" type="s">
       <choices>
+        <choice value="left"/>
+        <choice value="center"/>
+        <choice value="right"/>
         <choice value="left-of-calendar"/>
         <choice value="right-of-calendar"/>
       </choices>
       <default>'right-of-calendar'</default>
-      <summary>Position beside the calendar</summary>
-      <description>Place the UsageBeam indicator immediately left or right of the panel calendar</description>
+      <summary>Panel position</summary>
+      <description>Place UsageBeam in the left, center, or right panel area, or immediately beside the calendar</description>
     </key>
     <key name="history-retention-days" type="i">
       <default>30</default>

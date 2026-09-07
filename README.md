@@ -67,8 +67,17 @@ active, the former `freeby@kelvin.local` extension can be uninstalled.
 
 ## Settings
 
-The development preferences window controls left/right-of-calendar placement,
-refresh frequency, and notifications. The underlying schema also supports the
+The development preferences window offers five panel positions: left, center,
+right, left of calendar, and right of calendar. The center group shares a midpoint
+between the clock and indicator; the indicator reserves a constant width so
+provider changes do not move the clock. Placement follows GNOME's panel boxes
+(other panel-layout extensions may override their arrangement).
+
+The popup uses locally installed SF Pro Text, with SF Pro Display for the provider
+heading and system font fallback when unavailable. Fonts are not bundled or
+downloaded. Activity expands fully with compact model rows and no inner scrollbar.
+
+Preferences also control refresh frequency and notifications. The schema supports the
 default provider, ordered enabled providers, history retention, and notification
 threshold; these receive their full preferences interface in alpha.5.
 
@@ -90,9 +99,10 @@ npm run pack
 python3 tools/smoke-shell.py
 ```
 
-The final command starts a private headless GNOME session and does not enable the
-extension in the active desktop. Live-provider checks are intentionally separate
-from credential-free automated fixtures.
+The final command starts a private headless GNOME session, opens the popup with
+synthetic data, verifies allocation and placement, and saves light/dark screenshots
+in a temporary directory. It does not enable the extension in the active desktop.
+Live-provider checks are intentionally separate from these credential-free tests.
 
 ## Uninstall or downgrade
 

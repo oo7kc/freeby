@@ -280,6 +280,36 @@ Two builds produced the same 42,120-byte archive at SHA-256
 The exact archive loaded, changed calendar side live, disabled, and re-enabled
 without extension or stylesheet errors in a private GNOME Shell 50 session.
 
+### Stable placement and compact typography checkpoint
+
+- [x] Add left, center, and right panel areas while preserving both calendar-side
+  choices and the existing default. Keep provider/quota changes within a fixed,
+  font-relative slot so the calendar stays still.
+- [x] Verify the combined clock/indicator midpoint in the native center box.
+- [x] Use locally installed SF Pro Text and SF Pro Display, enlarge activity
+  captions and summary text, and keep quota columns right-aligned without ellipses.
+- [x] Allocate bars without feeding their sizes back into preferred-size requests;
+  restore compact model rows and natural expansion without an inner scrollbar.
+- [x] Remove the duplicate rectangular shadow and preserve the rounded perimeter
+  and light/dark surfaces.
+- [x] Add a test-only private-Shell companion that opens the popup, exercises the
+  disclosure, checks rendered geometry across repeated layouts and provider
+  changes, and captures both themes. Exclude it from runtime archives.
+
+Evidence (2026-09-07): `npm run check` passed 29 unit tests plus syntax, strict
+schema, repository, and GJS integration checks. Repeated builds produced the same
+43,637-byte archive, SHA-256
+`b376f99e78d882173a6dca2c6937daea3e2cbac1079fda719d634d6b39c43952`.
+The exact archive passed private GNOME Shell 50 lifecycle and real open-popup
+checks at normal size, 125% text size, and on a 2× virtual monitor. Model rows
+measured 29 logical pixels normally and 32 with enlarged text, without growth
+across repeated layouts. All five placements preserved indicator width and clock
+position across Codex, Claude, and unavailable quota states. Screenshots were
+inspected for SF Pro rendering, chart fills, compact rows, and the outer border.
+Physical/fractional monitor combinations and other panel-layout extensions still
+require desktop QA. This is a dev-only correction, not a completed provider
+milestone or a stable release.
+
 ### 3. Cursor — v2.0.0-alpha.3
 
 - [ ] Revalidate current Cursor authentication and usage sources for free and paid accounts.

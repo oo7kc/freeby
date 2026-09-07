@@ -4,7 +4,7 @@ import Gio from 'gi://Gio';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
 import {compactTokens} from '../core/format.js';
-import {chartBarGeometry} from './presentation.js';
+import {UsageBeamBar} from './bar.js';
 
 const PROVIDER_ICONS = new Set(['claude', 'codex']);
 const PROVIDER_ICON_FILES = {claude: 'claude.svg', codex: 'codex-symbolic.svg'};
@@ -12,6 +12,18 @@ const PROVIDER_ICON_FILES = {claude: 'claude.svg', codex: 'codex-symbolic.svg'};
 export function label(text, style = '', expand = false) {
     return new St.Label({text: String(text ?? ''), style_class: style,
         y_align: Clutter.ActorAlign.CENTER, x_expand: expand});
+}
+
+export function metricLabel(text, style = '', expand = false) {
+    const actor = label(text, style, expand);
+    actor.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+    return actor;
+}
+
+function metricColumn(text, style) {
+    const child = metricLabel(text, '', true);
+    child.x_align = Clutter.ActorAlign.END;
+    return new St.Bin({style_class: style, child});
 }
 
 export function providerIcon(provider, extensionPath, style = '') {
@@ -32,51 +44,28 @@ export function limitRow(name, value, reset) {
     box.add_child(title);
     const metrics = new St.BoxLayout({style_class: 'usagebeam-limit-metrics'});
     if (reset) {
-        metrics.add_child(label(value, 'usagebeam-limit-percent'));
-        metrics.add_child(label('·', 'usagebeam-limit-separator'));
-        metrics.add_child(label(reset, 'usagebeam-limit-reset'));
+        metrics.add_child(metricColumn(value, 'usagebeam-limit-percent'));
+        metrics.add_child(metricColumn('·', 'usagebeam-limit-separator'));
+        metrics.add_child(metricColumn(reset, 'usagebeam-limit-reset'));
     } else {
-        metrics.add_child(label(value, 'usagebeam-limit-value'));
+        metrics.add_child(metricColumn(value, 'usagebeam-limit-value'));
     }
     box.add_child(metrics);
     return box;
 }
 
 export function meter(fraction, name, style = '') {
-    const ratio = Math.max(0, Math.min(1, Number(fraction) || 0));
-    const track = new St.Widget({style_class: `usagebeam-track ${style}`, x_expand: true,
-        layout_manager: new Clutter.FixedLayout(), accessible_name: name, accessible_role: Atk.Role.PROGRESS_BAR});
-    const fill = new St.Widget({style_class: 'usagebeam-fill'});
-    fill.set_position(0, 0);
-    track.add_child(fill);
-    track.connect('notify::allocation', () => {
-        fill.set_size(Math.round(Math.max(0, track.width) * ratio), Math.max(0, track.height));
-    });
-    return track;
+    return new UsageBeamBar({fraction, name, style: `usagebeam-track ${style}`, fillStyle: 'usagebeam-fill'});
 }
 
 export function modelMeter(left, right, fraction, name) {
-    const ratio = Math.max(0, Math.min(1, Number(fraction) || 0));
-    const track = new St.Widget({style_class: 'usagebeam-model-meter', x_expand: true,
-        layout_manager: new Clutter.FixedLayout(), accessible_name: name,
-        accessible_role: Atk.Role.PROGRESS_BAR});
-    const fill = new St.Widget({style_class: 'usagebeam-model-fill'});
     const content = new St.BoxLayout({style_class: 'usagebeam-model-content'});
     const title = label(left, 'usagebeam-model-name', true);
     title.clutter_text.ellipsize = Pango.EllipsizeMode.END;
     content.add_child(title);
-    content.add_child(label(right, 'usagebeam-number'));
-    track.add_child(fill);
-    track.add_child(content);
-    track.connect('notify::allocation', () => {
-        const width = Math.max(0, track.width);
-        const height = Math.max(0, track.height);
-        fill.set_position(0, 0);
-        fill.set_size(Math.round(width * ratio), height);
-        content.set_position(0, 0);
-        content.set_size(width, height);
-    });
-    return track;
+    content.add_child(metricLabel(right, 'usagebeam-number'));
+    return new UsageBeamBar({fraction, name, content,
+        style: 'usagebeam-model-meter', fillStyle: 'usagebeam-model-fill'});
 }
 
 export function dayChart(days, today) {
@@ -103,21 +92,12 @@ export function dayChart(days, today) {
             accessible_name: `${isToday ? 'Today, ' : ''}${weekday}, ${day.total} tokens, ${day.sessions ?? 0} sessions`,
         });
         column.add_child(label(compactTokens(day.total), 'usagebeam-chart-value'));
-        const plot = new St.Widget({
-            style_class: 'usagebeam-chart-plot',
-            x_expand: true,
-            clip_to_allocation: true,
-            layout_manager: new Clutter.FixedLayout(),
-        });
-        const bar = new St.Widget({
-            style_class: 'usagebeam-chart-bar',
-            visible: day.total > 0,
-        });
-        plot.add_child(bar);
-        plot.connect('notify::allocation', () => {
-            const geometry = chartBarGeometry(day.total, max, plot.width, plot.height);
-            bar.set_position(geometry.x, geometry.y);
-            bar.set_size(geometry.width, geometry.height);
+        const plot = new UsageBeamBar({
+            fraction: day.total / max,
+            name: `${day.date}: ${day.total} tokens`,
+            style: 'usagebeam-chart-plot',
+            fillStyle: 'usagebeam-chart-bar',
+            vertical: true,
         });
         column.add_child(plot);
         column.add_child(label(weekday, 'usagebeam-chart-day'));

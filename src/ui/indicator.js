@@ -1,6 +1,7 @@
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
+import Pango from 'gi://Pango';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
@@ -9,7 +10,7 @@ import {age, dateRange, modelName, tokens} from '../core/format.js';
 import {historyOverview, latestUpdate, panelQuota, periodDays, providerStatus,
     quotaPresentation} from './presentation.js';
 import {actionButton, button, dayChart, disclosureButton, label, meter, modelMeter,
-    limitRow, providerIcon} from './widgets.js';
+    limitRow, metricLabel, providerIcon} from './widgets.js';
 
 const TAB_NAMES = {claude: 'Claude'};
 const PROVIDER_MARKS = {codex: '>_', claude: '✦', cursor: '⌁', copilot: '◆'};
@@ -23,6 +24,15 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
         this._service = null;
         this._detailsExpanded = false;
         this._panelStatus = new St.BoxLayout({style_class: 'usagebeam-panel-status'});
+        this._panelIcon = new St.Bin({style_class: 'usagebeam-panel-icon-slot', y_align: Clutter.ActorAlign.CENTER});
+        this._panelProvider = label('UsageBeam', 'usagebeam-panel-provider', true);
+        this._panelProvider.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+        this._panelValue = metricLabel('—', 'usagebeam-panel-value');
+        this._panelReset = metricLabel('—', 'usagebeam-panel-reset');
+        for (const actor of [this._panelIcon, this._panelProvider, this._panelValue,
+            label('·', 'usagebeam-panel-separator'), this._panelReset])
+            this._panelStatus.add_child(actor);
+        this._panelProviderId = null;
         this.add_child(this._panelStatus);
         this.menu.actor.add_style_class_name('usagebeam-menu');
         this._shellSettings = St.Settings.get();
@@ -96,24 +106,19 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
     }
 
     _renderPanelStatus(id, record) {
-        this._panelStatus.destroy_all_children();
         const name = TAB_NAMES[id] ?? NAMES[id] ?? 'UsageBeam';
-        const icon = providerIcon(id, this._extensionPath, 'usagebeam-panel-icon');
-        if (icon)
-            this._panelStatus.add_child(icon);
-        else
-            this._panelStatus.add_child(label(PROVIDER_MARKS[id] ?? 'AI', 'usagebeam-panel-mark'));
-        this._panelStatus.add_child(label(name, 'usagebeam-panel-provider'));
-        const quota = panelQuota(record);
-        if (quota) {
-            this._panelStatus.add_child(label(`${quota.percent}%`,
-                `usagebeam-panel-value${quota.percent >= 100 ? ' usagebeam-danger' :
-                    quota.percent >= 90 ? ' usagebeam-warning' : ''}`));
-            if (quota.reset) {
-                this._panelStatus.add_child(label('·', 'usagebeam-panel-separator'));
-                this._panelStatus.add_child(label(quota.reset, 'usagebeam-panel-reset'));
-            }
+        if (this._panelProviderId !== id) {
+            this._panelIcon.get_child()?.destroy();
+            this._panelIcon.set_child(providerIcon(id, this._extensionPath, 'usagebeam-panel-icon') ??
+                label(PROVIDER_MARKS[id] ?? 'AI', 'usagebeam-panel-mark'));
+            this._panelProviderId = id;
         }
+        this._panelProvider.text = name;
+        const quota = panelQuota(record);
+        this._panelValue.text = quota ? `${quota.percent}%` : '—';
+        this._panelValue.style_class = `usagebeam-panel-value${quota?.percent >= 100 ? ' usagebeam-danger' :
+            quota?.percent >= 90 ? ' usagebeam-warning' : ''}`;
+        this._panelReset.text = quota?.reset ?? '—';
         const resetDescription = quota?.reset === 'due' ? ', reset due' :
             quota?.reset ? `, resets in ${quota.reset}` : '';
         this.accessible_name = `UsageBeam, ${name}${quota ? `, ${quota.percent} percent used${resetDescription}` : ''}`;

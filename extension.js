@@ -1,6 +1,7 @@
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {UsageBeamIndicator} from './src/ui/indicator.js';
+import {placeIndicator} from './src/ui/panelPlacement.js';
 import {migrateLegacyInstall} from './src/services/migration.js';
 import {UsageService} from './src/services/usageService.js';
 
@@ -32,23 +33,7 @@ export default class UsageBeamExtension extends Extension {
     }
 
     _placeIndicator() {
-        const container = this._indicator?.container;
-        if (!container)
-            return;
-        const calendar = Main.panel.statusArea.dateMenu?.container;
-        const panelBox = calendar?.get_parent() ?? container.get_parent();
-        if (!panelBox)
-            return;
-        const parent = container.get_parent();
-        if (parent)
-            parent.remove_child(container);
-        const siblings = panelBox.get_children();
-        const calendarIndex = calendar ? siblings.indexOf(calendar) : -1;
-        const side = this._settings.get_string('panel-position');
-        const position = calendarIndex < 0
-            ? (side === 'left-of-calendar' ? 0 : siblings.length)
-            : calendarIndex + (side === 'right-of-calendar' ? 1 : 0);
-        panelBox.insert_child_at_index(container, position);
+        placeIndicator(this._indicator, this._settings.get_string('panel-position'));
     }
 
     disable() {
