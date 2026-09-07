@@ -64,7 +64,7 @@ def package(source, output):
             if set(names) != expected:
                 raise RuntimeError('Extension archive contents differ from the runtime allowlist')
             if any(name.startswith(('.AGENTS/', '.github/', 'docs/', 'tests/', 'tools/')) for name in names):
-                raise RuntimeError('Development-only content entered the extension archive')
+                raise RuntimeError('Repository-only content entered the extension archive')
     print(archive.resolve())
     return archive
 

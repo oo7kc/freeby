@@ -28,8 +28,8 @@ never reads provider credentials or transcript formats.
   private XDG storage.
 - `src/ui/` owns Shell actors and accessibility behavior; provider-status and
   period presentation decisions remain pure and unit-testable.
-- `prefs.js` is the libadwaita preferences entry point until configuration pages
-  are split during alpha.5.
+- `prefs.js` is the native libadwaita preferences entry point for placement,
+  refresh, and notification controls.
 
 Collectors have deadlines, bounded output, and cancellation. Child processes
 receive a scoped `PATH` without changing the Shell process environment. Refresh
@@ -60,9 +60,9 @@ not billing data and never becomes a fabricated subscription percentage.
 
 ## Distribution
 
-Meson installs only extension entry points, source modules, provider SVG marks,
-metadata, styles, license, and an extension-local schema. `tools/package.py`
-uses the same explicit runtime allowlist to produce deterministic ZIP files.
-Inputs must be regular, repository-owned files, and the completed archive is
-checked against the exact allowlist; agent material, docs, tests, tools,
-screenshots, and references cannot enter a release archive.
+Meson installs only extension entry points, source modules, verified provider
+adapters, provider SVG marks, metadata, styles, license, and an extension-local
+schema. `tools/package.py` uses the same explicit runtime allowlist to produce
+deterministic ZIP files. Inputs must be regular, repository-owned files, and the
+completed archive is checked against that allowlist; repository guidance, docs,
+tests, tools, and references cannot enter a release archive.

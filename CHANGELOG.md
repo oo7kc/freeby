@@ -1,154 +1,92 @@
 # Changelog
 
-All notable changes are documented here. UsageBeam uses semantic prerelease versions
-while version 2 is developed on the `dev` branch.
+All notable UsageBeam changes are documented here.
 
 ## Unreleased
 
+### Added
+
+- UsageBeam product identity with the permanent extension UUID
+  `usagebeam@oo7kc.github.io` and settings schema
+  `org.gnome.shell.extensions.usagebeam`.
+- Active-provider panel readout with provider icon, highest current quota, and
+  reset countdown.
+- Left area, right area, left-of-calendar, and right-of-calendar placement.
+- Expandable seven-day activity chart and compact per-model token totals.
+- Native preferences for placement, refresh interval, and notifications.
+- Explicit quota severity states: caution at 80%, warning at 90%, and exhausted
+  at 100%.
+
 ### Changed
 
-- Renamed the product from Freeby to UsageBeam and adopted the permanent GNOME
-  extension UUID `usagebeam@oo7kc.github.io` and settings schema
-  `org.gnome.shell.extensions.usagebeam` ahead of alpha.3.
-- Migrate recognized derived state, incremental history caches, and explicitly
-  changed preferences from the former alpha identity without moving credentials
-  or overwriting values already set for UsageBeam.
-- Split command discovery from private file storage and launch discovered CLIs
-  with a process-local environment, explicit deadlines, cancellation reasons,
-  and output limits.
-- Upgraded the provider-neutral usage record to schema version 2 with strict
-  source, freshness, quota, date, token-component, and collection-bound checks.
-- Decomposed panel rendering into focused limit, daily activity, model activity,
-  status, and footer paths backed by unit-testable presentation decisions.
-- Hardened deterministic packaging to reject symlinked or out-of-tree inputs and
-  verify the archive against its exact runtime allowlist.
-- Reworked the popup into a compact, theme-integrated usage panel based on the
-  supplied Omarchy references, with equal-width `Claude`/`Codex` tabs, visible
-  provider status, and filled model-usage rows.
-- Inherit the user's Shell accent color, with a restrained accent on
-  the popup's actual perimeter instead of a nested hard-coded blue frame.
-- Keep limits and freshness visible in the default view while placing seven-day
-  and model activity behind an accessible disclosure control; the complete view
-  now expands naturally without a nested scrollbar.
-- Consolidate freshness, refresh, and settings into a single compact footer.
-- Replace the generic panel label with a single active-provider readout showing
-  its supplied icon, short name, highest current quota, and reset countdown.
-- Place quota reset countdowns inline, display Codex reserve usage as `Weekly
-  reserve`, and render daily token history as a softly colored seven-column chart.
-- Add four immediate panel positions: left, right, left of calendar, and right
-  of calendar. Reserve a stable indicator width across providers and quota states;
-  place the calendar/indicator gap exactly on the panel midpoint.
-- Refine the interface into an accent-tinted slate surface with an explicit
-  perimeter, locally installed SF Pro Text/Display typography, stronger hierarchy,
-  and a bordered activity disclosure in both light and dark Shell color schemes.
-- Consolidated agent rules, the active roadmap, archived planning notes, and
-  visual implementation references under `.AGENTS/`, with a minimal root
-  `AGENTS.md` discovery entrypoint.
-- Added documentation indexes and a runtime architecture guide; historical v1
-  screenshots now live under `docs/assets/screenshots/v1/`.
-- Split the temporary combined provider module into dedicated Cursor and Copilot
-  adapters without changing their preview behavior.
+- Rebuilt the popup as a compact, accent-aware GNOME surface with SF Pro
+  typography when available, aligned quota metrics, and stable panel geometry.
+- Account limits, local activity, and cached results now expose their scope and
+  freshness independently.
+- Codex discovery supports common user-local and Node version-manager layouts.
+- Provider records use a strict versioned contract with bounded collection,
+  typed quota states, source attribution, and private derived storage.
+- Recognized Freeby alpha settings and derived data migrate without copying
+  credentials or overwriting existing UsageBeam data.
 
 ### Fixed
 
-- Keep one stable private session identity across incremental history scans,
-  preventing resumed Codex records from inflating session counts.
-- Detect cumulative-token resets, same-size history replacements, stale source
-  removal, invalid cached events, and bounded directory-scan failures without
-  silently presenting incorrect totals.
-- Require HTTPS for provider requests, bound response sizes, and repair private
-  cache directory/file permissions on every atomic write.
-- Distinguish live account data, local-only activity, cached data, active sync,
-  and setup states while safely truncating long provider/model labels.
-- Discover Codex installed through fnm, nvm, mise, asdf, Volta, and common
-  user-local binary directories even when GNOME Shell starts with a minimal
-  `PATH`.
-- Launch version-managed Codex installations with their matching sibling Node
-  runtime, restoring live account quota reads on systems without `/usr/bin/node`.
-- Anchor daily and model fills to the left edge and render human-readable model
-  names instead of centered or malformed bars.
-- Enlarge activity headings, dates, and summary text with proportional SF Pro
-  typography, falling back to a system font when SF Pro is unavailable.
-- Replace allocation-notification sizing loops with a native bar actor whose
-  fill never affects preferred size, preventing growing model rows and layout
-  flicker. Keep model rows compact and chart columns bottom aligned.
-- Remove the duplicate rectangular popup shadow, retaining the rounded outer
-  border. Prevent quota numbers and separators from ellipsizing and right-align
-  numeric text within stable columns.
-- Add private-Shell regression tests that open the actual popup, measure all four
-  positions, switch providers, verify repeated allocation, and capture both themes.
-- Establish a clearer information hierarchy by reducing secondary quota, reset,
-  activity-summary, and model-total type. Replace text glyph separators with
-  consistently sized, optically centered dots in the menu and panel indicator.
-- Allocate daily chart bars explicitly so non-zero days always receive visible
-  width and bottom-aligned height.
-- Center the popup on the active-provider panel indicator instead of anchoring
-  its left edge to the trigger.
-- Align limit percentages, separators, and reset countdowns in fixed tabular
-  columns, and format activity periods as concise locale-aware date ranges.
+- Daily chart columns allocate visible bottom-aligned bars for non-zero activity.
+- Model fills remain compact and stable across repeated layout passes.
+- Calendar placement remains fixed while providers and quota values change.
+- Reset values, percentages, and separator dots retain consistent alignment.
+- Expired quota windows are not presented as current cached data.
+- Empty, malformed, or unavailable provider responses are never shown as zero
+  usage.
 
 ### Removed
 
-- Removed the superseded v1 indicator, Bash collector/setup scripts, and their
-  obsolete Bats suite. These files were no longer installed after alpha.1.
+- Unverified Cursor and Copilot preview adapters. Providers now ship only after
+  their data sources and failure states have completed validation.
+- Superseded runtime scripts and historical UI artifacts that were not part of
+  the product.
 
 ## 2.0.0-alpha.2 - 2026-09-06
 
 ### Added
 
-- Claude Code detection and saved OAuth sign-in handling, including explicit
-  missing, absent, and expired authentication states.
-- Anthropic 5-hour, weekly, and model-scoped quota parsing with both current
-  percentage and older fractional utilization normalization.
-- Incremental Claude Code transcript scanning with message deduplication and
-  per-model input, output, cache-read, and cache-write totals.
-- Provider switching between Codex and Claude Code using the shared native UI.
+- Claude Code installation and saved OAuth sign-in detection.
+- Supported 5-hour, weekly, and model-scoped Claude quota windows.
+- Incremental Claude Code activity with per-model input, output, cache-read, and
+  cache-write totals.
+- Shared provider switching between Codex and Claude Code.
 
-### Changed
+### Fixed
 
-- New installations enable Codex and Claude Code by default.
-- Expired cached quota windows are discarded instead of being displayed as stale
-  after their reset time.
+- Expired cached quota windows are discarded after their reset time.
+- Missing, absent, and expired Claude authentication remain distinct states.
 
-### Verification limits
+### Verification scope
 
-- Claude Code 2.1.218 detection and the unauthenticated path were exercised on
-  this machine. Quota responses, expired authentication, duplicates, and cache
-  semantics were verified with synthetic fixtures against the current upstream
-  interface; no signed-in Claude account was available for a live quota probe.
+- Claude Code 2.1.218 installation detection and missing-authentication behavior
+  were exercised locally.
+- Quota payloads, expired authentication, duplicate messages, and cache-token
+  semantics were verified with deterministic fixtures.
+- A signed-in Claude account was not available for a live quota probe.
 
 ## 2.0.0-alpha.1 - 2026-09-06
 
 ### Added
 
-- Versioned provider-neutral usage contract with explicit capabilities, source
-  scope, freshness, quota states, reset timestamps, and token categories.
+- Provider-neutral usage contract with explicit capabilities, source scope,
+  freshness, quota state, reset timestamp, and token categories.
 - Bounded Codex app-server collection for account rate limits.
-- Incremental local Codex history scanning with seven-day and model aggregates.
+- Incremental local Codex history with seven-day and model aggregates.
 - Private XDG state/cache persistence, stale-data recovery, and refresh backoff.
-- Native provider header, quota meters, daily activity, model totals, status
-  footer, setup/error states, and accessible controls.
-- Deterministic archive packaging, unit tests, GJS integration tests, and an
-  isolated headless GNOME lifecycle smoke test.
+- Deterministic packaging and isolated GNOME lifecycle verification.
 
 ### Fixed
 
-- Refresh now occurs after resume rather than before suspend.
-- Provider jobs no longer overlap or update destroyed UI.
-- Notifications require a verified threshold crossing and are deduplicated per
+- Refresh occurs after resume instead of before suspend.
+- Provider jobs do not overlap or update a destroyed interface.
+- Notifications require a verified threshold crossing and deduplicate per
   account, quota window, and reset period.
-- Missing or empty provider responses are no longer reported as zero usage.
-- Runtime `npx` downloads and unbounded collection processes were removed.
-- Schemas install inside the extension and uninstall no longer requires deleting
-  a shared compiled schema file.
-
-### Known limitations
-
-- GNOME Shell 50 is the only compatibility target verified for alpha.1.
-- Codex activity is local to this device. Account quota limits and local token
-  history intentionally remain separate scopes.
-- Cursor and Copilot adapters are preview-only until alpha.3 and alpha.4.
-- Claude Code support is scheduled for alpha.2.
+- Runtime package downloads and unbounded collection processes were removed.
 
 ## 1.0.2 - 2026-04-27
 
@@ -157,5 +95,4 @@ while version 2 is developed on the `dev` branch.
 - Kept the dropdown open after manual refresh and fixed an invalid popup
   accessibility property.
 
-Earlier release history remains available in the repository's Git tags and
-GitHub releases.
+Earlier history remains available in the repository's Git tags and releases.

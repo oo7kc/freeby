@@ -33,9 +33,9 @@ is written to UsageBeam's XDG cache.
 History is local to this device, covers the displayed seven-day period, and is
 not a measure of subscription quota or billable cost.
 
-## Alpha.2 verification
+## Verification status
 
 - Claude Code 2.1.218 installation detection and missing-auth behavior: live.
 - Standard/scoped limits, percentage normalization, expired auth, endpoint auth
   errors, duplicate messages, and token categories: deterministic fixtures.
-- Signed-in account quota probe: not available on the development machine.
+- Signed-in account quota probe: not yet available for live verification.

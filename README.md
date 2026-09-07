@@ -1,123 +1,128 @@
 # UsageBeam
 
-UsageBeam is a native GNOME Shell usage monitor for AI coding tools. It keeps
-account limits, reset windows, recent local token activity, and model totals one
-click away in the top panel.
+UsageBeam puts Codex and Claude Code usage where it is easiest to see: in the
+GNOME top panel. The compact indicator shows the active provider's highest quota
+and reset countdown; its popup reveals every reported limit plus seven days of
+local token and model activity.
 
-Version 2 is being delivered provider by provider. The former Freeby identity
-was used through `v2.0.0-alpha.2`; development now uses the permanent UsageBeam
-identity. Cursor and Copilot adapters remain opt-in previews while their
-dedicated milestones are completed.
+## At a glance
 
-## What the current prerelease includes
+- Live account limits and reset windows for Codex and Claude Code.
+- A stable, single-provider panel indicator that does not move the clock when
+  its content changes.
+- Four panel placements: left area, right area, left of calendar, or right of
+  calendar.
+- Seven-day local activity chart and per-model token totals.
+- Independent live, local, cached, syncing, and setup states.
+- Light and dark surfaces derived from the active GNOME accent color.
+- Private local storage with no prompt, response, transcript, or credential
+  retention.
 
-- Account quota windows from the installed Codex CLI's app-server interface.
-- Claude Code 5-hour, weekly, and model-scoped limits through its saved OAuth
-  sign-in, with clear missing/expired-authentication states.
-- Reset countdowns without guessing missing values.
-- Seven-day local Codex and Claude Code activity with per-model input, output,
-  cache-read, and cache-write totals.
-- Cached results shown as stale while a provider independently refreshes.
-- Explicit unavailable, unsupported, missing-authentication, and exhausted states.
-- Bounded collectors, refresh backoff, wake refresh, cancellation on disable, and
-  threshold-crossing notifications.
-- A native, theme-aware, keyboard-focusable interface with a compact active-provider
-  panel readout and expandable seven-day activity chart.
+UsageBeam displays only data reported by a provider or found in local usage
+records. Local activity covers this device; it is not billing data and is never
+converted into an account quota.
 
-UsageBeam stores only derived usage metadata under the standard XDG state/cache
-directories. It does not copy prompts, responses, transcripts, or credentials.
-Local activity covers this device only and must not be interpreted as billing or
-subscription usage.
+## Supported providers
+
+### Codex
+
+UsageBeam reads account quota windows through the installed Codex CLI app-server
+and scans local Codex session records for activity. The CLI must be installed
+and signed in to show live limits. Common user-local, fnm, nvm, mise, asdf, and
+Volta installations are discovered even when GNOME Shell has a restricted
+`PATH`.
+
+### Claude Code
+
+UsageBeam reads supported account limits from Claude Code's saved OAuth sign-in
+and scans local Claude Code project records for activity. Account limits require
+an active sign-in; local activity can remain available independently.
+
+See the detailed [Codex](docs/providers/codex.md) and
+[Claude Code](docs/providers/claude.md) provider notes for source and
+compatibility details.
+
+## Usage semantics
+
+Quota bars use a fixed 0–100% scale and retain their numeric percentage:
+
+- Below 80% uses the normal theme accent.
+- 80–89% uses a restrained yellow caution state.
+- 90–99% uses an orange warning state.
+- 100% and above uses a red exhausted state.
+
+Color reinforces the value; it never replaces the percentage or state text.
+Activity bars are relative to the largest value in the displayed seven-day
+period and do not represent account limits.
 
 ## Requirements
 
-- GNOME Shell 50 (the version verified for this prerelease).
-- Codex CLI installed and signed in for Codex account limits. System installs
-  and common user-local/version-manager layouts (including fnm, nvm, mise,
-  asdf, and Volta) are detected from GNOME Shell's restricted environment.
-- Claude Code installed and signed in for Claude account limits; local Claude
-  transcripts remain useful independently.
-- GJS with Gio/GLib and Soup 3 introspection data.
-- Meson, Ninja, and `glib-compile-schemas` when installing from source.
+- GNOME Shell 50.
+- GJS with Gio, GLib, and Soup 3 introspection data.
+- The Codex CLI and/or Claude Code, installed and signed in for account limits.
+- SF Pro Text and SF Pro Display are used when installed; GNOME's system fallback
+  is used otherwise. UsageBeam does not bundle or download fonts.
 
-## Install from source
+## Install
 
-Development happens on the `dev` branch:
+Download the UsageBeam ZIP from [GitHub Releases](https://github.com/oo7kc/freeby/releases),
+then run:
 
 ```bash
-git clone https://github.com/oo7kc/freeby.git
-cd freeby
-git switch dev
-meson setup build --prefix="$HOME/.local"
-meson install -C build
+gnome-extensions install --force ./usagebeam@oo7kc.github.io-VERSION.zip
 gnome-extensions enable usagebeam@oo7kc.github.io
 ```
 
-Log out and back in if GNOME Shell has not discovered the extension. Starting
-with alpha.3, a downloaded release archive can instead be installed with:
-
-```bash
-gnome-extensions install --force usagebeam@oo7kc.github.io-VERSION.zip
-```
-
-The identity migration copies recognized derived usage data and explicitly
-changed settings from an installed Freeby alpha without overwriting existing
-UsageBeam values. It does not copy credentials. After confirming UsageBeam is
-active, the former `freeby@kelvin.local` extension can be uninstalled.
+Log out and back in when installing UsageBeam for the first time so GNOME Shell
+can discover the new extension identity.
 
 ## Settings
 
-The development preferences window offers four panel positions: left, right,
-left of calendar, and right of calendar. For calendar-side placement, the gap
-between the clock and indicator sits exactly on the panel midpoint; the indicator
-reserves a constant width so provider changes do not move the clock. Placement
-follows GNOME's panel boxes (other panel-layout extensions may override their
-arrangement).
-
-The popup uses locally installed SF Pro Text, with SF Pro Display for the provider
-heading and system font fallback when unavailable. Fonts are not bundled or
-downloaded. Activity expands fully with compact model rows and no inner scrollbar.
-
-Preferences also control refresh frequency and notifications. The schema supports the
-default provider, ordered enabled providers, history retention, and notification
-threshold; these receive their full preferences interface in alpha.5.
-
-To opt into a preview adapter during development:
+Open the preferences window from the popup or with:
 
 ```bash
-gsettings set org.gnome.shell.extensions.usagebeam enabled-providers "['codex', 'claude', 'cursor', 'copilot']"
+gnome-extensions prefs usagebeam@oo7kc.github.io
 ```
 
-Preview providers are not part of the alpha.2 compatibility promise. See the
-[Claude provider notes](docs/providers/claude.md) for scope and compatibility
-details.
+Preferences control panel placement, refresh frequency, and quota notifications.
+Calendar-side placement keeps the gap between the indicator and clock on the
+panel midpoint. The indicator reserves a stable width so switching providers or
+loading new quota data does not move the calendar.
 
-## Verify a checkout
+## Privacy and storage
 
-```bash
-npm run check
-npm run pack
-python3 tools/smoke-shell.py
-```
+UsageBeam processes provider data locally and stores only derived usage metadata:
 
-The final command starts a private headless GNOME session, opens the popup with
-synthetic data, verifies allocation and placement, and saves light/dark screenshots
-in a temporary directory. It does not enable the extension in the active desktop.
-Live-provider checks are intentionally separate from these credential-free tests.
+- State: `$XDG_STATE_HOME/usagebeam`
+- Incremental history cache: `$XDG_CACHE_HOME/usagebeam`
 
-## Uninstall or downgrade
+Files are created with private permissions. Credentials are read only when a
+provider requires them and are never copied, cached, or logged. Account and
+session identifiers used for change detection or deduplication are hashed before
+persistence. Prompt and response content is ignored.
+
+Recognized settings and derived data from older Freeby alpha builds are migrated
+once without overwriting existing UsageBeam data. Credentials are excluded from
+that migration.
+
+## Troubleshooting
+
+- **Limits show Setup:** open the provider's CLI and confirm it is signed in.
+- **Activity is local only:** this is expected; UsageBeam does not merge records
+  from other devices.
+- **Values show Cached:** the last valid values remain visible during a temporary
+  provider or network failure.
+- **The indicator is absent after installation:** log out and back in, then enable
+  the extension again.
+- **Another panel extension changes placement:** UsageBeam follows GNOME's panel
+  boxes, so layout extensions may override the final arrangement.
+
+## Remove
 
 ```bash
 gnome-extensions disable usagebeam@oo7kc.github.io
 gnome-extensions uninstall usagebeam@oo7kc.github.io
 ```
 
-The extension-local schema is removed with the extension; shared system schema
-artifacts are never deleted. To downgrade, install an older release archive with
-`gnome-extensions install --force` and restart the session. Releases through
-alpha.2 use the former UUID and therefore install as a separate extension.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development practices and
-[.AGENTS/plans/roadmap.md](.AGENTS/plans/roadmap.md) for the ordered provider
-milestones. Architecture and provider documentation is indexed in
-[docs/README.md](docs/README.md). UsageBeam is licensed under the [MIT License](LICENSE).
+UsageBeam is licensed under the [MIT License](LICENSE). Its runtime design and
+security boundaries are documented in [Architecture](docs/architecture.md).
