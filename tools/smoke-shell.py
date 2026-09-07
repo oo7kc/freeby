@@ -58,13 +58,16 @@ def seed_usage(destination):
                        'source': 'Synthetic smoke fixture',
                        'windows': [
                            {'id': f'{provider}:session', 'label': 'Session · 5 hours', 'usedPercent': percentages[0],
-                            'used': None, 'limit': None, 'unit': 'percent', 'unlimited': False, 'state': 'active',
+                            'used': None, 'limit': None, 'unit': 'percent', 'unlimited': False,
+                            'state': 'exhausted' if percentages[0] >= 100 else 'active',
                             'durationMinutes': 300, 'resetsAt': now + 7_200_000},
                            {'id': f'{provider}:weekly', 'label': 'Weekly', 'usedPercent': percentages[1],
-                            'used': None, 'limit': None, 'unit': 'percent', 'unlimited': False, 'state': 'active',
+                            'used': None, 'limit': None, 'unit': 'percent', 'unlimited': False,
+                            'state': 'exhausted' if percentages[1] >= 100 else 'active',
                             'durationMinutes': 10_080, 'resetsAt': now + 172_800_000},
-                           {'id': f'{provider}:reserve', 'label': 'Weekly reserve', 'usedPercent': 0,
-                            'used': None, 'limit': None, 'unit': 'percent', 'unlimited': False, 'state': 'active',
+                           {'id': f'{provider}:reserve', 'label': 'Weekly reserve', 'usedPercent': percentages[2],
+                            'used': None, 'limit': None, 'unit': 'percent', 'unlimited': False,
+                            'state': 'exhausted' if percentages[2] >= 100 else 'active',
                             'durationMinutes': 10_080, 'resetsAt': now + 604_800_000},
                        ]},
             'history': {'status': 'ready', 'message': '', 'updatedAt': now, 'scope': 'local',
@@ -82,8 +85,8 @@ def seed_usage(destination):
     ]
     target = destination / 'state' / PRODUCT_DIRECTORY
     target.mkdir(parents=True, exist_ok=True)
-    records = {'codex': record('codex', 'Codex', 'Plus', (46, 7), models),
-               'claude': record('claude', 'Claude Code', 'Pro', (100, 43), models)}
+    records = {'codex': record('codex', 'Codex', 'Plus', (100, 94, 83), models),
+               'claude': record('claude', 'Claude Code', 'Pro', (46, 7, 0), models)}
     for provider, data in records.items():
         (target / f'{provider}.json').write_text(json.dumps(data))
     # Separate fixtures survive asynchronous collector updates to the cache.

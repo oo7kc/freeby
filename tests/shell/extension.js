@@ -209,6 +209,15 @@ export default class UsageBeamUITest extends Extension {
             limitName.get_theme_node().get_font().get_size(), 'Limit metrics lack font hierarchy');
         const activityParts = matching(content, 'usagebeam-disclosure-summary');
         assert(activityParts.length === 3, 'Activity summary is not split into semantic parts');
+        for (const severity of ['caution', 'warning', 'danger']) {
+            const actors = matching(content, `usagebeam-${severity}`);
+            assert(actors.some(actor => actor.has_style_class_name('usagebeam-limit-percent')),
+                `${severity}: percentage does not expose quota severity`);
+            assert(actors.some(actor => actor.has_style_class_name('usagebeam-track')),
+                `${severity}: meter does not expose quota severity`);
+        }
+        assert(indicator._panelValue.has_style_class_name('usagebeam-danger'),
+            'Panel indicator does not expose the highest quota severity');
         const modelContent = matching(content, 'usagebeam-model-content')[0];
         const [modelName, modelTotal] = modelContent.get_children();
         assert(modelTotal.get_theme_node().get_font().get_size() <

@@ -6,9 +6,9 @@ export const fingerprint = value => GLib.compute_checksum_for_string(GLib.Checks
 
 const PRODUCT_DIRECTORY = 'usagebeam';
 const LEGACY_DIRECTORY = 'freeby';
-const PROVIDERS = Object.freeze(['codex', 'claude', 'cursor', 'copilot']);
+const PROVIDERS = Object.freeze(['codex', 'claude']);
 
-export function readText(path, fallback = null, maxBytes = 16 * 1024 * 1024) {
+function readText(path, fallback = null, maxBytes = 16 * 1024 * 1024) {
     if (!Number.isSafeInteger(maxBytes) || maxBytes <= 0)
         throw new Error('File size limit must be a positive integer');
     try {

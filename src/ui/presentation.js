@@ -2,6 +2,24 @@ import {resetCountdown} from '../core/format.js';
 
 const CURRENT_STATES = new Set(['ready', 'partial']);
 
+export const QUOTA_THRESHOLDS = Object.freeze({
+    caution: 80,
+    warning: 90,
+    danger: 100,
+});
+
+export function quotaSeverity(percent) {
+    if (!Number.isFinite(percent))
+        return null;
+    if (percent >= QUOTA_THRESHOLDS.danger)
+        return 'danger';
+    if (percent >= QUOTA_THRESHOLDS.warning)
+        return 'warning';
+    if (percent >= QUOTA_THRESHOLDS.caution)
+        return 'caution';
+    return null;
+}
+
 export function providerStatus(record, refreshing = false) {
     if (CURRENT_STATES.has(record?.limits?.status))
         return 'LIVE';

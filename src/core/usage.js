@@ -1,5 +1,5 @@
 export const SCHEMA_VERSION = 2;
-export const NAMES = Object.freeze({codex: 'Codex', claude: 'Claude Code', cursor: 'Cursor', copilot: 'Copilot'});
+export const NAMES = Object.freeze({codex: 'Codex', claude: 'Claude Code'});
 
 const STATES = new Set(['loading', 'ready', 'partial', 'stale', 'missing-auth', 'unsupported', 'unavailable']);
 const WINDOW_STATES = new Set(['active', 'exhausted', 'unlimited']);
@@ -222,13 +222,6 @@ export function mergeRecord(previous, next, now = Date.now()) {
         result.accountKey ??= previous.accountKey;
     }
     return result;
-}
-
-export function highestUsage(value) {
-    if (!value || !['ready', 'partial'].includes(value.limits.status))
-        return null;
-    const values = value.limits.windows.filter(w => !w.unlimited && number(w.usedPercent) !== null).map(w => w.usedPercent);
-    return values.length ? Math.max(...values) : null;
 }
 
 export function localDate(time) {

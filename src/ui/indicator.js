@@ -8,12 +8,12 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {NAMES, recentDates} from '../core/usage.js';
 import {age, dateRange, modelName, tokens} from '../core/format.js';
 import {historyOverview, latestUpdate, panelQuota, periodDays, providerStatus,
-    quotaPresentation} from './presentation.js';
+    quotaPresentation, quotaSeverity} from './presentation.js';
 import {actionButton, button, dayChart, disclosureButton, label, meter, modelMeter,
     limitRow, metricLabel, providerIcon, separatorDot} from './widgets.js';
 
 const TAB_NAMES = {claude: 'Claude'};
-const PROVIDER_MARKS = {codex: '>_', claude: '✦', cursor: '⌁', copilot: '◆'};
+const PROVIDER_MARKS = {codex: '>_', claude: '✦'};
 
 export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator extends PanelMenu.Button {
     _init(settings, extensionPath, openPreferences) {
@@ -117,8 +117,8 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
         this._panelProvider.text = name;
         const quota = panelQuota(record);
         this._panelValue.text = quota ? `${quota.percent}%` : '—';
-        this._panelValue.style_class = `usagebeam-panel-value${quota?.percent >= 100 ? ' usagebeam-danger' :
-            quota?.percent >= 90 ? ' usagebeam-warning' : ''}`;
+        const severity = quotaSeverity(quota?.percent);
+        this._panelValue.style_class = `usagebeam-panel-value${severity ? ` usagebeam-${severity}` : ''}`;
         this._panelReset.text = quota?.reset ?? '—';
         const resetDescription = quota?.reset === 'due' ? ', reset due' :
             quota?.reset ? `, resets in ${quota.reset}` : '';
@@ -160,14 +160,14 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
             const view = quotaPresentation(window);
             if (!view)
                 continue;
-            box.add_child(limitRow(view.name, view.value, view.reset));
+            const severity = quotaSeverity(window.usedPercent);
+            box.add_child(limitRow(view.name, view.value, view.reset, severity));
             if (!window.unlimited) {
-                const level = window.usedPercent >= 100 ? 'usagebeam-danger' :
-                    window.usedPercent >= 90 ? 'usagebeam-warning' : '';
                 const resetDescription = view.reset === 'due' ? ', reset due' :
                     view.reset ? `, resets in ${view.reset}` : '';
                 box.add_child(meter(window.usedPercent / 100,
-                    `${view.name}: ${view.value} used${resetDescription}`, level));
+                    `${view.name}: ${view.value} used${resetDescription}`,
+                    severity ? `usagebeam-${severity}` : ''));
             }
             this._contentBox.add_child(box);
         }

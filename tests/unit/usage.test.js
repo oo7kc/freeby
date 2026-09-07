@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {aggregateEvents, highestUsage, mergeRecord, number, recentDates, record, validTime, validateRecord, windowUsage} from '../../src/core/usage.js';
+import {aggregateEvents, mergeRecord, number, recentDates, record, validTime, validateRecord, windowUsage} from '../../src/core/usage.js';
 import {compactTokens, dateRange, modelName, resetCountdown, resetTime, tokens} from '../../src/core/format.js';
 import {ThresholdTracker} from '../../src/core/notifications.js';
 
@@ -9,7 +9,6 @@ test('unknown metrics are not coerced to zero', () => {
         assert.equal(number(value), null);
     assert.equal(number(0), 0);
     assert.equal(windowUsage({id: 'plan', label: 'Plan', used: 0, limit: 0}), null);
-    assert.equal(highestUsage(record('codex')), null);
 });
 
 test('unknown, exhausted and unlimited windows remain distinct', () => {
@@ -24,7 +23,8 @@ test('unknown, exhausted and unlimited windows remain distinct', () => {
 
 test('contract rejects invalid provider IDs and quota values', () => {
     assert.throws(() => record('toString'), /Unsupported provider/);
-    assert.throws(() => validateRecord(record('codex'), 'cursor'));
+    assert.throws(() => record('cursor'), /Unsupported provider/);
+    assert.throws(() => validateRecord(record('codex'), 'claude'));
     const value = record('codex');
     value.limits.windows.push({id: 'x', label: 'X', state: 'active', usedPercent: null});
     assert.throws(() => validateRecord(value, 'codex'));
@@ -77,7 +77,6 @@ test('failure preserves last successful values as stale, account change discards
     assert.equal(merged.limits.status, 'stale');
     assert.equal(merged.limits.updatedAt, 100);
     assert.equal(merged.limits.windows[0].usedPercent, 50);
-    assert.equal(highestUsage(merged), null);
     next.accountKey = 'two';
     assert.equal(mergeRecord(old, next).limits.windows.length, 0);
     next.accountKey = null;

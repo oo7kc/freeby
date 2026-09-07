@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {chartBarGeometry, historyOverview, latestUpdate, panelQuota, periodDays, providerStatus,
-    quotaName, quotaPresentation} from '../../src/ui/presentation.js';
+    quotaName, quotaPresentation, quotaSeverity, QUOTA_THRESHOLDS} from '../../src/ui/presentation.js';
 
 test('provider status distinguishes live, local, cached and setup data', () => {
     const value = {limits: {status: 'ready'}, history: {status: 'ready'}};
@@ -63,6 +63,18 @@ test('panel quota reports only the highest current quota window', () => {
     assert.deepEqual(panelQuota(record, now), {percent: 46, reset: '15h 59m'});
     assert.equal(panelQuota({limits: {...record.limits, status: 'stale'}}, now), null);
     assert.equal(panelQuota(null, now), null);
+});
+
+test('quota severity uses explicit caution, warning and danger thresholds', () => {
+    assert.deepEqual(QUOTA_THRESHOLDS, {caution: 80, warning: 90, danger: 100});
+    for (const value of [null, undefined, NaN, 0, 79.9])
+        assert.equal(quotaSeverity(value), null);
+    assert.equal(quotaSeverity(80), 'caution');
+    assert.equal(quotaSeverity(89.9), 'caution');
+    assert.equal(quotaSeverity(90), 'warning');
+    assert.equal(quotaSeverity(99.9), 'warning');
+    assert.equal(quotaSeverity(100), 'danger');
+    assert.equal(quotaSeverity(125), 'danger');
 });
 
 test('chart geometry gives every non-zero day visible width and bottom alignment', () => {

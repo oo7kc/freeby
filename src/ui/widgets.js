@@ -47,14 +47,15 @@ export function providerIcon(provider, extensionPath, style = '') {
     });
 }
 
-export function limitRow(name, value, reset) {
+export function limitRow(name, value, reset, severity = null) {
     const box = new St.BoxLayout({style_class: 'usagebeam-limit-row', x_expand: true});
     const title = label(name, 'usagebeam-limit-name', true);
     title.clutter_text.ellipsize = Pango.EllipsizeMode.END;
     box.add_child(title);
     const metrics = new St.BoxLayout({style_class: 'usagebeam-limit-metrics'});
     if (reset) {
-        metrics.add_child(metricColumn(value, 'usagebeam-limit-percent'));
+        metrics.add_child(metricColumn(value,
+            `usagebeam-limit-percent${severity ? ` usagebeam-${severity}` : ''}`));
         metrics.add_child(separatorDot('usagebeam-limit-separator'));
         metrics.add_child(metricColumn(reset, 'usagebeam-limit-reset'));
     } else {

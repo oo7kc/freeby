@@ -255,22 +255,6 @@
   background-color: st-mix(-st-accent-color, #b7cbd5, 42%);
 }
 
-.usagebeam-warning {
-  color: #f6c85f;
-}
-
-.usagebeam-danger {
-  color: #ff6b88;
-}
-
-.usagebeam-warning .usagebeam-fill {
-  background-color: #f6c85f;
-}
-
-.usagebeam-danger .usagebeam-fill {
-  background-color: #ff6b88;
-}
-
 .usagebeam-disclosure {
   min-height: 25px;
   margin: 3px 0 4px;
@@ -451,4 +435,44 @@
 
 .usagebeam-menu.usagebeam-light .usagebeam-status-live {
   color: #167345;
+}
+
+/* Quota severity is deliberately encoded in both color and numeric text. */
+.usagebeam-panel-value.usagebeam-caution,
+.usagebeam-menu .usagebeam-limit-percent.usagebeam-caution {
+  color: #e8c65d;
+}
+
+.usagebeam-panel-value.usagebeam-warning,
+.usagebeam-menu .usagebeam-limit-percent.usagebeam-warning {
+  color: #ee9d50;
+}
+
+.usagebeam-panel-value.usagebeam-danger,
+.usagebeam-menu .usagebeam-limit-percent.usagebeam-danger {
+  color: #f05f78;
+}
+
+.usagebeam-track.usagebeam-caution .usagebeam-fill {
+  background-color: #e8c65d;
+}
+
+.usagebeam-track.usagebeam-warning .usagebeam-fill {
+  background-color: #ee9d50;
+}
+
+.usagebeam-track.usagebeam-danger .usagebeam-fill {
+  background-color: #f05f78;
+}
+
+.usagebeam-menu.usagebeam-light .usagebeam-limit-percent.usagebeam-caution {
+  color: #7a5b00;
+}
+
+.usagebeam-menu.usagebeam-light .usagebeam-limit-percent.usagebeam-warning {
+  color: #9a4f00;
+}
+
+.usagebeam-menu.usagebeam-light .usagebeam-limit-percent.usagebeam-danger {
+  color: #b12643;
 }
