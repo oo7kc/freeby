@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {chartBarGeometry, historyOverview, latestUpdate, panelQuota, periodDays, providerStatus,
-    quotaName, quotaPresentation, quotaSeverity, QUOTA_THRESHOLDS} from '../../src/ui/presentation.js';
+    quotaName, quotaPresentation} from '../../src/ui/presentation.js';
+import {notificationMilestones, quotaSeverity, QUOTA_THRESHOLDS} from '../../src/core/thresholds.js';
 
 test('provider status distinguishes live, local, cached and setup data', () => {
     const value = {limits: {status: 'ready'}, history: {status: 'ready'}};
@@ -43,14 +44,23 @@ test('quota presentation keeps names concise and reset times inline', () => {
     const now = 1_000_000;
     const reserve = {id: 'gpt-reserve:primary', label: 'Reserve · Weekly',
         durationMinutes: 10080, usedPercent: 18.2, resetsAt: now + 4 * 86400000 + 22 * 3600000};
-    assert.equal(quotaName(reserve), 'Weekly reserve');
+    assert.equal(quotaName(reserve), 'Weekly Reserve');
     assert.deepEqual(quotaPresentation(reserve, now), {
-        name: 'Weekly reserve', value: '18%', reset: '4d 22h',
+        name: 'Weekly Reserve', value: '18%', reset: '4d 22h',
     });
+    assert.equal(quotaName({id: 'five-hour', label: 'Session · 5 hours', durationMinutes: 300}),
+        '5H Session');
     assert.deepEqual(quotaPresentation({id: 'credits', label: 'Credits', unlimited: true}, now), {
         name: 'Credits', value: 'Unlimited', reset: null,
     });
     assert.equal(quotaPresentation({id: 'broken', label: 'Broken'}, now), null);
+});
+
+test('notification milestones follow quota semantics without duplicate levels', () => {
+    assert.deepEqual(notificationMilestones(80), [80, 90, 100]);
+    assert.deepEqual(notificationMilestones(90), [90, 100]);
+    assert.deepEqual(notificationMilestones(95), [95, 100]);
+    assert.deepEqual(notificationMilestones(NaN), [90, 100]);
 });
 
 test('panel quota reports only the highest current quota window', () => {

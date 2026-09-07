@@ -40,7 +40,7 @@ export default class UsageBeamPreferences extends ExtensionPreferences {
 
         const notifyRow = new Adw.SwitchRow({
             title: 'Notifications',
-            subtitle: 'Alert when a provider hits its limit',
+            subtitle: 'Alert once when usage crosses each warning milestone',
         });
         settings.bind('notifications-enabled', notifyRow, 'active', 0);
         group.add(notifyRow);

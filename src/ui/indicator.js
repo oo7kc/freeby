@@ -7,8 +7,9 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {NAMES, recentDates} from '../core/usage.js';
 import {age, modelName, tokens} from '../core/format.js';
+import {quotaSeverity} from '../core/thresholds.js';
 import {historyOverview, latestUpdate, panelQuota, periodDays, providerStatus,
-    quotaPresentation, quotaSeverity} from './presentation.js';
+    quotaPresentation} from './presentation.js';
 import {actionButton, button, dayChart, disclosureButton, label, meter, modelMeter,
     limitRow, metricLabel, providerIcon, separatorDot} from './widgets.js';
 
@@ -183,12 +184,7 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
     _renderHistory(history) {
         const overview = historyOverview(history);
         if (overview) {
-            const summary = [
-                overview.days ? {text: `${overview.days} days`, role: 'period'} : null,
-                {text: tokens(overview.total), role: 'tokens'},
-                {text: overview.scope, role: 'source'},
-            ].filter(Boolean);
-            this._contentBox.add_child(disclosureButton(summary, this._detailsExpanded, () => {
+            this._contentBox.add_child(disclosureButton(this._detailsExpanded, () => {
                 this._detailsExpanded = !this._detailsExpanded;
                 this.render();
             }));
@@ -210,8 +206,6 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
     _renderDays(history, parent = this._contentBox) {
         const overview = historyOverview(history);
         this._heading(`LAST ${overview?.days ?? history.days.length} DAYS · ${tokens(overview?.total ?? 0)} TOKENS`, parent);
-        const scope = history.scope === 'account' ? 'Account activity' : 'This device';
-        parent.add_child(label(scope, 'usagebeam-history-scope'));
         const today = recentDates(Date.now(), 1)[0];
         parent.add_child(dayChart(history.days, today));
     }

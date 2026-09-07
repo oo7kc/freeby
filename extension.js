@@ -1,5 +1,6 @@
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {notificationBody} from './src/core/notifications.js';
 import {UsageBeamIndicator} from './src/ui/indicator.js';
 import {clearIndicatorPlacement, placeIndicator} from './src/ui/panelPlacement.js';
 import {migrateLegacyInstall} from './src/services/migration.js';
@@ -13,10 +14,9 @@ export default class UsageBeamExtension extends Extension {
         Main.panel.addToStatusArea(this.uuid, this._indicator, 0, 'center');
         this._placeIndicator();
         this._service = new UsageService(this._settings, this.path, () => this._indicator?.render(), alerts => {
-            for (const alert of alerts) {
-                const state = alert.threshold === 100 ? 'limit reached' : `reached ${alert.threshold}%`;
-                Main.notify('UsageBeam usage alert', `${alert.provider}: ${alert.label} ${state}.`);
-            }
+            const message = notificationBody(alerts);
+            if (message)
+                Main.notify('UsageBeam usage alert', message);
         });
         this._indicator.attach(this._service);
         this._settingsIds = [];

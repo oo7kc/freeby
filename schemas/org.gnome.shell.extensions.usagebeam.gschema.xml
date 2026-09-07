@@ -11,7 +11,7 @@
     <key name="notifications-enabled" type="b">
       <default>true</default>
       <summary>Enable notifications</summary>
-      <description>Show desktop notifications when a provider hits its limit</description>
+      <description>Show one desktop notification when usage crosses each configured warning milestone</description>
     </key>
     <key name="enabled-providers" type="as">
       <default>['codex', 'claude']</default>
@@ -40,7 +40,7 @@
     <key name="notification-threshold" type="i">
       <default>90</default>
       <range min="50" max="100"/>
-      <summary>Usage percentage that triggers a warning</summary>
+      <summary>First usage percentage that triggers a warning</summary>
     </key>
   </schema>
   <!-- Provider capabilities are discovered at runtime; unsupported fields are never invented. -->

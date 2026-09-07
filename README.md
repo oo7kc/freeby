@@ -5,6 +5,11 @@ GNOME top panel. The compact indicator shows the active provider's highest quota
 and reset countdown; its popup reveals every reported limit plus seven days of
 local token and model activity.
 
+The product concept was adapted for GNOME Shell from the
+[Agents plugin in Omarchy](https://github.com/omacom/omarchy/blob/quattro/shell/plugins/agents/README.md).
+UsageBeam is an independent implementation designed around GNOME's native panel,
+preferences, accessibility, and lifecycle conventions.
+
 ## At a glance
 
 - Live account limits and reset windows for Codex and Claude Code.
@@ -42,19 +47,6 @@ See the detailed [Codex](docs/providers/codex.md) and
 [Claude Code](docs/providers/claude.md) provider notes for source and
 compatibility details.
 
-## Usage semantics
-
-Quota bars use a fixed 0–100% scale and retain their numeric percentage:
-
-- Below 80% uses the normal theme accent.
-- 80–89% uses a restrained yellow caution state.
-- 90–99% uses an orange warning state.
-- 100% and above uses a red exhausted state.
-
-Color reinforces the value; it never replaces the percentage or state text.
-Activity bars are relative to the largest value in the displayed seven-day
-period and do not represent account limits.
-
 ## Requirements
 
 - GNOME Shell 50.
@@ -69,12 +61,14 @@ Download the UsageBeam ZIP from [GitHub Releases](https://github.com/oo7kc/freeb
 then run:
 
 ```bash
-gnome-extensions install --force ./usagebeam@oo7kc.github.io-VERSION.zip
+gnome-extensions install ./usagebeam@oo7kc.github.io-VERSION.zip
 gnome-extensions enable usagebeam@oo7kc.github.io
 ```
 
 Log out and back in when installing UsageBeam for the first time so GNOME Shell
-can discover the new extension identity.
+can discover the new extension identity. When replacing an existing UsageBeam
+installation, add `--force`; it tells `gnome-extensions` that overwriting the
+installed copy is intentional.
 
 ## Settings
 

@@ -126,7 +126,7 @@ export function button(text, callback, {active = false, name = text} = {}) {
     return actor;
 }
 
-export function disclosureButton(summary, expanded, callback) {
+export function disclosureButton(expanded, callback) {
     const actor = new St.Button({
         accessible_name: 'Activity details',
         accessible_role: Atk.Role.TOGGLE_BUTTON,
@@ -140,18 +140,10 @@ export function disclosureButton(summary, expanded, callback) {
     });
     const content = new St.BoxLayout({style_class: 'usagebeam-disclosure-content', x_expand: true});
     content.add_child(label('Activity', 'usagebeam-disclosure-title', true));
-    const meta = new St.BoxLayout({style_class: 'usagebeam-disclosure-meta'});
-    summary.forEach(({text, role}, index) => {
-        if (index)
-            meta.add_child(separatorDot('usagebeam-disclosure-separator'));
-        meta.add_child(metricLabel(text,
-            `usagebeam-disclosure-summary usagebeam-disclosure-${role}`));
-    });
-    meta.add_child(new St.Icon({
+    content.add_child(new St.Icon({
         icon_name: expanded ? 'pan-up-symbolic' : 'pan-down-symbolic',
         style_class: 'usagebeam-disclosure-icon',
     }));
-    content.add_child(meta);
     actor.set_child(content);
     actor.connect('clicked', callback);
     return actor;

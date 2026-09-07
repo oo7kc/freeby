@@ -279,37 +279,12 @@
 }
 
 .usagebeam-disclosure-content {
-  spacing: 10px;
+  spacing: 8px;
 }
 
 .usagebeam-disclosure-title {
   font-size: 10pt;
   font-weight: 650;
-}
-
-.usagebeam-disclosure-meta {
-  spacing: 5px;
-}
-
-.usagebeam-disclosure-summary {
-  font-feature-settings: "tnum";
-  font-size: 8.75pt;
-  font-weight: 500;
-  opacity: 0.76;
-}
-
-.usagebeam-disclosure-tokens {
-  font-weight: 650;
-  opacity: 0.94;
-}
-
-.usagebeam-disclosure-source {
-  font-size: 8.5pt;
-  opacity: 0.64;
-}
-
-.usagebeam-disclosure-separator {
-  min-width: 4px;
 }
 
 .usagebeam-disclosure-icon {
@@ -320,13 +295,6 @@
 .usagebeam-details {
   spacing: 0;
   padding-top: 1px;
-}
-
-.usagebeam-history-scope {
-  padding-bottom: 1px;
-  font-size: 9.75pt;
-  font-weight: 650;
-  opacity: 0.94;
 }
 
 .usagebeam-day-chart {

@@ -39,6 +39,12 @@ All notable UsageBeam changes are documented here.
   while retaining a fixed width across provider changes.
 - Seven-day activity emphasizes its local/account scope without repeating a
   date range already represented by the chart.
+- The activity disclosure now shows only its title and chevron; period, totals,
+  and source remain in the expanded content where they are needed.
+- Usage alerts now progress through configured, warning, and exhausted milestones
+  once per quota period and combine simultaneous crossings into one notification.
+- Quota labels use compact `5H Session` and `Weekly Reserve` names, while expanded
+  activity keeps scope implicit and gives the chart more breathing room.
 - Expired quota windows are not presented as current cached data.
 - Empty, malformed, or unavailable provider responses are never shown as zero
   usage.

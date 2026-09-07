@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {aggregateEvents, mergeRecord, number, recentDates, record, validTime, validateRecord, windowUsage} from '../../src/core/usage.js';
 import {compactTokens, modelName, resetCountdown, resetTime, tokens} from '../../src/core/format.js';
-import {ThresholdTracker} from '../../src/core/notifications.js';
+import {notificationBody, ThresholdTracker} from '../../src/core/notifications.js';
 
 test('unknown metrics are not coerced to zero', () => {
     for (const value of [null, undefined, '', '  ', false, -1, Infinity, 'bad', [1], {value: 1}])
@@ -113,19 +113,38 @@ test('calendar buckets are consecutive across month boundaries', () => {
     assert.equal(validTime('1800000000'), 1800000000000);
 });
 
-test('notifications require a verified crossing and deduplicate warning and limit separately', () => {
+test('notifications emit every configured milestone once per quota period', () => {
     const tracker = new ThresholdTracker();
     const value = record('codex');
-    value.limits = {status: 'ready', windows: [{id: 'weekly', label: 'Weekly', usedPercent: 95, resetsAt: 500}]};
-    assert.deepEqual(tracker.update(value), []);
+    value.limits = {status: 'ready', windows: [{id: 'weekly', label: 'Weekly', usedPercent: 79, resetsAt: 500}]};
+    assert.deepEqual(tracker.update(value, 80), []);
+    value.limits.windows[0].usedPercent = 80;
+    assert.equal(tracker.update(value, 80)[0].threshold, 80);
+    assert.deepEqual(tracker.update(value, 80), []);
+    value.limits.windows[0].usedPercent = 90;
+    assert.equal(tracker.update(value, 80)[0].threshold, 90);
+    assert.deepEqual(tracker.update(value, 80), []);
     value.limits.windows[0].usedPercent = 100;
-    assert.equal(tracker.update(value)[0].threshold, 100);
-    assert.deepEqual(tracker.update(value), []);
+    assert.equal(tracker.update(value, 80)[0].threshold, 100);
+    assert.deepEqual(tracker.update(value, 80), []);
+    value.limits.windows[0].usedPercent = 50;
+    assert.deepEqual(tracker.update(value, 80), []);
+    value.limits.windows[0].usedPercent = 100;
+    assert.deepEqual(tracker.update(value, 80), []);
     value.limits.status = 'unavailable';
-    assert.deepEqual(tracker.update(value), []);
+    assert.deepEqual(tracker.update(value, 80), []);
     value.limits.status = 'ready';
     value.limits.windows[0].resetsAt = 1000;
-    assert.deepEqual(tracker.update(value), []);
+    assert.deepEqual(tracker.update(value, 80), []);
+});
+
+test('simultaneous and repeated alerts produce one concise notification body', () => {
+    assert.equal(notificationBody([
+        {provider: 'Codex', label: 'Weekly', threshold: 90},
+        {provider: 'Codex', label: 'Weekly', threshold: 90},
+        {provider: 'Codex', label: '5H Session', threshold: 100},
+    ]), 'Codex: Weekly reached 90%.\nCodex: 5H Session limit reached.');
+    assert.equal(notificationBody([]), '');
 });
 
 test('formatting preserves unknown/reset-due states', () => {

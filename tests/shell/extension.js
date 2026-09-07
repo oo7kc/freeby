@@ -234,11 +234,17 @@ export default class UsageBeamUITest extends Extension {
         const limitValue = matching(content, 'usagebeam-limit-percent')[0].get_child();
         assert(limitValue.get_theme_node().get_font().get_size() <
             limitName.get_theme_node().get_font().get_size(), 'Limit metrics lack font hierarchy');
-        const activityParts = matching(content, 'usagebeam-disclosure-summary');
-        assert(activityParts.length === 3, 'Activity summary is not split into semantic parts');
-        const historyScope = matching(content, 'usagebeam-history-scope');
-        assert(historyScope.length === 1 && historyScope[0].text === 'This device',
-            'Expanded activity should emphasize source scope without a date range');
+        assert(matching(content, 'usagebeam-disclosure-summary').length === 0,
+            'Collapsed activity control should not repeat detail metadata');
+        assert(matching(content, 'usagebeam-disclosure-icon').length === 1,
+            'Activity control should retain its disclosure affordance');
+        assert(matching(content, 'usagebeam-history-scope').length === 0,
+            'Expanded activity should not repeat its local source scope');
+        const todayColumns = matching(content, 'usagebeam-today');
+        assert(todayColumns.length === 1,
+            'Daily activity should distinguish exactly one current-day column');
+        assert(matching(content, 'usagebeam-chart-bar').length === 7,
+            'Every daily activity column should use the same bar style');
         for (const severity of ['caution', 'warning', 'danger']) {
             const actors = matching(content, `usagebeam-${severity}`);
             assert(actors.some(actor => actor.has_style_class_name('usagebeam-limit-percent')),
