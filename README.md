@@ -21,7 +21,8 @@ dedicated milestones are completed.
 - Explicit unavailable, unsupported, missing-authentication, and exhausted states.
 - Bounded collectors, refresh backoff, wake refresh, cancellation on disable, and
   threshold-crossing notifications.
-- A native, theme-aware, keyboard-focusable GNOME panel interface.
+- A native, theme-aware, keyboard-focusable interface with a compact active-provider
+  panel readout and expandable seven-day activity chart.
 
 UsageBeam stores only derived usage metadata under the standard XDG state/cache
 directories. It does not copy prompts, responses, transcripts, or credentials.
@@ -66,10 +67,10 @@ active, the former `freeby@kelvin.local` extension can be uninstalled.
 
 ## Settings
 
-The alpha.2 preferences window controls refresh frequency and notifications.
-The underlying schema also supports the default provider, ordered enabled
-providers, history retention, and notification threshold; these receive their
-full preferences interface in alpha.5.
+The development preferences window controls left/right-of-calendar placement,
+refresh frequency, and notifications. The underlying schema also supports the
+default provider, ordered enabled providers, history retention, and notification
+threshold; these receive their full preferences interface in alpha.5.
 
 To opt into a preview adapter during development:
 

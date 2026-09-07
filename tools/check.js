@@ -57,6 +57,10 @@ for (const file of required) {
 const schemas = walk('schemas').filter(file => file.endsWith('.xml'));
 if (schemas.length !== 1 || schemas[0] !== 'schemas/org.gnome.shell.extensions.usagebeam.gschema.xml')
     throw new Error('Unexpected extension schema input');
+const icons = walk('icons');
+if (icons.length !== 2 || !icons.includes('icons/claude.svg') ||
+    !icons.includes('icons/codex-symbolic.svg'))
+    throw new Error('Unexpected runtime icon input');
 const obsolete = ['plan.md', 'indicator.js', 'src/providers/legacy.js', 'scripts/freeby.sh',
     'scripts/copilot-setup.sh', 'tests/freeby.bats', 'docs/s1.png', 'docs/s2.png', 'reference-images'];
 for (const file of obsolete) {

@@ -1,7 +1,8 @@
 # UsageBeam usage monitor roadmap
 
-Updated: 2026-09-07. Status: UsageBeam identity migration complete on `dev`;
-Cursor remains the next alpha.3 provider milestone.
+Updated: 2026-09-07. Status: the UsageBeam identity and active-provider
+interface refinements are complete on `dev`; Cursor remains the next alpha.3
+provider milestone.
 
 ## Agreed direction
 
@@ -28,13 +29,14 @@ The [Claude reference](../references/claude-usage.jpeg) and
 1. Provider mark, name, and reported plan.
 2. A selector for connected/enabled providers; omit the selector when only one exists.
 3. Independently labeled quota windows with percent-used meters and reset countdowns.
-4. Seven daily token totals, with today emphasized.
+4. A seven-column daily token chart, with today emphasized.
 5. Model totals shown as horizontal bars.
 
 Adapt that hierarchy to GNOME using native St/Clutter widgets, theme-aware colors,
 aligned/tabular numerals, restrained separators, visible focus, and accessible
 labels. Add a footer with last-successful-update time, refresh, and preferences.
-Limit popup height to the monitor work area and scroll content when needed.
+Keep activity collapsed by default; when opened, expand the popup naturally
+without a nested scrolling region.
 
 - Quota bars use a fixed 0–100% scale. Activity bars scale against the largest value in the displayed period.
 - Daily and model breakdowns must clearly state their period and whether the source is local or account-wide.
@@ -172,8 +174,8 @@ re-enabled without extension errors in an isolated GNOME Shell 50 session.
 - [x] Match the supplied Omarchy hierarchy with a compact, theme-integrated
   panel, visible data status, equal provider tabs, and left-anchored graphics.
 - [x] Keep limits and freshness in the default view, move daily/model activity
-  behind an accessible disclosure, and retain scrolling only as a constrained
-  display or expanded-content fallback.
+  behind an accessible disclosure, and let the complete activity view expand
+  without a nested scrollbar.
 - [x] Inherit the user's Shell font and accent, place the subtle accent on the
   popup perimeter, and consolidate actions into a compact footer.
 - [x] Detect user-local and version-managed Codex installations from GNOME
@@ -237,6 +239,27 @@ errors in a private GNOME Shell 50 session. The former local extension package
 was removed and the new UUID was installed and enabled for the next login; GNOME
 Shell 50 cannot discover a brand-new UUID in an already-running Wayland session.
 
+### Active-provider interface checkpoint
+
+- [x] Replace the generic panel label with one compact active-provider readout:
+  adaptive provider icon, short name, highest current quota, and reset countdown.
+- [x] Put quota reset countdowns beside their percentages, rename the Codex
+  reserve window to `Weekly reserve` for display, and remove redundant reset rows.
+- [x] Render seven-day activity as an accessible, softly colored column chart
+  while retaining explicit local/account scope and measurement dates.
+- [x] Remove the popup's internal scrolling region so activity expands to its
+  complete natural height, while remaining collapsed by default.
+- [x] Add immediate left/right-of-calendar placement in native preferences and
+  package the supplied Claude and adaptive Codex SVG marks.
+
+Evidence: `npm run check` passed 28 deterministic unit tests, strict schema,
+layout, identity, and GJS integration checks. Two builds produced the same
+41,049-byte archive at SHA-256
+`0622c2af111f7f1985e99340af32fb99c1dd4020bb9f2f03ccee774c1973e542`.
+That exact archive loaded with populated Codex and Claude records, moved live
+from the left to the right of the calendar, disabled, and re-enabled without
+extension errors in a private GNOME Shell 50 session.
+
 ### 3. Cursor — v2.0.0-alpha.3
 
 - [ ] Revalidate current Cursor authentication and usage sources for free and paid accounts.
@@ -256,11 +279,11 @@ Shell 50 cannot discover a brand-new UUID in an already-running Wayland session.
 ### 5. Preferences and interface polish — v2.0.0-alpha.5
 
 - [ ] Expand the existing preferences entry into organized native libadwaita pages.
-- [ ] Add left/center/right panel placement and ordering within the selected panel area, with immediate updates.
+- [x] Add immediate left/right-of-calendar panel placement for the compact active-provider readout.
 - [ ] Add provider enablement/order, default provider, refresh controls, and connection diagnostics.
 - [ ] Add notification thresholds, deduplication per account/window, and history retention/clear controls.
 - [ ] Preserve valid existing settings and document new defaults and migrations.
-- [ ] Verify keyboard navigation, screen-reader labels, dark/light themes, long content, scrolling, and display scaling.
+- [ ] Verify keyboard navigation, screen-reader labels, dark/light themes, long content, natural popup expansion, and display scaling.
 - [ ] Commit, tag, publish, and verify the installable alpha.5 prerelease using the finalized name and existing icon.
 
 ### 6. Stabilization — v2.0.0-beta.1, then v2.0.0

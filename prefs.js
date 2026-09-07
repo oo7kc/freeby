@@ -13,6 +13,22 @@ export default class UsageBeamPreferences extends ExtensionPreferences {
         const group = new Adw.PreferencesGroup({title: 'General'});
         page.add(group);
 
+        const positions = ['left-of-calendar', 'right-of-calendar'];
+        const positionRow = new Adw.ComboRow({
+            title: 'Panel position',
+            subtitle: 'Place the active provider beside the calendar',
+            model: Gtk.StringList.new(['Left of calendar', 'Right of calendar']),
+        });
+        const syncPosition = () => {
+            const selected = positions.indexOf(settings.get_string('panel-position'));
+            positionRow.selected = selected >= 0 ? selected : 1;
+        };
+        syncPosition();
+        positionRow.connect('notify::selected', () =>
+            settings.set_string('panel-position', positions[positionRow.selected]));
+        settings.connect('changed::panel-position', syncPosition);
+        group.add(positionRow);
+
         const intervalRow = new Adw.SpinRow({
             title: 'Refresh interval',
             subtitle: 'How often to check usage (seconds, min 30)',

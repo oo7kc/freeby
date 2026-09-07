@@ -93,6 +93,7 @@ def smoke(source, archive, destination):
            'GSETTINGS_SCHEMA_DIR': str(prefix / 'share/gnome-shell/extensions' / UUID / 'schemas'),
            'LIBGL_ALWAYS_SOFTWARE': '1'}
     run(['gsettings', 'set', SCHEMA, 'enabled-providers', "['codex', 'claude']"], env, check=True)
+    run(['gsettings', 'set', SCHEMA, 'panel-position', "'left-of-calendar'"], env, check=True)
     run(['gsettings', 'set', 'org.gnome.shell', 'enabled-extensions', f"['{UUID}']"], env, check=True)
     run(['gsettings', 'set', 'org.gnome.shell', 'welcome-dialog-last-shown-version', '999'], env)
     bus = subprocess.Popen(['dbus-daemon', '--session', '--nofork', '--print-address=1'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
@@ -118,6 +119,9 @@ def smoke(source, archive, destination):
         else:
             raise RuntimeError(f'Extension did not become active: {info}')
         print('PASS: packaged extension loads in a private GNOME Shell session')
+        run(['gsettings', 'set', SCHEMA, 'panel-position', "'right-of-calendar'"], env, check=True)
+        time.sleep(0.2)
+        print('PASS: live calendar-side placement update')
         run(['gnome-extensions', 'disable', UUID], env, check=True)
         run(['gnome-extensions', 'enable', UUID], env, check=True)
         print('PASS: extension disable/re-enable')

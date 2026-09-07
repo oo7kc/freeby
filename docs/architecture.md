@@ -6,7 +6,8 @@ never reads provider credentials or transcript formats.
 
 ## Runtime flow
 
-1. `extension.js` creates the indicator and `UsageService`.
+1. `extension.js` creates the indicator, places it beside the Shell calendar
+   according to preferences, and creates `UsageService`.
 2. `UsageService` loads cached provider records, schedules independent refreshes,
    and starts one bounded GJS collector per enabled provider. Command discovery
    is isolated in `src/services/commands.js`, including user-local and supported
@@ -59,9 +60,9 @@ not billing data and never becomes a fabricated subscription percentage.
 
 ## Distribution
 
-Meson installs only extension entry points, source modules, metadata, styles,
-license, and an extension-local schema. `tools/package.py` uses the same explicit
-runtime allowlist to produce deterministic ZIP files. Inputs must be regular,
-repository-owned files, and the completed archive is checked against the exact
-allowlist; agent material, docs, tests, tools, screenshots, and references cannot
-enter a release archive.
+Meson installs only extension entry points, source modules, provider SVG marks,
+metadata, styles, license, and an extension-local schema. `tools/package.py`
+uses the same explicit runtime allowlist to produce deterministic ZIP files.
+Inputs must be regular, repository-owned files, and the completed archive is
+checked against the exact allowlist; agent material, docs, tests, tools,
+screenshots, and references cannot enter a release archive.

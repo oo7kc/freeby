@@ -1,11 +1,27 @@
 import Atk from 'gi://Atk';
 import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
+import {compactTokens} from '../core/format.js';
+
+const PROVIDER_ICONS = new Set(['claude', 'codex']);
+const PROVIDER_ICON_FILES = {claude: 'claude.svg', codex: 'codex-symbolic.svg'};
 
 export function label(text, style = '', expand = false) {
     return new St.Label({text: String(text ?? ''), style_class: style,
         y_align: Clutter.ActorAlign.CENTER, x_expand: expand});
+}
+
+export function providerIcon(provider, extensionPath, style = '') {
+    if (!PROVIDER_ICONS.has(provider))
+        return null;
+    return new St.Icon({
+        gicon: new Gio.FileIcon({
+            file: Gio.File.new_for_path(`${extensionPath}/icons/${PROVIDER_ICON_FILES[provider]}`),
+        }),
+        style_class: `usagebeam-provider-icon usagebeam-${provider}-icon ${style}`.trim(),
+    });
 }
 
 export function row(left, right, style = 'usagebeam-row') {
@@ -52,6 +68,50 @@ export function modelMeter(left, right, fraction, name) {
         content.set_size(width, height);
     });
     return track;
+}
+
+export function dayChart(days, today) {
+    const values = Array.isArray(days) ? days : [];
+    const max = Math.max(1, ...values.map(day => day.total));
+    const chart = new St.Widget({
+        style_class: 'usagebeam-day-chart',
+        x_expand: true,
+        layout_manager: new Clutter.BoxLayout({
+            homogeneous: true,
+            orientation: Clutter.Orientation.HORIZONTAL,
+            spacing: 6,
+        }),
+        accessible_name: 'Daily token activity chart',
+        accessible_role: Atk.Role.PANEL,
+    });
+    for (const day of values) {
+        const isToday = day.date === today;
+        const weekday = new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, {weekday: 'short'});
+        const column = new St.BoxLayout({
+            vertical: true,
+            style_class: `usagebeam-chart-column${isToday ? ' usagebeam-today' : ''}`,
+            x_expand: true,
+            accessible_name: `${isToday ? 'Today, ' : ''}${weekday}, ${day.total} tokens, ${day.sessions ?? 0} sessions`,
+        });
+        column.add_child(label(compactTokens(day.total), 'usagebeam-chart-value'));
+        const plot = new St.Widget({
+            style_class: 'usagebeam-chart-plot',
+            x_expand: true,
+            layout_manager: new Clutter.BinLayout(),
+        });
+        const bar = new St.Widget({
+            style_class: 'usagebeam-chart-bar',
+            x_align: Clutter.ActorAlign.FILL,
+            y_align: Clutter.ActorAlign.END,
+            visible: day.total > 0,
+            height: Math.max(3, Math.round(day.total / max * 58)),
+        });
+        plot.add_child(bar);
+        column.add_child(plot);
+        column.add_child(label(weekday, 'usagebeam-chart-day'));
+        chart.add_child(column);
+    }
+    return chart;
 }
 
 export function button(text, callback, {active = false, name = text} = {}) {

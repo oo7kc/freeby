@@ -33,6 +33,7 @@ def package(source, output):
         raise RuntimeError('package.json contains an invalid release version')
     files = [source / name for name in ('extension.js', 'prefs.js', 'metadata.json', 'stylesheet.css', 'LICENSE')]
     files.extend(sorted((source / 'src').rglob('*.js')))
+    files.extend(sorted((source / 'icons').glob('*.svg')))
     schema = metadata.get('settings-schema')
     if schema != 'org.gnome.shell.extensions.usagebeam':
         raise RuntimeError('metadata.json contains an unexpected settings schema')

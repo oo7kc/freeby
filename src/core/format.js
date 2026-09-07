@@ -8,6 +8,10 @@ export function tokens(value) {
     return String(Math.round(value));
 }
 
+export function compactTokens(value) {
+    return tokens(value).replace(/\.0(?=[BMK]$)/, '');
+}
+
 export function resetTime(time, now = Date.now()) {
     if (!Number.isFinite(time) || time <= 0)
         return 'Reset time unavailable';
@@ -19,6 +23,15 @@ export function resetTime(time, now = Date.now()) {
     if (minutes >= 60)
         return `Resets in ${Math.floor(minutes / 60)}h ${minutes % 60}m`;
     return `Resets in ${minutes}m`;
+}
+
+export function resetCountdown(time, now = Date.now()) {
+    const value = resetTime(time, now);
+    if (value.startsWith('Resets in '))
+        return value.slice('Resets in '.length);
+    if (value.startsWith('Reset due'))
+        return 'due';
+    return null;
 }
 
 export function age(time, now = Date.now()) {

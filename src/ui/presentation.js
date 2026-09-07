@@ -1,3 +1,5 @@
+import {resetCountdown} from '../core/format.js';
+
 const CURRENT_STATES = new Set(['ready', 'partial']);
 
 export function providerStatus(record, refreshing = false) {
@@ -37,5 +39,42 @@ export function historyOverview(history) {
         days: periodDays(history.period),
         scope: history.scope === 'account' ? 'account' : 'local',
         total,
+    };
+}
+
+export function quotaName(window) {
+    const source = `${window?.id ?? ''} ${window?.label ?? ''}`.toLowerCase();
+    if (source.includes('reserve') &&
+        (source.includes('weekly') || window?.durationMinutes === 10080))
+        return 'Weekly reserve';
+    return String(window?.label ?? 'Usage limit');
+}
+
+export function quotaPresentation(window, now = Date.now()) {
+    if (!window)
+        return null;
+    if (window.unlimited)
+        return {name: quotaName(window), value: 'Unlimited', reset: null};
+    if (!Number.isFinite(window.usedPercent))
+        return null;
+    return {
+        name: quotaName(window),
+        value: `${Math.round(window.usedPercent)}%`,
+        reset: resetCountdown(window.resetsAt, now),
+    };
+}
+
+export function panelQuota(record, now = Date.now()) {
+    if (!CURRENT_STATES.has(record?.limits?.status))
+        return null;
+    const candidates = record.limits.windows
+        .filter(window => !window.unlimited && Number.isFinite(window.usedPercent))
+        .sort((left, right) => right.usedPercent - left.usedPercent);
+    const window = candidates[0];
+    if (!window)
+        return null;
+    return {
+        percent: Math.round(window.usedPercent),
+        reset: resetCountdown(window.resetsAt, now),
     };
 }

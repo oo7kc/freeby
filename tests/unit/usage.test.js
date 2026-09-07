@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {aggregateEvents, highestUsage, mergeRecord, number, recentDates, record, validTime, validateRecord, windowUsage} from '../../src/core/usage.js';
-import {modelName, resetTime, tokens} from '../../src/core/format.js';
+import {compactTokens, modelName, resetCountdown, resetTime, tokens} from '../../src/core/format.js';
 import {ThresholdTracker} from '../../src/core/notifications.js';
 
 test('unknown metrics are not coerced to zero', () => {
@@ -132,8 +132,13 @@ test('notifications require a verified crossing and deduplicate warning and limi
 test('formatting preserves unknown/reset-due states', () => {
     assert.equal(tokens(null), '—');
     assert.equal(tokens(23000000), '23.0M');
+    assert.equal(compactTokens(186000000), '186M');
+    assert.equal(compactTokens(56300000), '56.3M');
     assert.equal(resetTime(null), 'Reset time unavailable');
     assert.match(resetTime(100, 200), /awaiting update/);
+    assert.equal(resetCountdown(null), null);
+    assert.equal(resetCountdown(100, 200), 'due');
+    assert.equal(resetCountdown(100 + 4 * 86400000 + 22 * 3600000, 100), '4d 22h');
     assert.equal(modelName('gpt-5.6-sol'), 'GPT 5.6 Sol');
     assert.equal(modelName('codex_auto-review'), 'Codex Auto Review');
 });

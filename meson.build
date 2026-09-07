@@ -11,6 +11,7 @@ install_data('extension.js', 'prefs.js', 'metadata.json', 'stylesheet.css', 'LIC
   install_dir: extdir)
 
 install_subdir('src', install_dir: extdir)
+install_subdir('icons', install_dir: extdir)
 
 install_data('schemas/org.gnome.shell.extensions.usagebeam.gschema.xml',
   install_dir: schemadir)

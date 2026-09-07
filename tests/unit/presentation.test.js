@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {historyOverview, latestUpdate, periodDays, providerStatus} from '../../src/ui/presentation.js';
+import {historyOverview, latestUpdate, panelQuota, periodDays, providerStatus,
+    quotaName, quotaPresentation} from '../../src/ui/presentation.js';
 
 test('provider status distinguishes live, local, cached and setup data', () => {
     const value = {limits: {status: 'ready'}, history: {status: 'ready'}};
@@ -36,4 +37,30 @@ test('history overview summarizes daily activity without double-counting models'
         {days: 7, scope: 'account', total: 70});
     assert.equal(historyOverview({...history, days: [], models: []}), null);
     assert.equal(historyOverview(null), null);
+});
+
+test('quota presentation keeps names concise and reset times inline', () => {
+    const now = 1_000_000;
+    const reserve = {id: 'gpt-reserve:primary', label: 'Reserve · Weekly',
+        durationMinutes: 10080, usedPercent: 18.2, resetsAt: now + 4 * 86400000 + 22 * 3600000};
+    assert.equal(quotaName(reserve), 'Weekly reserve');
+    assert.deepEqual(quotaPresentation(reserve, now), {
+        name: 'Weekly reserve', value: '18%', reset: '4d 22h',
+    });
+    assert.deepEqual(quotaPresentation({id: 'credits', label: 'Credits', unlimited: true}, now), {
+        name: 'Credits', value: 'Unlimited', reset: null,
+    });
+    assert.equal(quotaPresentation({id: 'broken', label: 'Broken'}, now), null);
+});
+
+test('panel quota reports only the highest current quota window', () => {
+    const now = 1_000_000;
+    const record = {limits: {status: 'ready', windows: [
+        {usedPercent: 15, resetsAt: now + 3600000},
+        {usedPercent: 46, resetsAt: now + 15 * 3600000 + 59 * 60000},
+        {usedPercent: null, unlimited: true},
+    ]}};
+    assert.deepEqual(panelQuota(record, now), {percent: 46, reset: '15h 59m'});
+    assert.equal(panelQuota({limits: {...record.limits, status: 'stale'}}, now), null);
+    assert.equal(panelQuota(null, now), null);
 });

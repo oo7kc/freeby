@@ -28,9 +28,15 @@ while version 2 is developed on the `dev` branch.
 - Inherit the user's Shell font and accent color, with a restrained accent on
   the popup's actual perimeter instead of a nested hard-coded blue frame.
 - Keep limits and freshness visible in the default view while placing seven-day
-  and model activity behind an accessible disclosure control; scrolling remains
-  an automatic fallback for the expanded view and smaller displays.
+  and model activity behind an accessible disclosure control; the complete view
+  now expands naturally without a nested scrollbar.
 - Consolidate freshness, refresh, and settings into a single compact footer.
+- Replace the generic panel label with a single active-provider readout showing
+  its supplied icon, short name, highest current quota, and reset countdown.
+- Place quota reset countdowns inline, display Codex reserve usage as `Weekly
+  reserve`, and render daily token history as a softly colored seven-column chart.
+- Add native preferences for immediate placement directly left or right of the
+  Shell calendar.
 - Consolidated agent rules, the active roadmap, archived planning notes, and
   visual implementation references under `.AGENTS/`, with a minimal root
   `AGENTS.md` discovery entrypoint.
@@ -57,7 +63,8 @@ while version 2 is developed on the `dev` branch.
   runtime, restoring live account quota reads on systems without `/usr/bin/node`.
 - Anchor daily and model fills to the left edge and render human-readable model
   names instead of centered or malformed bars.
-- Reset the popup to its top edge whenever it opens.
+- Preserve the user's Shell typeface while strengthening text contrast and
+  hierarchy for cleaner rendering.
 
 ### Removed
 
