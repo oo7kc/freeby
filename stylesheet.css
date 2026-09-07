@@ -39,8 +39,6 @@
 }
 
 .usagebeam-panel-icon-slot { width: 16px; }
-.usagebeam-panel-value { min-width: 3.2em; text-align: right; }
-.usagebeam-panel-reset { min-width: 4.8em; text-align: right; }
 
 .usagebeam-provider-icon {
   icon-size: 20px;
@@ -51,8 +49,6 @@
 }
 
 .usagebeam-panel-provider,
-.usagebeam-panel-value,
-.usagebeam-panel-reset,
 .usagebeam-panel-mark {
   font-size: 9.5pt;
 }
@@ -64,11 +60,32 @@
 .usagebeam-panel-value,
 .usagebeam-panel-reset {
   color: st-lighten(-st-accent-color, 25%);
-  font-weight: 550;
+  font-size: 8.75pt;
 }
 
-.usagebeam-panel-separator {
-  opacity: 0.5;
+.usagebeam-panel-value {
+  font-weight: 620;
+}
+
+.usagebeam-panel-reset {
+  font-weight: 500;
+  opacity: 0.86;
+}
+
+.usagebeam-separator-dot {
+  min-width: 4px;
+  min-height: 4px;
+}
+
+.usagebeam-separator-dot-core {
+  width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: rgba(220, 232, 237, 0.62);
+}
+
+.usagebeam-panel-separator .usagebeam-separator-dot-core {
+  background-color: rgba(255, 255, 255, 0.58);
 }
 
 .usagebeam-content {
@@ -192,27 +209,28 @@
 .usagebeam-limit-reset,
 .usagebeam-limit-value {
   color: st-mix(-st-accent-color, #d7e4eb, 28%);
-  font-size: 10.5pt;
-  font-weight: 550;
+  font-size: 9.5pt;
   text-align: right;
 }
 
 .usagebeam-limit-percent {
   min-width: 3.2em;
+  font-weight: 620;
 }
 
 .usagebeam-limit-separator {
-  min-width: 0.6em;
-  opacity: 0.48;
-  text-align: center;
+  min-width: 0.8em;
 }
 
 .usagebeam-limit-reset {
   min-width: 4.8em;
+  font-weight: 500;
+  opacity: 0.84;
 }
 
 .usagebeam-limit-value {
   min-width: 8.6em;
+  font-weight: 550;
 }
 
 .usagebeam-number {
@@ -279,13 +297,28 @@
 }
 
 .usagebeam-disclosure-meta {
-  spacing: 7px;
+  spacing: 5px;
 }
 
 .usagebeam-disclosure-summary {
   font-feature-settings: "tnum";
-  font-size: 9.5pt;
-  opacity: 0.82;
+  font-size: 8.75pt;
+  font-weight: 500;
+  opacity: 0.76;
+}
+
+.usagebeam-disclosure-tokens {
+  font-weight: 650;
+  opacity: 0.94;
+}
+
+.usagebeam-disclosure-source {
+  font-size: 8.5pt;
+  opacity: 0.64;
+}
+
+.usagebeam-disclosure-separator {
+  min-width: 4px;
 }
 
 .usagebeam-disclosure-icon {
@@ -358,10 +391,16 @@
 .usagebeam-model-content {
   spacing: 10px;
   padding: 4px 8px;
+  font-size: 9.25pt;
 }
 
 .usagebeam-model-name {
   font-weight: 520;
+}
+
+.usagebeam-model-content .usagebeam-number {
+  font-size: 8.75pt;
+  font-weight: 650;
 }
 
 .usagebeam-actions {
@@ -391,6 +430,10 @@
 .usagebeam-menu.usagebeam-light .usagebeam-limit-reset,
 .usagebeam-menu.usagebeam-light .usagebeam-limit-value {
   color: st-mix(-st-accent-color, #263b46, 38%);
+}
+
+.usagebeam-menu.usagebeam-light .usagebeam-separator-dot-core {
+  background-color: rgba(38, 59, 70, 0.54);
 }
 
 .usagebeam-menu.usagebeam-light .usagebeam-track {

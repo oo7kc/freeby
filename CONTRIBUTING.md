@@ -26,7 +26,7 @@ meson install -C build
 
 `python3 tools/smoke-shell.py` additionally verifies lifecycle and actual popup
 geometry in a private headless GNOME Shell session. The test-only companion under
-`tests/shell/` injects synthetic usage, exercises all five panel positions and
+`tests/shell/` injects synthetic usage, exercises all four panel positions and
 provider changes, expands activity, and checks bar sizes, text alignment, and
 layout stability. JSON measurements and light/dark screenshots are saved in the
 printed temporary directory. The companion is never included in release archives;

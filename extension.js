@@ -1,7 +1,7 @@
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {UsageBeamIndicator} from './src/ui/indicator.js';
-import {placeIndicator} from './src/ui/panelPlacement.js';
+import {clearIndicatorPlacement, placeIndicator} from './src/ui/panelPlacement.js';
 import {migrateLegacyInstall} from './src/services/migration.js';
 import {UsageService} from './src/services/usageService.js';
 
@@ -42,6 +42,7 @@ export default class UsageBeamExtension extends Extension {
         this._settingsIds = null;
         this._service?.destroy();
         this._service = null;
+        clearIndicatorPlacement(this._indicator);
         this._indicator?.destroy();
         this._indicator = null;
         this._settings = null;

@@ -152,7 +152,7 @@ def smoke(source, archive, destination, scale=1, text_scale=1.0):
         results = json.loads(results_path.read_text())
         if not results['ok']:
             raise RuntimeError(f"UI check failed: {results['error']}")
-        print('PASS: five positions, stable provider width, and combined calendar centering')
+        print('PASS: four positions, stable provider width, and exact calendar-gap centering')
         print('PASS: opened popup, compact bars, aligned text, repeated allocation, and theme screenshots')
         print(f'UI geometry and screenshots: {destination}')
         run(['gnome-extensions', 'disable', TEST_UUID], env, check=True)

@@ -67,11 +67,12 @@ active, the former `freeby@kelvin.local` extension can be uninstalled.
 
 ## Settings
 
-The development preferences window offers five panel positions: left, center,
-right, left of calendar, and right of calendar. The center group shares a midpoint
-between the clock and indicator; the indicator reserves a constant width so
-provider changes do not move the clock. Placement follows GNOME's panel boxes
-(other panel-layout extensions may override their arrangement).
+The development preferences window offers four panel positions: left, right,
+left of calendar, and right of calendar. For calendar-side placement, the gap
+between the clock and indicator sits exactly on the panel midpoint; the indicator
+reserves a constant width so provider changes do not move the clock. Placement
+follows GNOME's panel boxes (other panel-layout extensions may override their
+arrangement).
 
 The popup uses locally installed SF Pro Text, with SF Pro Display for the provider
 heading and system font fallback when unavailable. Fonts are not bundled or

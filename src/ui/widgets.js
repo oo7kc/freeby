@@ -20,6 +20,16 @@ export function metricLabel(text, style = '', expand = false) {
     return actor;
 }
 
+export function separatorDot(style = '') {
+    const dot = new St.Widget({style_class: 'usagebeam-separator-dot-core'});
+    return new St.Bin({
+        child: dot,
+        style_class: `usagebeam-separator-dot ${style}`.trim(),
+        x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.CENTER,
+    });
+}
+
 function metricColumn(text, style) {
     const child = metricLabel(text, '', true);
     child.x_align = Clutter.ActorAlign.END;
@@ -45,7 +55,7 @@ export function limitRow(name, value, reset) {
     const metrics = new St.BoxLayout({style_class: 'usagebeam-limit-metrics'});
     if (reset) {
         metrics.add_child(metricColumn(value, 'usagebeam-limit-percent'));
-        metrics.add_child(metricColumn('·', 'usagebeam-limit-separator'));
+        metrics.add_child(separatorDot('usagebeam-limit-separator'));
         metrics.add_child(metricColumn(reset, 'usagebeam-limit-reset'));
     } else {
         metrics.add_child(metricColumn(value, 'usagebeam-limit-value'));
@@ -130,7 +140,12 @@ export function disclosureButton(summary, expanded, callback) {
     const content = new St.BoxLayout({style_class: 'usagebeam-disclosure-content', x_expand: true});
     content.add_child(label('Activity', 'usagebeam-disclosure-title', true));
     const meta = new St.BoxLayout({style_class: 'usagebeam-disclosure-meta'});
-    meta.add_child(label(summary, 'usagebeam-disclosure-summary'));
+    summary.forEach(({text, role}, index) => {
+        if (index)
+            meta.add_child(separatorDot('usagebeam-disclosure-separator'));
+        meta.add_child(metricLabel(text,
+            `usagebeam-disclosure-summary usagebeam-disclosure-${role}`));
+    });
     meta.add_child(new St.Icon({
         icon_name: expanded ? 'pan-up-symbolic' : 'pan-down-symbolic',
         style_class: 'usagebeam-disclosure-icon',

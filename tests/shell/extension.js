@@ -85,7 +85,7 @@ export default class UsageBeamUITest extends Extension {
             isRefreshing: () => false, refreshAll: () => {}});
         const settings = indicator._settings;
         const calendar = Main.panel.statusArea.dateMenu.container;
-        const positions = ['left', 'right', 'center', 'left-of-calendar', 'right-of-calendar'];
+        const positions = ['left', 'right', 'left-of-calendar', 'right-of-calendar'];
         const placement = [];
         Main.overview.hide();
         await this._wait(500);
@@ -138,12 +138,13 @@ export default class UsageBeamUITest extends Extension {
                 const offset = children.indexOf(indicator.container) - children.indexOf(calendar);
                 assert(offset === (position === 'left-of-calendar' ? -1 : 1), 'Calendar adjacency lost');
             }
-            if (parent === Main.panel._centerBox) {
-                const left = Math.min(before.x, clockBefore.x);
-                const right = Math.max(before.x + before.width, clockBefore.x + clockBefore.width);
+            if (position.includes('calendar')) {
+                const left = position === 'left-of-calendar' ? before : clockBefore;
+                const right = position === 'left-of-calendar' ? clockBefore : before;
                 const panel = bounds(Main.panel);
-                assert(Math.abs((left + right) / 2 - (panel.x + panel.width / 2)) <= 1,
-                    `${position}: combined calendar/indicator midpoint is not centered`);
+                const gapCenter = (left.x + left.width + right.x) / 2;
+                assert(Math.abs(gapCenter - (panel.x + panel.width / 2)) <= 1,
+                    `${position}: calendar/indicator gap is not centered (${gapCenter})`);
             }
             placement.push({position, indicator: before, calendar: clockBefore});
         }
@@ -176,7 +177,7 @@ export default class UsageBeamUITest extends Extension {
             if (plot._fraction > 0)
                 assert(plot._fill.width > 0 && plot._fill.height > 0, 'Daily bar has no area');
         }
-        for (const style of ['usagebeam-limit-percent', 'usagebeam-limit-reset', 'usagebeam-limit-separator']) {
+        for (const style of ['usagebeam-limit-percent', 'usagebeam-limit-reset']) {
             const actors = matching(content, style);
             for (const actor of actors) {
                 const text = actor.get_child();
@@ -188,6 +189,30 @@ export default class UsageBeamUITest extends Extension {
                     `${style}: numbers are not right aligned (${edge} vs ${bounds(firstText).x + firstText.width})`);
             }
         }
+        const dots = [indicator._panelSeparator, ...matching(content, 'usagebeam-separator-dot')];
+        for (const dot of dots) {
+            const dotBounds = bounds(dot);
+            const coreBounds = bounds(dot.get_child());
+            assert(Math.abs(coreBounds.x + coreBounds.width / 2 - (dotBounds.x + dotBounds.width / 2)) <= 1 &&
+                Math.abs(coreBounds.y + coreBounds.height / 2 - (dotBounds.y + dotBounds.height / 2)) <= 1,
+            'Separator dot is not optically centered');
+        }
+        const valueBounds = bounds(indicator._panelValue);
+        const separatorBounds = bounds(indicator._panelSeparator);
+        const resetBounds = bounds(indicator._panelReset);
+        assert(Math.abs(separatorBounds.x - (valueBounds.x + valueBounds.width) -
+            (resetBounds.x - separatorBounds.x - separatorBounds.width)) <= 1,
+        'Panel separator does not have equal spacing');
+        const limitName = matching(content, 'usagebeam-limit-name')[0];
+        const limitValue = matching(content, 'usagebeam-limit-percent')[0].get_child();
+        assert(limitValue.get_theme_node().get_font().get_size() <
+            limitName.get_theme_node().get_font().get_size(), 'Limit metrics lack font hierarchy');
+        const activityParts = matching(content, 'usagebeam-disclosure-summary');
+        assert(activityParts.length === 3, 'Activity summary is not split into semantic parts');
+        const modelContent = matching(content, 'usagebeam-model-content')[0];
+        const [modelName, modelTotal] = modelContent.get_children();
+        assert(modelTotal.get_theme_node().get_font().get_size() <
+            modelName.get_theme_node().get_font().get_size(), 'Model row lacks font hierarchy');
         const heights = models.map(actor => actor.height);
         for (let frame = 0; frame < 8; frame++) {
             content.queue_relayout();

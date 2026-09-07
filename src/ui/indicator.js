@@ -10,7 +10,7 @@ import {age, dateRange, modelName, tokens} from '../core/format.js';
 import {historyOverview, latestUpdate, panelQuota, periodDays, providerStatus,
     quotaPresentation} from './presentation.js';
 import {actionButton, button, dayChart, disclosureButton, label, meter, modelMeter,
-    limitRow, metricLabel, providerIcon} from './widgets.js';
+    limitRow, metricLabel, providerIcon, separatorDot} from './widgets.js';
 
 const TAB_NAMES = {claude: 'Claude'};
 const PROVIDER_MARKS = {codex: '>_', claude: '✦', cursor: '⌁', copilot: '◆'};
@@ -29,8 +29,9 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
         this._panelProvider.clutter_text.ellipsize = Pango.EllipsizeMode.END;
         this._panelValue = metricLabel('—', 'usagebeam-panel-value');
         this._panelReset = metricLabel('—', 'usagebeam-panel-reset');
+        this._panelSeparator = separatorDot('usagebeam-panel-separator');
         for (const actor of [this._panelIcon, this._panelProvider, this._panelValue,
-            label('·', 'usagebeam-panel-separator'), this._panelReset])
+            this._panelSeparator, this._panelReset])
             this._panelStatus.add_child(actor);
         this._panelProviderId = null;
         this.add_child(this._panelStatus);
@@ -181,8 +182,11 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
     _renderHistory(history) {
         const overview = historyOverview(history);
         if (overview) {
-            const summary = [overview.days ? `${overview.days} days` : null,
-                tokens(overview.total), overview.scope].filter(Boolean).join(' · ');
+            const summary = [
+                overview.days ? {text: `${overview.days} days`, role: 'period'} : null,
+                {text: tokens(overview.total), role: 'tokens'},
+                {text: overview.scope, role: 'source'},
+            ].filter(Boolean);
             this._contentBox.add_child(disclosureButton(summary, this._detailsExpanded, () => {
                 this._detailsExpanded = !this._detailsExpanded;
                 this.render();

@@ -35,12 +35,12 @@ while version 2 is developed on the `dev` branch.
   its supplied icon, short name, highest current quota, and reset countdown.
 - Place quota reset countdowns inline, display Codex reserve usage as `Weekly
   reserve`, and render daily token history as a softly colored seven-column chart.
-- Add five immediate panel positions: left, center, right, left of calendar,
-  and right of calendar. Reserve a stable indicator width across providers and
-  quota states; center the combined clock/indicator group in the center box.
+- Add four immediate panel positions: left, right, left of calendar, and right
+  of calendar. Reserve a stable indicator width across providers and quota states;
+  place the calendar/indicator gap exactly on the panel midpoint.
 - Refine the interface into an accent-tinted slate surface with an explicit
-  perimeter, locally installed SF Pro Text/Display typography, stronger hierarchy, and a
-  bordered activity disclosure in both light and dark Shell color schemes.
+  perimeter, locally installed SF Pro Text/Display typography, stronger hierarchy,
+  and a bordered activity disclosure in both light and dark Shell color schemes.
 - Consolidated agent rules, the active roadmap, archived planning notes, and
   visual implementation references under `.AGENTS/`, with a minimal root
   `AGENTS.md` discovery entrypoint.
@@ -75,8 +75,11 @@ while version 2 is developed on the `dev` branch.
 - Remove the duplicate rectangular popup shadow, retaining the rounded outer
   border. Prevent quota numbers and separators from ellipsizing and right-align
   numeric text within stable columns.
-- Add private-Shell regression tests that open the actual popup, measure all five
+- Add private-Shell regression tests that open the actual popup, measure all four
   positions, switch providers, verify repeated allocation, and capture both themes.
+- Establish a clearer information hierarchy by reducing secondary quota, reset,
+  activity-summary, and model-total type. Replace text glyph separators with
+  consistently sized, optically centered dots in the menu and panel indicator.
 - Allocate daily chart bars explicitly so non-zero days always receive visible
   width and bottom-aligned height.
 - Center the popup on the active-provider panel indicator instead of anchoring
