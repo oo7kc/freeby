@@ -1,12 +1,18 @@
 # Changelog
 
-All notable changes are documented here. Freeby uses semantic prerelease versions
+All notable changes are documented here. UsageBeam uses semantic prerelease versions
 while version 2 is developed on the `dev` branch.
 
 ## Unreleased
 
 ### Changed
 
+- Renamed the product from Freeby to UsageBeam and adopted the permanent GNOME
+  extension UUID `usagebeam@oo7kc.github.io` and settings schema
+  `org.gnome.shell.extensions.usagebeam` ahead of alpha.3.
+- Migrate recognized derived state, incremental history caches, and explicitly
+  changed preferences from the former alpha identity without moving credentials
+  or overwriting values already set for UsageBeam.
 - Split command discovery from private file storage and launch discovered CLIs
   with a process-local environment, explicit deadlines, cancellation reasons,
   and output limits.

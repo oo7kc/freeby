@@ -1,7 +1,7 @@
-# Freeby usage monitor roadmap
+# UsageBeam usage monitor roadmap
 
-Updated: 2026-09-06. Status: post-alpha.2 compact interface/runtime and
-production hardening complete; Cursor remains the next alpha.3 milestone.
+Updated: 2026-09-07. Status: UsageBeam identity migration complete on `dev`;
+Cursor remains the next alpha.3 provider milestone.
 
 ## Agreed direction
 
@@ -10,10 +10,11 @@ and Copilot**, covering free and paid plans. The first stable release is about
 usage: quota windows, reset times, activity history, and model breakdowns where
 the provider exposes them.
 
-Complete and verify the system before introducing a new name or icon. Keep the
-current extension UUID and GSettings schema identity throughout these milestones.
-Cost breakdowns, provider spending/balances, estimates, and budgets are deferred
-to a later phase. Subscription percentages must not be derived from token totals.
+The canonical product name is **UsageBeam**, with extension UUID
+`usagebeam@oo7kc.github.io` and schema `org.gnome.shell.extensions.usagebeam`.
+Keep those identities stable from alpha.3 onward. Icon work, cost breakdowns,
+provider spending/balances, estimates, and budgets are deferred to a later phase.
+Subscription percentages must not be derived from token totals.
 
 Every completed implementation milestone ends with a conventional commit, a
 version tag, and an installable GitHub prerelease. The first stable release must
@@ -51,7 +52,7 @@ Expensive history work belongs in a managed GJS subprocess, not the Shell UI
 process. Avoid a persistent background daemon in this first iteration.
 
 ```text
-freeby/
+usagebeam/
 ├── .AGENTS/                    # Rules, roadmap, archive, design references
 ├── AGENTS.md                   # Tool-discovery entrypoint
 ├── extension.js                 # GNOME lifecycle entry
@@ -98,7 +99,7 @@ runtime implementations.
 - Give each provider a deadline, bounded retries/backoff, and independent success/failure handling.
 - Parse changed records incrementally; handle repeated events, cumulative counters, partial writes, rotation, and timezone boundaries.
 - Keep private usage metadata in XDG state/cache locations using atomic writes, bounded retention, and schema migrations.
-- Do not retain credentials, prompts, responses, or complete transcripts in Freeby's history or diagnostics.
+- Do not retain credentials, prompts, responses, or complete transcripts in UsageBeam's history or diagnostics.
 
 ## Known regressions to address
 
@@ -212,6 +213,30 @@ an isolated GNOME Shell 50 session. A sanitized live check with Codex CLI
 0.145.0 returned the Plus plan, three account quota windows, seven-day local
 activity, and model totals under usage schema version 2.
 
+### Product identity checkpoint
+
+- [x] Rename the active product, runtime classes/styles, package, schema, archive,
+  CI artifact, and documentation from Freeby to UsageBeam.
+- [x] Adopt `usagebeam@oo7kc.github.io` and
+  `org.gnome.shell.extensions.usagebeam` as the permanent extension identities.
+- [x] Migrate recognized derived state, history caches, and explicitly changed
+  preferences without copying credentials or overwriting new UsageBeam values.
+- [x] Verify a clean install, former-alpha migration, deterministic packaging,
+  and disable/re-enable lifecycle; commit the checkpoint on `dev` without moving
+  or tagging `main`.
+
+Evidence: `npm run check` passed 26 unit tests, strict schema/layout/identity
+validation, and the GJS history, migration, command, process, and HTTP-policy
+integration suite. A live local migration copied four recognized derived files
+and two explicitly changed settings, retained private `0600` file modes, matched
+the original data checksums, and preserved the 30-second refresh preference.
+Two builds produced the same 38,098-byte archive at SHA-256
+`d92595924b705125cebc6bd09dc9689f6562522a9cf9ffaba98db7d666f0926a`.
+That exact UsageBeam archive loaded, disabled, and re-enabled without extension
+errors in a private GNOME Shell 50 session. The former local extension package
+was removed and the new UUID was installed and enabled for the next login; GNOME
+Shell 50 cannot discover a brand-new UUID in an already-running Wayland session.
+
 ### 3. Cursor — v2.0.0-alpha.3
 
 - [ ] Revalidate current Cursor authentication and usage sources for free and paid accounts.
@@ -236,7 +261,7 @@ activity, and model totals under usage schema version 2.
 - [ ] Add notification thresholds, deduplication per account/window, and history retention/clear controls.
 - [ ] Preserve valid existing settings and document new defaults and migrations.
 - [ ] Verify keyboard navigation, screen-reader labels, dark/light themes, long content, scrolling, and display scaling.
-- [ ] Commit, tag, publish, and verify the installable alpha.5 prerelease using the existing name and icon.
+- [ ] Commit, tag, publish, and verify the installable alpha.5 prerelease using the finalized name and existing icon.
 
 ### 6. Stabilization — v2.0.0-beta.1, then v2.0.0
 
@@ -269,7 +294,7 @@ Documentation setup is preparatory work and does not trigger a product prereleas
 
 ## After usage monitoring is reliable
 
-- Decide the new name and icon direction, then plan branding and any required identity/settings migration.
+- Design a distinctive UsageBeam icon without changing the finalized extension identity.
 - Design cost breakdowns separately, distinguishing provider-reported charges from estimates and including currency, period, and pricing provenance.
 - Consider budgets, additional providers, multiple accounts, cross-device history, and a separate dashboard only as later scoped work.
 

@@ -1,6 +1,6 @@
 # Architecture
 
-Freeby is a GNOME Shell extension with a small trusted UI process and short-lived
+UsageBeam is a GNOME Shell extension with a small trusted UI process and short-lived
 collector subprocesses. Provider code never creates GNOME actors, and UI code
 never reads provider credentials or transcript formats.
 
@@ -42,11 +42,17 @@ oversized records are rejected before they reach the UI or persistent state.
 
 ## Privacy and storage
 
-Freeby stores derived records in `$XDG_STATE_HOME/freeby` and versioned
-incremental scan caches in `$XDG_CACHE_HOME/freeby`, with private directory and
-file modes. Credentials are read only when needed and are never written by
-Freeby. Prompt/response content is ignored, while session and account identifiers
+UsageBeam stores derived records in `$XDG_STATE_HOME/usagebeam` and versioned
+incremental scan caches in `$XDG_CACHE_HOME/usagebeam`, with private directory
+and file modes. Credentials are read only when needed and are never written by
+UsageBeam. Prompt/response content is ignored, while session and account identifiers
 used for deduplication are hashed once before persistence.
+
+On the first start after the pre-alpha identity change, UsageBeam copies only
+recognized provider records and incremental history caches from the former
+directories when the corresponding destination is absent. Explicitly changed
+preferences are imported from an installed former schema under the same
+non-overwrite rule. Credentials and unrelated files are never migrated.
 
 Account quota and local token activity remain separate scopes. Local activity is
 not billing data and never becomes a fabricated subscription percentage.

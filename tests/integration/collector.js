@@ -5,15 +5,16 @@ import {scanHistory} from '../../src/services/history.js';
 import {parseCodexEvent} from '../../src/providers/codex.js';
 import {parseClaudeEvent} from '../../src/providers/claude.js';
 import {commandSpec, findCommand} from '../../src/services/commands.js';
-import {readJson, writeJson, join} from '../../src/services/files.js';
+import {join, migrateLegacyData, readJson, writeJson} from '../../src/services/files.js';
 import {requestJson} from '../../src/services/http.js';
+import {copyLegacySettings} from '../../src/services/migration.js';
 import {RpcClient, runCommand} from '../../src/services/process.js';
 
 function assert(value, message) {
     if (!value)
         throw new Error(message);
 }
-const scratch = GLib.dir_make_tmp('freeby-integration-XXXXXX');
+const scratch = GLib.dir_make_tmp('usagebeam-integration-XXXXXX');
 const sessions = join(scratch, 'sessions');
 GLib.mkdir_with_parents(sessions, 0o700);
 const fixture = join(sessions, 'synthetic.jsonl');
@@ -45,6 +46,35 @@ assert((directoryInfo.get_attribute_uint32('unix::mode') & 0o777) === 0o700, 'pr
 const stateInfo = Gio.File.new_for_path(privateRecord).query_info('unix::mode', Gio.FileQueryInfoFlags.NONE, null);
 assert((stateInfo.get_attribute_uint32('unix::mode') & 0o777) === 0o600, 'private JSON file mode');
 print('PASS: GJS history initial scan, cached scan, append, partial line, and private JSON cache');
+
+const legacyState = join(scratch, 'legacy-state');
+const legacyCache = join(scratch, 'legacy-cache');
+const migratedState = join(scratch, 'usagebeam-state');
+const migratedCache = join(scratch, 'usagebeam-cache');
+writeJson(join(legacyState, 'codex.json'), {provider: 'codex'});
+writeJson(join(legacyCache, 'history-codex.json'), {version: 4});
+writeJson(join(legacyState, 'unrelated.json'), {private: true});
+assert(migrateLegacyData({legacyState, legacyCache, state: migratedState, cache: migratedCache}) === 2,
+    'legacy migration must copy only recognized derived data');
+assert(readJson(join(migratedState, 'codex.json')).provider === 'codex', 'provider state migration');
+assert(readJson(join(migratedCache, 'history-codex.json')).version === 4, 'history cache migration');
+assert(!Gio.File.new_for_path(join(migratedState, 'unrelated.json')).query_exists(null),
+    'legacy migration must ignore unrelated files');
+assert(migrateLegacyData({legacyState, legacyCache, state: migratedState, cache: migratedCache}) === 0,
+    'legacy migration must not overwrite migrated data');
+print('PASS: GJS legacy derived-data migration');
+
+const currentSettings = new Map([['default-provider', 'claude']]);
+const formerSettings = new Map([['default-provider', 'codex'], ['refresh-interval', 30]]);
+const fakeSettings = values => ({
+    get_user_value: key => values.get(key) ?? null,
+    set_value(key, value) { values.set(key, value); return true; },
+});
+assert(copyLegacySettings(fakeSettings(currentSettings), fakeSettings(formerSettings)) === 1,
+    'settings migration must copy only missing explicit values');
+assert(currentSettings.get('default-provider') === 'claude' && currentSettings.get('refresh-interval') === 30,
+    'settings migration must preserve UsageBeam values');
+print('PASS: GJS legacy settings migration policy');
 
 const replacementRoot = join(scratch, 'replacement');
 GLib.mkdir_with_parents(replacementRoot, 0o700);

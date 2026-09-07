@@ -53,7 +53,7 @@ export class UsageService {
         try {
             this._changed();
         } catch (error) {
-            console.error('Freeby could not update its panel', error);
+            console.error('UsageBeam could not update its panel', error);
         }
     }
 
@@ -61,7 +61,7 @@ export class UsageService {
         try {
             this._alerts(alerts);
         } catch (error) {
-            console.error('Freeby could not display a usage alert', error);
+            console.error('UsageBeam could not display a usage alert', error);
         }
     }
 

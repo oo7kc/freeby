@@ -181,7 +181,7 @@ export function scanHistory(id, roots, parse, {retention = 30, now = Date.now(),
                         const event = parse(JSON.parse(text), previous.state);
                         // Provider session identifiers are useful only for
                         // deduplication. Hash them before either parser state or
-                        // derived events reach Freeby's private cache.
+                        // derived events reach UsageBeam's private cache.
                         if (previous.state.session !== oldSession)
                             previous.state.session = privateIdentity(id, previous.state.session);
                         if (event) {

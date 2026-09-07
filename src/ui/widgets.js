@@ -8,20 +8,20 @@ export function label(text, style = '', expand = false) {
         y_align: Clutter.ActorAlign.CENTER, x_expand: expand});
 }
 
-export function row(left, right, style = 'freeby-row') {
+export function row(left, right, style = 'usagebeam-row') {
     const box = new St.BoxLayout({style_class: style, x_expand: true});
     const title = label(left, '', true);
     title.clutter_text.ellipsize = Pango.EllipsizeMode.END;
     box.add_child(title);
-    box.add_child(label(right, 'freeby-number'));
+    box.add_child(label(right, 'usagebeam-number'));
     return box;
 }
 
 export function meter(fraction, name, style = '') {
     const ratio = Math.max(0, Math.min(1, Number(fraction) || 0));
-    const track = new St.Widget({style_class: `freeby-track ${style}`, x_expand: true,
+    const track = new St.Widget({style_class: `usagebeam-track ${style}`, x_expand: true,
         layout_manager: new Clutter.FixedLayout(), accessible_name: name, accessible_role: Atk.Role.PROGRESS_BAR});
-    const fill = new St.Widget({style_class: 'freeby-fill'});
+    const fill = new St.Widget({style_class: 'usagebeam-fill'});
     fill.set_position(0, 0);
     track.add_child(fill);
     track.connect('notify::allocation', () => {
@@ -32,15 +32,15 @@ export function meter(fraction, name, style = '') {
 
 export function modelMeter(left, right, fraction, name) {
     const ratio = Math.max(0, Math.min(1, Number(fraction) || 0));
-    const track = new St.Widget({style_class: 'freeby-model-meter', x_expand: true,
+    const track = new St.Widget({style_class: 'usagebeam-model-meter', x_expand: true,
         layout_manager: new Clutter.FixedLayout(), accessible_name: name,
         accessible_role: Atk.Role.PROGRESS_BAR});
-    const fill = new St.Widget({style_class: 'freeby-model-fill'});
-    const content = new St.BoxLayout({style_class: 'freeby-model-content'});
-    const title = label(left, 'freeby-model-name', true);
+    const fill = new St.Widget({style_class: 'usagebeam-model-fill'});
+    const content = new St.BoxLayout({style_class: 'usagebeam-model-content'});
+    const title = label(left, 'usagebeam-model-name', true);
     title.clutter_text.ellipsize = Pango.EllipsizeMode.END;
     content.add_child(title);
-    content.add_child(label(right, 'freeby-number'));
+    content.add_child(label(right, 'usagebeam-number'));
     track.add_child(fill);
     track.add_child(content);
     track.connect('notify::allocation', () => {
@@ -56,7 +56,7 @@ export function modelMeter(left, right, fraction, name) {
 
 export function button(text, callback, {active = false, name = text} = {}) {
     const actor = new St.Button({label: text, can_focus: true, reactive: true, track_hover: true,
-        accessible_name: name, style_class: 'freeby-button', x_expand: true});
+        accessible_name: name, style_class: 'usagebeam-button', x_expand: true});
     if (active)
         actor.add_style_pseudo_class('checked');
     actor.connect('clicked', callback);
@@ -70,17 +70,17 @@ export function disclosureButton(summary, expanded, callback) {
         can_focus: true,
         checked: expanded,
         reactive: true,
-        style_class: 'freeby-disclosure',
+        style_class: 'usagebeam-disclosure',
         toggle_mode: true,
         track_hover: true,
         x_expand: true,
     });
-    const content = new St.BoxLayout({style_class: 'freeby-disclosure-content', x_expand: true});
-    content.add_child(label('Activity', 'freeby-disclosure-title', true));
-    content.add_child(label(summary, 'freeby-disclosure-summary'));
+    const content = new St.BoxLayout({style_class: 'usagebeam-disclosure-content', x_expand: true});
+    content.add_child(label('Activity', 'usagebeam-disclosure-title', true));
+    content.add_child(label(summary, 'usagebeam-disclosure-summary'));
     content.add_child(new St.Icon({
         icon_name: expanded ? 'pan-up-symbolic' : 'pan-down-symbolic',
-        style_class: 'freeby-disclosure-icon',
+        style_class: 'usagebeam-disclosure-icon',
     }));
     actor.set_child(content);
     actor.connect('clicked', callback);
@@ -90,6 +90,6 @@ export function disclosureButton(summary, expanded, callback) {
 export function actionButton(text, callback, name = text) {
     const actor = button(text, callback, {name});
     actor.x_expand = false;
-    actor.add_style_class_name('freeby-action-button');
+    actor.add_style_class_name('usagebeam-action-button');
     return actor;
 }

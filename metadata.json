@@ -1,8 +1,8 @@
 {
-  "uuid": "freeby@kelvin.local",
-  "name": "Freeby",
+  "uuid": "usagebeam@oo7kc.github.io",
+  "name": "UsageBeam",
   "description": "AI coding usage monitor for account limits, reset windows, local token activity and model breakdowns. Supports Codex and Claude Code; additional providers arrive through version 2 prereleases.",
   "shell-version": ["50"],
-  "settings-schema": "org.gnome.shell.extensions.freeby",
+  "settings-schema": "org.gnome.shell.extensions.usagebeam",
   "url": "https://github.com/oo7kc/freeby"
 }

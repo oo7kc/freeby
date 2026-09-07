@@ -12,21 +12,21 @@ import {actionButton, button, disclosureButton, label, meter, modelMeter, row} f
 const TAB_NAMES = {claude: 'Claude'};
 const PROVIDER_MARKS = {codex: '>_', claude: '✦', cursor: '⌁', copilot: '◆'};
 
-export const FreebyIndicator = GObject.registerClass(class FreebyIndicator extends PanelMenu.Button {
+export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator extends PanelMenu.Button {
     _init(settings, openPreferences) {
-        super._init(0.0, 'Freeby usage monitor');
+        super._init(0.0, 'UsageBeam usage monitor');
         this._settings = settings;
         this._openPreferences = openPreferences;
         this._service = null;
         this._detailsExpanded = false;
-        this._panelLabel = label('AI', 'freeby-panel-label');
+        this._panelLabel = label('AI', 'usagebeam-panel-label');
         this.add_child(this._panelLabel);
-        this.menu.actor.add_style_class_name('freeby-menu');
+        this.menu.actor.add_style_class_name('usagebeam-menu');
         const section = new PopupMenu.PopupMenuSection();
         this.menu.addMenuItem(section);
         // `content` is an inherited Clutter.Actor property whose value must be
         // ClutterContent, so keep the menu actor under an unambiguous name.
-        this._contentBox = new St.BoxLayout({vertical: true, style_class: 'freeby-content', x_expand: true});
+        this._contentBox = new St.BoxLayout({vertical: true, style_class: 'usagebeam-content', x_expand: true});
         this._scroll = new St.ScrollView({hscrollbar_policy: St.PolicyType.NEVER, vscrollbar_policy: St.PolicyType.AUTOMATIC,
             overlay_scrollbars: true});
         // St.ScrollView is a Clutter actor in GNOME 50. Its inherited
@@ -77,8 +77,8 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
         const busy = this._service?.isRefreshing(id) ?? false;
 
         this._panelLabel.text = percent === null ? 'AI' : `AI · ${Math.round(percent)}%`;
-        this._panelLabel.style_class = `freeby-panel-label${percent >= 100 ? ' freeby-danger' : percent >= 90 ? ' freeby-warning' : ''}`;
-        this.accessible_name = `Freeby, ${record?.name ?? 'usage monitor'}${percent === null ? '' : `, ${Math.round(percent)} percent used`}`;
+        this._panelLabel.style_class = `usagebeam-panel-label${percent >= 100 ? ' usagebeam-danger' : percent >= 90 ? ' usagebeam-warning' : ''}`;
+        this.accessible_name = `UsageBeam, ${record?.name ?? 'usage monitor'}${percent === null ? '' : `, ${Math.round(percent)} percent used`}`;
 
         this._renderHeader(id, record, busy);
         if (enabled.length > 1)
@@ -94,19 +94,19 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
     }
 
     _renderHeader(id, record, busy) {
-        const header = new St.BoxLayout({style_class: 'freeby-header', x_expand: true});
-        header.add_child(label(PROVIDER_MARKS[id] ?? 'AI', `freeby-provider-mark freeby-${id}-mark`));
-        const identity = new St.BoxLayout({vertical: true, style_class: 'freeby-identity', x_expand: true});
-        identity.add_child(label(record?.name ?? 'Freeby', 'freeby-title'));
-        identity.add_child(label(record?.plan ? String(record.plan).toUpperCase() : 'USAGE MONITOR', 'freeby-caption'));
+        const header = new St.BoxLayout({style_class: 'usagebeam-header', x_expand: true});
+        header.add_child(label(PROVIDER_MARKS[id] ?? 'AI', `usagebeam-provider-mark usagebeam-${id}-mark`));
+        const identity = new St.BoxLayout({vertical: true, style_class: 'usagebeam-identity', x_expand: true});
+        identity.add_child(label(record?.name ?? 'UsageBeam', 'usagebeam-title'));
+        identity.add_child(label(record?.plan ? String(record.plan).toUpperCase() : 'USAGE MONITOR', 'usagebeam-caption'));
         header.add_child(identity);
         const statusText = providerStatus(record, busy);
-        header.add_child(label(`● ${statusText}`, `freeby-status freeby-status-${statusText.toLowerCase()}`));
+        header.add_child(label(`● ${statusText}`, `usagebeam-status usagebeam-status-${statusText.toLowerCase()}`));
         this._contentBox.add_child(header);
     }
 
     _renderSelector(enabled, selected) {
-        const selector = new St.Widget({style_class: 'freeby-selector', x_expand: true,
+        const selector = new St.Widget({style_class: 'usagebeam-selector', x_expand: true,
             layout_manager: new Clutter.BoxLayout({orientation: Clutter.Orientation.HORIZONTAL,
                 homogeneous: true, spacing: 8})});
         for (const provider of enabled) {
@@ -120,14 +120,14 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
     _renderLimits(limits) {
         this._heading('LIMITS');
         for (const window of limits.windows) {
-            const box = new St.BoxLayout({vertical: true, style_class: 'freeby-window'});
+            const box = new St.BoxLayout({vertical: true, style_class: 'usagebeam-window'});
             const value = window.unlimited ? 'Unlimited' : `${Math.round(window.usedPercent)}%`;
             box.add_child(row(window.label, value));
             if (!window.unlimited) {
-                const level = window.usedPercent >= 100 ? 'freeby-danger' :
-                    window.usedPercent >= 90 ? 'freeby-warning' : '';
+                const level = window.usedPercent >= 100 ? 'usagebeam-danger' :
+                    window.usedPercent >= 90 ? 'usagebeam-warning' : '';
                 box.add_child(meter(window.usedPercent / 100, `${window.label}: ${value} used`, level));
-                box.add_child(label(resetTime(window.resetsAt), 'freeby-caption'));
+                box.add_child(label(resetTime(window.resetsAt), 'usagebeam-caption'));
             }
             this._contentBox.add_child(box);
         }
@@ -151,7 +151,7 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
 
             // Construct the complete view even while collapsed so lifecycle smoke
             // coverage continues to exercise every primary widget.
-            const details = new St.BoxLayout({vertical: true, style_class: 'freeby-details',
+            const details = new St.BoxLayout({vertical: true, style_class: 'usagebeam-details',
                 x_expand: true, visible: this._detailsExpanded});
             if (history.days.length)
                 this._renderDays(history, details);
@@ -166,20 +166,20 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
     _renderDays(history, parent = this._contentBox) {
         this._heading('TOKENS BY DAY', parent);
         const scope = history.scope === 'account' ? 'Account activity' : 'This device';
-        parent.add_child(label(`${scope} · ${history.period.start} – ${history.period.end}`, 'freeby-caption'));
+        parent.add_child(label(`${scope} · ${history.period.start} – ${history.period.end}`, 'usagebeam-caption'));
         const max = Math.max(1, ...history.days.map(day => day.total));
         const today = recentDates(Date.now(), 1)[0];
         for (const day of history.days) {
-            const line = new St.BoxLayout({style_class: 'freeby-day-row', x_expand: true});
+            const line = new St.BoxLayout({style_class: 'usagebeam-day-row', x_expand: true});
             const dayName = day.date === today ? 'Today' :
                 new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, {weekday: 'short'});
-            line.add_child(label(dayName, 'freeby-day'));
+            line.add_child(label(dayName, 'usagebeam-day'));
             if (day.date === today)
-                line.add_style_class_name('freeby-today');
+                line.add_style_class_name('usagebeam-today');
             const bar = meter(day.total / max, `${day.date}: ${tokens(day.total)} tokens`);
             bar.y_align = Clutter.ActorAlign.CENTER;
             line.add_child(bar);
-            line.add_child(label(tokens(day.total), 'freeby-day-total'));
+            line.add_child(label(tokens(day.total), 'usagebeam-day-total'));
             line.accessible_name = `${dayName}, ${day.total} tokens, ${day.sessions ?? 0} sessions`;
             parent.add_child(line);
         }
@@ -198,12 +198,12 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
             parent.add_child(modelMeter(displayName, tokens(model.total), model.total / max, accessible));
         }
         if (history.models.length > visibleModels.length)
-            parent.add_child(label(`Top ${visibleModels.length} of ${history.models.length} models`, 'freeby-caption'));
+            parent.add_child(label(`Top ${visibleModels.length} of ${history.models.length} models`, 'usagebeam-caption'));
     }
 
     _renderFooter(record, busy) {
-        const actions = new St.BoxLayout({style_class: 'freeby-actions', x_expand: true});
-        actions.add_child(label(busy ? 'Refreshing…' : age(latestUpdate(record)), 'freeby-caption', true));
+        const actions = new St.BoxLayout({style_class: 'usagebeam-actions', x_expand: true});
+        actions.add_child(label(busy ? 'Refreshing…' : age(latestUpdate(record)), 'usagebeam-caption', true));
         actions.add_child(actionButton('Refresh', () => this._service?.refreshAll(true), 'Refresh usage'));
         actions.add_child(actionButton('Settings', () => { this.menu.close(); this._openPreferences(); },
             'Open extension settings'));
@@ -223,11 +223,11 @@ export const FreebyIndicator = GObject.registerClass(class FreebyIndicator exten
     }
 
     _heading(text, parent = this._contentBox) {
-        parent.add_child(label(text, 'freeby-section-title'));
+        parent.add_child(label(text, 'usagebeam-section-title'));
     }
 
     _message(text) {
-        const message = label(text, 'freeby-message');
+        const message = label(text, 'usagebeam-message');
         message.clutter_text.line_wrap = true;
         this._contentBox.add_child(message);
     }

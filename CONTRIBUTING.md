@@ -1,4 +1,4 @@
-# Contributing to Freeby
+# Contributing to UsageBeam
 
 Development targets the `dev` branch. `main` is reserved for stable releases.
 Keep provider changes small enough to verify independently and use conventional
@@ -20,7 +20,7 @@ npm run pack
 For an isolated installation:
 
 ```bash
-meson setup build --prefix=/tmp/freeby-install
+meson setup build --prefix=/tmp/usagebeam-install
 meson install -C build
 ```
 

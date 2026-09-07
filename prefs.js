@@ -3,9 +3,9 @@ import Gtk from 'gi://Gtk';
 
 import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-export default class FreebyPreferences extends ExtensionPreferences {
+export default class UsageBeamPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
-        const settings = this.getSettings('org.gnome.shell.extensions.freeby');
+        const settings = this.getSettings('org.gnome.shell.extensions.usagebeam');
 
         const page = new Adw.PreferencesPage();
         window.add(page);

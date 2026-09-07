@@ -109,7 +109,7 @@ export async function collectCodex(io) {
     let rpc;
     try {
         rpc = io.codexClient();
-        await rpc.request('initialize', {clientInfo: {name: 'freeby', title: 'Freeby', version: '2.0.0'},
+        await rpc.request('initialize', {clientInfo: {name: 'usagebeam', title: 'UsageBeam', version: '2.0.0'},
             capabilities: {experimentalApi: false}});
         rpc.notify('initialized', {});
         const account = await rpc.request('account/read', {refreshToken: false});

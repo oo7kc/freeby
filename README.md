@@ -1,12 +1,13 @@
-# Freeby
+# UsageBeam
 
-Freeby is a native GNOME Shell usage monitor for AI coding tools. It keeps
+UsageBeam is a native GNOME Shell usage monitor for AI coding tools. It keeps
 account limits, reset windows, recent local token activity, and model totals one
 click away in the top panel.
 
-Version 2 is being delivered provider by provider. `v2.0.0-alpha.2` adds Claude
-Code to the Codex foundation. Cursor and Copilot adapters remain available as
-opt-in previews while their dedicated milestones are completed.
+Version 2 is being delivered provider by provider. The former Freeby identity
+was used through `v2.0.0-alpha.2`; development now uses the permanent UsageBeam
+identity. Cursor and Copilot adapters remain opt-in previews while their
+dedicated milestones are completed.
 
 ## What the current prerelease includes
 
@@ -22,7 +23,7 @@ opt-in previews while their dedicated milestones are completed.
   threshold-crossing notifications.
 - A native, theme-aware, keyboard-focusable GNOME panel interface.
 
-Freeby stores only derived usage metadata under the standard XDG state/cache
+UsageBeam stores only derived usage metadata under the standard XDG state/cache
 directories. It does not copy prompts, responses, transcripts, or credentials.
 Local activity covers this device only and must not be interpreted as billing or
 subscription usage.
@@ -48,15 +49,20 @@ cd freeby
 git switch dev
 meson setup build --prefix="$HOME/.local"
 meson install -C build
-gnome-extensions enable freeby@kelvin.local
+gnome-extensions enable usagebeam@oo7kc.github.io
 ```
 
-Log out and back in if GNOME Shell has not discovered the extension. An archive
-from a GitHub release can instead be installed with:
+Log out and back in if GNOME Shell has not discovered the extension. Starting
+with alpha.3, a downloaded release archive can instead be installed with:
 
 ```bash
-gnome-extensions install --force freeby@kelvin.local-2.0.0-alpha.2.zip
+gnome-extensions install --force usagebeam@oo7kc.github.io-VERSION.zip
 ```
+
+The identity migration copies recognized derived usage data and explicitly
+changed settings from an installed Freeby alpha without overwriting existing
+UsageBeam values. It does not copy credentials. After confirming UsageBeam is
+active, the former `freeby@kelvin.local` extension can be uninstalled.
 
 ## Settings
 
@@ -68,7 +74,7 @@ full preferences interface in alpha.5.
 To opt into a preview adapter during development:
 
 ```bash
-gsettings set org.gnome.shell.extensions.freeby enabled-providers "['codex', 'claude', 'cursor', 'copilot']"
+gsettings set org.gnome.shell.extensions.usagebeam enabled-providers "['codex', 'claude', 'cursor', 'copilot']"
 ```
 
 Preview providers are not part of the alpha.2 compatibility promise. See the
@@ -90,15 +96,16 @@ from credential-free automated fixtures.
 ## Uninstall or downgrade
 
 ```bash
-gnome-extensions disable freeby@kelvin.local
-rm -rf "$HOME/.local/share/gnome-shell/extensions/freeby@kelvin.local"
+gnome-extensions disable usagebeam@oo7kc.github.io
+gnome-extensions uninstall usagebeam@oo7kc.github.io
 ```
 
-The extension-local schema is removed with that directory; shared system schema
+The extension-local schema is removed with the extension; shared system schema
 artifacts are never deleted. To downgrade, install an older release archive with
-`gnome-extensions install --force` and restart the session.
+`gnome-extensions install --force` and restart the session. Releases through
+alpha.2 use the former UUID and therefore install as a separate extension.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development practices and
 [.AGENTS/plans/roadmap.md](.AGENTS/plans/roadmap.md) for the ordered provider
 milestones. Architecture and provider documentation is indexed in
-[docs/README.md](docs/README.md). Freeby is licensed under the [MIT License](LICENSE).
+[docs/README.md](docs/README.md). UsageBeam is licensed under the [MIT License](LICENSE).

@@ -33,13 +33,16 @@ def package(source, output):
         raise RuntimeError('package.json contains an invalid release version')
     files = [source / name for name in ('extension.js', 'prefs.js', 'metadata.json', 'stylesheet.css', 'LICENSE')]
     files.extend(sorted((source / 'src').rglob('*.js')))
-    files.append(source / 'schemas' / 'org.gnome.shell.extensions.freeby.gschema.xml')
+    schema = metadata.get('settings-schema')
+    if schema != 'org.gnome.shell.extensions.usagebeam':
+        raise RuntimeError('metadata.json contains an unexpected settings schema')
+    files.append(source / 'schemas' / f'{schema}.gschema.xml')
     files = [checked_file(source, file) for file in files]
     output.mkdir(parents=True, exist_ok=True)
     archive = output / f'{uuid}-{version}.zip'
     if archive.is_symlink():
         raise RuntimeError(f'Refusing to overwrite archive symlink: {archive}')
-    with tempfile.TemporaryDirectory(prefix='freeby-schemas-') as scratch:
+    with tempfile.TemporaryDirectory(prefix='usagebeam-schemas-') as scratch:
         subprocess.run(['glib-compile-schemas', '--strict', '--targetdir', scratch, str(source / 'schemas')], check=True)
         payloads = [(file.relative_to(source).as_posix(), file.read_bytes()) for file in files]
         payloads.append(('schemas/gschemas.compiled', (Path(scratch) / 'gschemas.compiled').read_bytes()))

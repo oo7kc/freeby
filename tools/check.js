@@ -39,8 +39,10 @@ for (const entrypoint of ['extension.js', 'prefs.js']) {
         throw new Error(`${entrypoint}: GNOME entry points must remain thin`);
 }
 const metadata = JSON.parse(readFileSync('metadata.json', 'utf8'));
-if (metadata.uuid !== 'freeby@kelvin.local')
+if (metadata.uuid !== 'usagebeam@oo7kc.github.io')
     throw new Error('Extension identity changed without a migration');
+if (metadata.name !== 'UsageBeam' || metadata['settings-schema'] !== 'org.gnome.shell.extensions.usagebeam')
+    throw new Error('UsageBeam product metadata is inconsistent');
 const version = JSON.parse(readFileSync('package.json', 'utf8')).version;
 if (!readFileSync('meson.build', 'utf8').includes(`version: '${version}'`))
     throw new Error('Meson and package versions differ');
@@ -53,7 +55,7 @@ for (const file of required) {
         throw new Error(`Missing repository guidance: ${file}`);
 }
 const schemas = walk('schemas').filter(file => file.endsWith('.xml'));
-if (schemas.length !== 1 || schemas[0] !== 'schemas/org.gnome.shell.extensions.freeby.gschema.xml')
+if (schemas.length !== 1 || schemas[0] !== 'schemas/org.gnome.shell.extensions.usagebeam.gschema.xml')
     throw new Error('Unexpected extension schema input');
 const obsolete = ['plan.md', 'indicator.js', 'src/providers/legacy.js', 'scripts/freeby.sh',
     'scripts/copilot-setup.sh', 'tests/freeby.bats', 'docs/s1.png', 'docs/s2.png', 'reference-images'];

@@ -11,13 +11,17 @@ import tempfile
 import time
 import zipfile
 
+UUID = 'usagebeam@oo7kc.github.io'
+SCHEMA = 'org.gnome.shell.extensions.usagebeam'
+PRODUCT_DIRECTORY = 'usagebeam'
+
 
 def run(command, env, **options):
     return subprocess.run(command, env=env, text=True, capture_output=True, timeout=15, **options)
 
 
 def install(source, archive, prefix, destination):
-    extension = prefix / 'share' / 'gnome-shell' / 'extensions' / 'freeby@kelvin.local'
+    extension = prefix / 'share' / 'gnome-shell' / 'extensions' / UUID
     if archive:
         with zipfile.ZipFile(archive) as payload:
             for entry in payload.infolist():
@@ -69,7 +73,7 @@ def seed_usage(destination):
         {'model': 'gpt-6-astra', 'total': 790_000, 'input': 42_000, 'output': 62_000,
          'cacheRead': 686_000, 'cacheWrite': 0},
     ]
-    target = destination / 'state' / 'freeby'
+    target = destination / 'state' / PRODUCT_DIRECTORY
     target.mkdir(parents=True, exist_ok=True)
     (target / 'codex.json').write_text(json.dumps(record('codex', 'Codex', 'Pro', (24, 61), models)))
     (target / 'claude.json').write_text(json.dumps(record('claude', 'Claude Code', 'Pro', (17, 43), models[:2])))
@@ -86,10 +90,10 @@ def smoke(source, archive, destination):
            'XDG_CONFIG_HOME': str(destination / 'config'),
            'XDG_DATA_HOME': str(prefix / 'share'), 'XDG_CACHE_HOME': str(destination / 'cache'),
            'XDG_STATE_HOME': str(destination / 'state'), 'GSETTINGS_BACKEND': 'keyfile',
-           'GSETTINGS_SCHEMA_DIR': str(prefix / 'share/gnome-shell/extensions/freeby@kelvin.local/schemas'),
+           'GSETTINGS_SCHEMA_DIR': str(prefix / 'share/gnome-shell/extensions' / UUID / 'schemas'),
            'LIBGL_ALWAYS_SOFTWARE': '1'}
-    run(['gsettings', 'set', 'org.gnome.shell.extensions.freeby', 'enabled-providers', "['codex', 'claude']"], env, check=True)
-    run(['gsettings', 'set', 'org.gnome.shell', 'enabled-extensions', "['freeby@kelvin.local']"], env, check=True)
+    run(['gsettings', 'set', SCHEMA, 'enabled-providers', "['codex', 'claude']"], env, check=True)
+    run(['gsettings', 'set', 'org.gnome.shell', 'enabled-extensions', f"['{UUID}']"], env, check=True)
     run(['gsettings', 'set', 'org.gnome.shell', 'welcome-dialog-last-shown-version', '999'], env)
     bus = subprocess.Popen(['dbus-daemon', '--session', '--nofork', '--print-address=1'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
     env['DBUS_SESSION_BUS_ADDRESS'] = bus.stdout.readline().strip()
@@ -98,9 +102,9 @@ def smoke(source, archive, destination):
     try:
         with log_path.open('w') as log:
             shell = subprocess.Popen(['gnome-shell', '--headless', '--no-x11', '--virtual-monitor', '1280x1024',
-                                      '--wayland-display', 'freeby-test', '--debug-control'], env=env, stdout=log, stderr=log, start_new_session=True)
+                                      '--wayland-display', 'usagebeam-test', '--debug-control'], env=env, stdout=log, stderr=log, start_new_session=True)
         command = ['gdbus', 'call', '--session', '--dest', 'org.gnome.Shell.Extensions', '--object-path', '/org/gnome/Shell/Extensions',
-                   '--method', 'org.gnome.Shell.Extensions.GetExtensionInfo', 'freeby@kelvin.local']
+                   '--method', 'org.gnome.Shell.Extensions.GetExtensionInfo', UUID]
         deadline = time.monotonic() + 30
         info = ''
         while time.monotonic() < deadline and shell.poll() is None:
@@ -114,11 +118,11 @@ def smoke(source, archive, destination):
         else:
             raise RuntimeError(f'Extension did not become active: {info}')
         print('PASS: packaged extension loads in a private GNOME Shell session')
-        run(['gnome-extensions', 'disable', 'freeby@kelvin.local'], env, check=True)
-        run(['gnome-extensions', 'enable', 'freeby@kelvin.local'], env, check=True)
+        run(['gnome-extensions', 'disable', UUID], env, check=True)
+        run(['gnome-extensions', 'enable', UUID], env, check=True)
         print('PASS: extension disable/re-enable')
         # Leave no collector running while the private shell itself shuts down.
-        run(['gnome-extensions', 'disable', 'freeby@kelvin.local'], env, check=True)
+        run(['gnome-extensions', 'disable', UUID], env, check=True)
     finally:
         if shell and shell.poll() is None:
             os.killpg(shell.pid, signal.SIGTERM)
@@ -131,7 +135,7 @@ def smoke(source, archive, destination):
         bus.wait(timeout=5)
         print(f'GNOME log: {log_path}')
     contents = log_path.read_text(errors='replace')
-    if 'Gjs-CRITICAL' in contents and 'freeby@kelvin.local' in contents:
+    if 'Gjs-CRITICAL' in contents and UUID in contents:
         raise RuntimeError(f'Extension emitted a GJS critical; inspect {log_path}')
 
 
@@ -142,4 +146,4 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     smoke(args.source.resolve(), args.archive.resolve() if args.archive else None,
-          args.output or Path(tempfile.mkdtemp(prefix='freeby-shell-')))
+          args.output or Path(tempfile.mkdtemp(prefix='usagebeam-shell-')))

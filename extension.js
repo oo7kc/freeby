@@ -1,17 +1,19 @@
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import {FreebyIndicator} from './src/ui/indicator.js';
+import {UsageBeamIndicator} from './src/ui/indicator.js';
+import {migrateLegacyInstall} from './src/services/migration.js';
 import {UsageService} from './src/services/usageService.js';
 
-export default class FreebyExtension extends Extension {
+export default class UsageBeamExtension extends Extension {
     enable() {
-        this._settings = this.getSettings('org.gnome.shell.extensions.freeby');
-        this._indicator = new FreebyIndicator(this._settings, () => this.openPreferences());
+        this._settings = this.getSettings('org.gnome.shell.extensions.usagebeam');
+        migrateLegacyInstall(this._settings);
+        this._indicator = new UsageBeamIndicator(this._settings, () => this.openPreferences());
         Main.panel.addToStatusArea(this.uuid, this._indicator);
         this._service = new UsageService(this._settings, this.path, () => this._indicator?.render(), alerts => {
             for (const alert of alerts) {
                 const state = alert.threshold === 100 ? 'limit reached' : `reached ${alert.threshold}%`;
-                Main.notify('Freeby usage alert', `${alert.provider}: ${alert.label} ${state}.`);
+                Main.notify('UsageBeam usage alert', `${alert.provider}: ${alert.label} ${state}.`);
             }
         });
         this._indicator.attach(this._service);

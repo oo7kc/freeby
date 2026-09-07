@@ -1,5 +1,5 @@
 ---
-description: Product scope and architecture invariants for Freeby
+description: Product scope and architecture invariants for UsageBeam
 alwaysApply: true
 ---
 
@@ -7,8 +7,8 @@ alwaysApply: true
 
 - Build a reliable native GNOME usage monitor for Codex, Claude Code, Cursor,
   and Copilot across free and paid plans.
-- Finish usage monitoring before cost, billing, budgets, naming, icon, or schema
-  identity changes.
+- Keep the finalized UsageBeam identity stable. Finish usage monitoring before
+  cost, billing, budgets, or icon work.
 - Keep GNOME entry points thin. Separate provider adapters, usage contracts,
   services, UI actors, and preferences.
 - Prefer GJS, Gio/GLib, Soup, and native GNOME APIs. Never download runtime

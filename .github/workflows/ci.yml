@@ -20,10 +20,10 @@ jobs:
         run: npm run verify
       - name: Verify isolated install
         run: |
-          meson setup build --prefix="$RUNNER_TEMP/freeby-install"
+          meson setup build --prefix="$RUNNER_TEMP/usagebeam-install"
           meson install -C build
-          test -f "$RUNNER_TEMP/freeby-install/share/gnome-shell/extensions/freeby@kelvin.local/schemas/gschemas.compiled"
+          test -f "$RUNNER_TEMP/usagebeam-install/share/gnome-shell/extensions/usagebeam@oo7kc.github.io/schemas/gschemas.compiled"
       - uses: actions/upload-artifact@v7
         with:
-          name: freeby-extension
+          name: usagebeam-extension
           path: dist/*.zip

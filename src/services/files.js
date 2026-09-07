@@ -4,6 +4,10 @@ import GLib from 'gi://GLib';
 export const join = (...parts) => GLib.build_filenamev(parts);
 export const fingerprint = value => GLib.compute_checksum_for_string(GLib.ChecksumType.SHA256, String(value), -1);
 
+const PRODUCT_DIRECTORY = 'usagebeam';
+const LEGACY_DIRECTORY = 'freeby';
+const PROVIDERS = Object.freeze(['codex', 'claude', 'cursor', 'copilot']);
+
 export function readText(path, fallback = null, maxBytes = 16 * 1024 * 1024) {
     if (!Number.isSafeInteger(maxBytes) || maxBytes <= 0)
         throw new Error('File size limit must be a positive integer');
@@ -44,9 +48,41 @@ export function writeJson(path, value) {
 }
 
 export function stateDirectory() {
-    return join(GLib.get_user_state_dir(), 'freeby');
+    return join(GLib.get_user_state_dir(), PRODUCT_DIRECTORY);
 }
 
 export function cacheDirectory() {
-    return join(GLib.get_user_cache_dir(), 'freeby');
+    return join(GLib.get_user_cache_dir(), PRODUCT_DIRECTORY);
+}
+
+export function migrateLegacyData({
+    legacyState = join(GLib.get_user_state_dir(), LEGACY_DIRECTORY),
+    legacyCache = join(GLib.get_user_cache_dir(), LEGACY_DIRECTORY),
+    state = stateDirectory(),
+    cache = cacheDirectory(),
+} = {}) {
+    const groups = [
+        {source: legacyState, destination: state, names: PROVIDERS.map(id => `${id}.json`),
+            maxBytes: 16 * 1024 * 1024},
+        {source: legacyCache, destination: cache, names: PROVIDERS.map(id => `history-${id}.json`),
+            maxBytes: 64 * 1024 * 1024},
+    ];
+    let migrated = 0;
+    for (const group of groups) {
+        for (const name of group.names) {
+            const destination = join(group.destination, name);
+            if (Gio.File.new_for_path(destination).query_exists(null))
+                continue;
+            const value = readJson(join(group.source, name), null, group.maxBytes);
+            if (value === null)
+                continue;
+            try {
+                writeJson(destination, value);
+                migrated++;
+            } catch {
+                // Migration is best-effort; collection can rebuild derived data.
+            }
+        }
+    }
+    return migrated;
 }

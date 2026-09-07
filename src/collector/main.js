@@ -69,7 +69,8 @@ const io = {
             if (cleaned)
                 return cleaned;
         } catch { /* Standalone setup token is also supported. */ }
-        return token(readText(join(GLib.get_user_config_dir(), 'freeby', 'copilot-token'), null, 64 * 1024));
+        return token(readText(join(GLib.get_user_config_dir(), 'usagebeam', 'copilot-token'), null, 64 * 1024)) ??
+            token(readText(join(GLib.get_user_config_dir(), 'freeby', 'copilot-token'), null, 64 * 1024));
     },
 };
 

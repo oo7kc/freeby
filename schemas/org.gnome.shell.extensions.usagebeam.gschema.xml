@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist gettext-domain="freeby">
-  <schema id="org.gnome.shell.extensions.freeby"
-          path="/org/gnome/shell/extensions/freeby/">
+<schemalist gettext-domain="usagebeam">
+  <schema id="org.gnome.shell.extensions.usagebeam"
+          path="/org/gnome/shell/extensions/usagebeam/">
     <key name="refresh-interval" type="i">
       <default>120</default>
       <range min="30" max="3600"/>
