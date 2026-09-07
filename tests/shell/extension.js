@@ -179,14 +179,17 @@ export default class UsageBeamUITest extends Extension {
         }
         for (const style of ['usagebeam-limit-percent', 'usagebeam-limit-reset']) {
             const actors = matching(content, style);
+            const firstText = actors[0].get_child();
+            const firstEdge = style === 'usagebeam-limit-percent'
+                ? bounds(firstText).x + firstText.width : bounds(firstText).x;
             for (const actor of actors) {
                 const text = actor.get_child();
                 assert(!text.clutter_text.get_layout().is_ellipsized(), `${style}: clipped text`);
                 assert(Math.abs(bounds(actor).x - bounds(actors[0]).x) <= 1, `${style}: misaligned column`);
-                const edge = bounds(text).x + text.width;
-                const firstText = actors[0].get_child();
-                assert(Math.abs(edge - bounds(firstText).x - firstText.width) <= 1,
-                    `${style}: numbers are not right aligned (${edge} vs ${bounds(firstText).x + firstText.width})`);
+                const edge = style === 'usagebeam-limit-percent'
+                    ? bounds(text).x + text.width : bounds(text).x;
+                assert(Math.abs(edge - firstEdge) <= 1,
+                    `${style}: text alignment drifted (${edge} vs ${firstEdge})`);
             }
         }
         const dots = [indicator._panelSeparator, ...matching(content, 'usagebeam-separator-dot')];
@@ -203,12 +206,39 @@ export default class UsageBeamUITest extends Extension {
         assert(Math.abs(separatorBounds.x - (valueBounds.x + valueBounds.width) -
             (resetBounds.x - separatorBounds.x - separatorBounds.width)) <= 1,
         'Panel separator does not have equal spacing');
+        const providerBounds = bounds(indicator._panelProvider);
+        assert(valueBounds.x - providerBounds.x - providerBounds.width <= 6 * scale,
+            'Panel provider and percentage are spaced too far apart');
+        assert(bounds(indicator.container).width / scale < 180,
+            `Panel indicator is not compact: ${bounds(indicator.container).width / scale}`);
+        const clockLabels = descendants(calendar).filter(actor =>
+            actor instanceof St.Label && actor.visible && actor.mapped && actor.width > 0);
+        assert(clockLabels.length > 0, 'Calendar has no visible label');
+        const clockRight = Math.max(...clockLabels.map(actor => bounds(actor).x + actor.width));
+        const calendarGap = bounds(indicator._panelIcon).x - clockRight;
+        assert(calendarGap >= 0 && calendarGap <= 20 * scale,
+            `Calendar/provider visual gap is not compact: ${calendarGap / scale}`);
+        for (const metrics of matching(content, 'usagebeam-limit-metrics')) {
+            if (metrics.get_children().length !== 3)
+                continue;
+            const [percent, dot, reset] = metrics.get_children();
+            const percentText = bounds(percent.get_child());
+            const dotCore = bounds(dot.get_child());
+            const resetText = bounds(reset.get_child());
+            const beforeDot = dotCore.x - percentText.x - percentText.width;
+            const afterDot = resetText.x - dotCore.x - dotCore.width;
+            assert(Math.abs(beforeDot - afterDot) <= 1,
+                `Limit separator spacing is uneven: ${beforeDot} vs ${afterDot}`);
+        }
         const limitName = matching(content, 'usagebeam-limit-name')[0];
         const limitValue = matching(content, 'usagebeam-limit-percent')[0].get_child();
         assert(limitValue.get_theme_node().get_font().get_size() <
             limitName.get_theme_node().get_font().get_size(), 'Limit metrics lack font hierarchy');
         const activityParts = matching(content, 'usagebeam-disclosure-summary');
         assert(activityParts.length === 3, 'Activity summary is not split into semantic parts');
+        const historyScope = matching(content, 'usagebeam-history-scope');
+        assert(historyScope.length === 1 && historyScope[0].text === 'This device',
+            'Expanded activity should emphasize source scope without a date range');
         for (const severity of ['caution', 'warning', 'danger']) {
             const actors = matching(content, `usagebeam-${severity}`);
             assert(actors.some(actor => actor.has_style_class_name('usagebeam-limit-percent')),

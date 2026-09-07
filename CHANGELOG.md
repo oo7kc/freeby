@@ -35,6 +35,10 @@ All notable UsageBeam changes are documented here.
 - Model fills remain compact and stable across repeated layout passes.
 - Calendar placement remains fixed while providers and quota values change.
 - Reset values, percentages, and separator dots retain consistent alignment.
+- The active-provider readout uses compact internal and calendar-side spacing,
+  while retaining a fixed width across provider changes.
+- Seven-day activity emphasizes its local/account scope without repeating a
+  date range already represented by the chart.
 - Expired quota windows are not presented as current cached data.
 - Empty, malformed, or unavailable provider responses are never shown as zero
   usage.

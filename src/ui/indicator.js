@@ -6,7 +6,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {NAMES, recentDates} from '../core/usage.js';
-import {age, dateRange, modelName, tokens} from '../core/format.js';
+import {age, modelName, tokens} from '../core/format.js';
 import {historyOverview, latestUpdate, panelQuota, periodDays, providerStatus,
     quotaPresentation, quotaSeverity} from './presentation.js';
 import {actionButton, button, dayChart, disclosureButton, label, meter, modelMeter,
@@ -18,6 +18,7 @@ const PROVIDER_MARKS = {codex: '>_', claude: '✦'};
 export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator extends PanelMenu.Button {
     _init(settings, extensionPath, openPreferences) {
         super._init(0.5, 'UsageBeam usage monitor');
+        this.add_style_class_name('usagebeam-panel-button');
         this._settings = settings;
         this._extensionPath = extensionPath;
         this._openPreferences = openPreferences;
@@ -25,10 +26,10 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
         this._detailsExpanded = false;
         this._panelStatus = new St.BoxLayout({style_class: 'usagebeam-panel-status'});
         this._panelIcon = new St.Bin({style_class: 'usagebeam-panel-icon-slot', y_align: Clutter.ActorAlign.CENTER});
-        this._panelProvider = label('UsageBeam', 'usagebeam-panel-provider', true);
+        this._panelProvider = label('UsageBeam', 'usagebeam-panel-provider');
         this._panelProvider.clutter_text.ellipsize = Pango.EllipsizeMode.END;
         this._panelValue = metricLabel('—', 'usagebeam-panel-value');
-        this._panelReset = metricLabel('—', 'usagebeam-panel-reset');
+        this._panelReset = metricLabel('—', 'usagebeam-panel-reset', true);
         this._panelSeparator = separatorDot('usagebeam-panel-separator');
         for (const actor of [this._panelIcon, this._panelProvider, this._panelValue,
             this._panelSeparator, this._panelReset])
@@ -210,7 +211,7 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
         const overview = historyOverview(history);
         this._heading(`LAST ${overview?.days ?? history.days.length} DAYS · ${tokens(overview?.total ?? 0)} TOKENS`, parent);
         const scope = history.scope === 'account' ? 'Account activity' : 'This device';
-        parent.add_child(label(`${scope} · ${dateRange(history.period)}`, 'usagebeam-caption'));
+        parent.add_child(label(scope, 'usagebeam-history-scope'));
         const today = recentDates(Date.now(), 1)[0];
         parent.add_child(dayChart(history.days, today));
     }

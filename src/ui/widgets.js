@@ -30,9 +30,9 @@ export function separatorDot(style = '') {
     });
 }
 
-function metricColumn(text, style) {
+function metricColumn(text, style, alignment = Clutter.ActorAlign.END) {
     const child = metricLabel(text, '', true);
-    child.x_align = Clutter.ActorAlign.END;
+    child.x_align = alignment;
     return new St.Bin({style_class: style, child});
 }
 
@@ -57,7 +57,7 @@ export function limitRow(name, value, reset, severity = null) {
         metrics.add_child(metricColumn(value,
             `usagebeam-limit-percent${severity ? ` usagebeam-${severity}` : ''}`));
         metrics.add_child(separatorDot('usagebeam-limit-separator'));
-        metrics.add_child(metricColumn(reset, 'usagebeam-limit-reset'));
+        metrics.add_child(metricColumn(reset, 'usagebeam-limit-reset', Clutter.ActorAlign.START));
     } else {
         metrics.add_child(metricColumn(value, 'usagebeam-limit-value'));
     }

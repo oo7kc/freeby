@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {aggregateEvents, mergeRecord, number, recentDates, record, validTime, validateRecord, windowUsage} from '../../src/core/usage.js';
-import {compactTokens, dateRange, modelName, resetCountdown, resetTime, tokens} from '../../src/core/format.js';
+import {compactTokens, modelName, resetCountdown, resetTime, tokens} from '../../src/core/format.js';
 import {ThresholdTracker} from '../../src/core/notifications.js';
 
 test('unknown metrics are not coerced to zero', () => {
@@ -133,9 +133,6 @@ test('formatting preserves unknown/reset-due states', () => {
     assert.equal(tokens(23000000), '23.0M');
     assert.equal(compactTokens(186000000), '186M');
     assert.equal(compactTokens(56300000), '56.3M');
-    assert.match(dateRange({start: '2026-09-01', end: '2026-09-07'}, 'en-US'),
-        /^Sep 1.*7, 2026$/);
-    assert.equal(dateRange({start: 'bad', end: '2026-09-07'}, 'en-US'), 'Dates unavailable');
     assert.equal(resetTime(null), 'Reset time unavailable');
     assert.match(resetTime(100, 200), /awaiting update/);
     assert.equal(resetCountdown(null), null);

@@ -30,9 +30,14 @@
   background-color: st-mix(-st-accent-color, #f4f8f9, 4%);
 }
 
+.usagebeam-panel-button {
+  -natural-hpadding: 4px;
+  -minimum-hpadding: 3px;
+}
+
 .usagebeam-panel-status {
-  spacing: 5px;
-  width: 15em;
+  spacing: 4px;
+  width: 12.5em;
   font-family: "SF Pro Text";
   font-size: 9.5pt;
   font-feature-settings: "tnum";
@@ -70,6 +75,7 @@
 .usagebeam-panel-reset {
   font-weight: 500;
   opacity: 0.86;
+  text-align: left;
 }
 
 .usagebeam-separator-dot {
@@ -201,7 +207,7 @@
 }
 
 .usagebeam-limit-metrics {
-  spacing: 5px;
+  spacing: 4px;
   font-feature-settings: "tnum";
 }
 
@@ -214,18 +220,19 @@
 }
 
 .usagebeam-limit-percent {
-  min-width: 3.2em;
+  min-width: 3em;
   font-weight: 620;
 }
 
 .usagebeam-limit-separator {
-  min-width: 0.8em;
+  min-width: 4px;
 }
 
 .usagebeam-limit-reset {
-  min-width: 4.8em;
+  min-width: 4.3em;
   font-weight: 500;
   opacity: 0.84;
+  text-align: left;
 }
 
 .usagebeam-limit-value {
@@ -313,6 +320,13 @@
 .usagebeam-details {
   spacing: 0;
   padding-top: 1px;
+}
+
+.usagebeam-history-scope {
+  padding-bottom: 1px;
+  font-size: 9.75pt;
+  font-weight: 650;
+  opacity: 0.94;
 }
 
 .usagebeam-day-chart {
