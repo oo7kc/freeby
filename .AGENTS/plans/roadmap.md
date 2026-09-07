@@ -260,6 +260,26 @@ That exact archive loaded with populated Codex and Claude records, moved live
 from the left to the right of the calendar, disabled, and re-enabled without
 extension errors in a private GNOME Shell 50 session.
 
+### Visual QA correction checkpoint
+
+- [x] Correct the daily chart's zero-width bar allocation and keep every
+  non-zero column visibly bottom-aligned against the period maximum.
+- [x] Center the popup around its panel trigger and retain GNOME's work-area
+  clamping at screen edges.
+- [x] Give the activity disclosure a complete border and stable right-aligned
+  metadata group; align quota percentages and resets in tabular columns.
+- [x] Replace raw ISO ranges with concise locale-aware dates and refine the
+  surface into light/dark accent-tinted slate variants with mixed system and
+  system-monospace typography.
+
+Evidence: `npm run check` passed 29 deterministic unit tests, including chart
+geometry and date-presentation coverage, plus the strict schema/layout and GJS
+integration suite.
+Two builds produced the same 42,120-byte archive at SHA-256
+`11a51d84ed710e30cfc633fb6d6c7b5f8c6a7479c8e40dca95350e0f9d1526bc`.
+The exact archive loaded, changed calendar side live, disabled, and re-enabled
+without extension or stylesheet errors in a private GNOME Shell 50 session.
+
 ### 3. Cursor — v2.0.0-alpha.3
 
 - [ ] Revalidate current Cursor authentication and usage sources for free and paid accounts.

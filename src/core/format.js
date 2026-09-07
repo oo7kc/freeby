@@ -12,6 +12,21 @@ export function compactTokens(value) {
     return tokens(value).replace(/\.0(?=[BMK]$)/, '');
 }
 
+export function dateRange(period, locale = undefined) {
+    const start = new Date(`${period?.start ?? ''}T12:00:00`);
+    const end = new Date(`${period?.end ?? ''}T12:00:00`);
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end < start)
+        return 'Dates unavailable';
+    const formatter = new Intl.DateTimeFormat(locale, {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    });
+    return typeof formatter.formatRange === 'function'
+        ? formatter.formatRange(start, end)
+        : `${formatter.format(start)} – ${formatter.format(end)}`;
+}
+
 export function resetTime(time, now = Date.now()) {
     if (!Number.isFinite(time) || time <= 0)
         return 'Reset time unavailable';

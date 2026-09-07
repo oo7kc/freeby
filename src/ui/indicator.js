@@ -5,18 +5,18 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {NAMES, recentDates} from '../core/usage.js';
-import {age, modelName, tokens} from '../core/format.js';
+import {age, dateRange, modelName, tokens} from '../core/format.js';
 import {historyOverview, latestUpdate, panelQuota, periodDays, providerStatus,
     quotaPresentation} from './presentation.js';
 import {actionButton, button, dayChart, disclosureButton, label, meter, modelMeter,
-    providerIcon, row} from './widgets.js';
+    limitRow, providerIcon} from './widgets.js';
 
 const TAB_NAMES = {claude: 'Claude'};
 const PROVIDER_MARKS = {codex: '>_', claude: '✦', cursor: '⌁', copilot: '◆'};
 
 export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator extends PanelMenu.Button {
     _init(settings, extensionPath, openPreferences) {
-        super._init(0.0, 'UsageBeam usage monitor');
+        super._init(0.5, 'UsageBeam usage monitor');
         this._settings = settings;
         this._extensionPath = extensionPath;
         this._openPreferences = openPreferences;
@@ -25,6 +25,11 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
         this._panelStatus = new St.BoxLayout({style_class: 'usagebeam-panel-status'});
         this.add_child(this._panelStatus);
         this.menu.actor.add_style_class_name('usagebeam-menu');
+        this._shellSettings = St.Settings.get();
+        this._shellSettings.connectObject(
+            'notify::color-scheme', () => this._syncColorScheme(),
+            'notify::shell-color-scheme', () => this._syncColorScheme(), this);
+        this._syncColorScheme();
         const section = new PopupMenu.PopupMenuSection();
         this.menu.addMenuItem(section);
         // `content` is an inherited Clutter.Actor property whose value must be
@@ -41,6 +46,14 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
             }
         });
         this.render();
+    }
+
+    _syncColorScheme() {
+        const {colorScheme, shellColorScheme} = this._shellSettings;
+        const light = shellColorScheme === 'prefer-light' ||
+            (shellColorScheme !== 'prefer-dark' && colorScheme === St.SystemColorScheme.PREFER_LIGHT);
+        this.menu.actor.remove_style_class_name(light ? 'usagebeam-dark' : 'usagebeam-light');
+        this.menu.actor.add_style_class_name(light ? 'usagebeam-light' : 'usagebeam-dark');
     }
 
     resize() {
@@ -141,8 +154,7 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
             const view = quotaPresentation(window);
             if (!view)
                 continue;
-            const summary = [view.value, view.reset].filter(Boolean).join(' · ');
-            box.add_child(row(view.name, summary, 'usagebeam-limit-row'));
+            box.add_child(limitRow(view.name, view.value, view.reset));
             if (!window.unlimited) {
                 const level = window.usedPercent >= 100 ? 'usagebeam-danger' :
                     window.usedPercent >= 90 ? 'usagebeam-warning' : '';
@@ -189,7 +201,7 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
         const overview = historyOverview(history);
         this._heading(`LAST ${overview?.days ?? history.days.length} DAYS · ${tokens(overview?.total ?? 0)} TOKENS`, parent);
         const scope = history.scope === 'account' ? 'Account activity' : 'This device';
-        parent.add_child(label(`${scope} · ${history.period.start} – ${history.period.end}`, 'usagebeam-caption'));
+        parent.add_child(label(`${scope} · ${dateRange(history.period)}`, 'usagebeam-caption'));
         const today = recentDates(Date.now(), 1)[0];
         parent.add_child(dayChart(history.days, today));
     }
@@ -239,5 +251,11 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
         const message = label(text, 'usagebeam-message');
         message.clutter_text.line_wrap = true;
         this._contentBox.add_child(message);
+    }
+
+    destroy() {
+        this._shellSettings?.disconnectObject(this);
+        this._shellSettings = null;
+        super.destroy();
     }
 });

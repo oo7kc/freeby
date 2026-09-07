@@ -37,6 +37,9 @@ while version 2 is developed on the `dev` branch.
   reserve`, and render daily token history as a softly colored seven-column chart.
 - Add native preferences for immediate placement directly left or right of the
   Shell calendar.
+- Refine the interface into an accent-tinted slate surface with an explicit
+  perimeter, mixed system/monospace typography, stronger hierarchy, and a
+  bordered activity disclosure in both light and dark Shell color schemes.
 - Consolidated agent rules, the active roadmap, archived planning notes, and
   visual implementation references under `.AGENTS/`, with a minimal root
   `AGENTS.md` discovery entrypoint.
@@ -65,6 +68,12 @@ while version 2 is developed on the `dev` branch.
   names instead of centered or malformed bars.
 - Preserve the user's Shell typeface while strengthening text contrast and
   hierarchy for cleaner rendering.
+- Allocate daily chart bars explicitly so non-zero days always receive visible
+  width and bottom-aligned height.
+- Center the popup on the active-provider panel indicator instead of anchoring
+  its left edge to the trigger.
+- Align limit percentages, separators, and reset countdowns in fixed tabular
+  columns, and format activity periods as concise locale-aware date ranges.
 
 ### Removed
 

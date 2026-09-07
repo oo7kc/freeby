@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {historyOverview, latestUpdate, panelQuota, periodDays, providerStatus,
+import {chartBarGeometry, historyOverview, latestUpdate, panelQuota, periodDays, providerStatus,
     quotaName, quotaPresentation} from '../../src/ui/presentation.js';
 
 test('provider status distinguishes live, local, cached and setup data', () => {
@@ -63,4 +63,10 @@ test('panel quota reports only the highest current quota window', () => {
     assert.deepEqual(panelQuota(record, now), {percent: 46, reset: '15h 59m'});
     assert.equal(panelQuota({limits: {...record.limits, status: 'stale'}}, now), null);
     assert.equal(panelQuota(null, now), null);
+});
+
+test('chart geometry gives every non-zero day visible width and bottom alignment', () => {
+    assert.deepEqual(chartBarGeometry(70, 70, 50, 64), {x: 4, y: 0, width: 42, height: 64});
+    assert.deepEqual(chartBarGeometry(21.7, 70, 50, 64), {x: 4, y: 44, width: 42, height: 20});
+    assert.deepEqual(chartBarGeometry(0, 70, 50, 64), {x: 4, y: 64, width: 42, height: 0});
 });

@@ -4,6 +4,7 @@ import Gio from 'gi://Gio';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
 import {compactTokens} from '../core/format.js';
+import {chartBarGeometry} from './presentation.js';
 
 const PROVIDER_ICONS = new Set(['claude', 'codex']);
 const PROVIDER_ICON_FILES = {claude: 'claude.svg', codex: 'codex-symbolic.svg'};
@@ -24,12 +25,20 @@ export function providerIcon(provider, extensionPath, style = '') {
     });
 }
 
-export function row(left, right, style = 'usagebeam-row') {
-    const box = new St.BoxLayout({style_class: style, x_expand: true});
-    const title = label(left, '', true);
+export function limitRow(name, value, reset) {
+    const box = new St.BoxLayout({style_class: 'usagebeam-limit-row', x_expand: true});
+    const title = label(name, 'usagebeam-limit-name', true);
     title.clutter_text.ellipsize = Pango.EllipsizeMode.END;
     box.add_child(title);
-    box.add_child(label(right, 'usagebeam-number'));
+    const metrics = new St.BoxLayout({style_class: 'usagebeam-limit-metrics'});
+    if (reset) {
+        metrics.add_child(label(value, 'usagebeam-limit-percent'));
+        metrics.add_child(label('·', 'usagebeam-limit-separator'));
+        metrics.add_child(label(reset, 'usagebeam-limit-reset'));
+    } else {
+        metrics.add_child(label(value, 'usagebeam-limit-value'));
+    }
+    box.add_child(metrics);
     return box;
 }
 
@@ -97,16 +106,19 @@ export function dayChart(days, today) {
         const plot = new St.Widget({
             style_class: 'usagebeam-chart-plot',
             x_expand: true,
-            layout_manager: new Clutter.BinLayout(),
+            clip_to_allocation: true,
+            layout_manager: new Clutter.FixedLayout(),
         });
         const bar = new St.Widget({
             style_class: 'usagebeam-chart-bar',
-            x_align: Clutter.ActorAlign.FILL,
-            y_align: Clutter.ActorAlign.END,
             visible: day.total > 0,
-            height: Math.max(3, Math.round(day.total / max * 58)),
         });
         plot.add_child(bar);
+        plot.connect('notify::allocation', () => {
+            const geometry = chartBarGeometry(day.total, max, plot.width, plot.height);
+            bar.set_position(geometry.x, geometry.y);
+            bar.set_size(geometry.width, geometry.height);
+        });
         column.add_child(plot);
         column.add_child(label(weekday, 'usagebeam-chart-day'));
         chart.add_child(column);
@@ -137,11 +149,13 @@ export function disclosureButton(summary, expanded, callback) {
     });
     const content = new St.BoxLayout({style_class: 'usagebeam-disclosure-content', x_expand: true});
     content.add_child(label('Activity', 'usagebeam-disclosure-title', true));
-    content.add_child(label(summary, 'usagebeam-disclosure-summary'));
-    content.add_child(new St.Icon({
+    const meta = new St.BoxLayout({style_class: 'usagebeam-disclosure-meta'});
+    meta.add_child(label(summary, 'usagebeam-disclosure-summary'));
+    meta.add_child(new St.Icon({
         icon_name: expanded ? 'pan-up-symbolic' : 'pan-down-symbolic',
         style_class: 'usagebeam-disclosure-icon',
     }));
+    content.add_child(meta);
     actor.set_child(content);
     actor.connect('clicked', callback);
     return actor;

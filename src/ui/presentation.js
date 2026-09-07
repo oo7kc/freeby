@@ -78,3 +78,18 @@ export function panelQuota(record, now = Date.now()) {
         reset: resetCountdown(window.resetsAt, now),
     };
 }
+
+export function chartBarGeometry(value, maximum, width, height, inset = 4) {
+    const availableWidth = Math.max(0, width - inset * 2);
+    const availableHeight = Math.max(0, height);
+    const ratio = maximum > 0 && value > 0 ? Math.min(1, value / maximum) : 0;
+    const barHeight = ratio && availableHeight
+        ? Math.min(availableHeight, Math.max(3, Math.round(availableHeight * ratio)))
+        : 0;
+    return {
+        x: inset,
+        y: availableHeight - barHeight,
+        width: availableWidth,
+        height: barHeight,
+    };
+}
