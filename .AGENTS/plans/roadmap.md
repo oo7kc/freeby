@@ -77,6 +77,47 @@ Released foundations:
 - [ ] Publish and verify `v2.0.0-beta.1`; resolve release-blocking feedback.
 - [ ] Publish the first stable usage-monitoring release.
 
+### Portability stress checkpoint — 2026-09-08
+
+The initial `6e6cef4` diagnostic reproduced six release blockers. Hardened
+candidate `27934c0` was then verified on GNOME Shell 50.1 using archive SHA-256
+`edef685e21b69c34c816df0325397435a95e015147222214d190a6e6348e1958`
+(46,530 bytes).
+
+- Standard checks: 35 unit tests and the GJS collector integration suite passed.
+- Six private desktops exercised 1024×600 through 1920×1080 logical sizes,
+  1×/2× monitor scale, 100%/125%/150% text, SF Pro and verified Noto Sans fallback.
+  All 396 UI assertions passed against the exact archive.
+- All 600 refresh/provider-switch/expand cycles and 60 verified disable/re-enable
+  cycles completed without an extension JavaScript error or Shell crash.
+- Fifteen synthetic stress cases passed, including 50,000-event history, cache
+  rewrites, partial and oversized records, 10,000 notification observations,
+  concurrent subprocess/RPC work, bounded output, Unicode boundaries, and
+  in-flight cancellation.
+
+Resolved blockers:
+
+- [x] Constrained popup layouts paginate limits and activity before exceeding
+  the work area; every one of 32 quota windows and 12 model rows remains keyboard
+  reachable without nested scrolling.
+- [x] Calendar-gap balancing tracks visible center-panel neighbors, additions,
+  removals, visibility, and width changes on both calendar sides.
+- [x] History cache version 5 verifies complete committed prefixes, rebuilding
+  same-length and growing in-place rewrites instead of retaining stale totals.
+- [x] Oversized complete and incomplete history lines are skipped safely while
+  later valid records remain available and totals remain explicitly partial.
+- [x] Notification milestone state uses bounded LRU eviction and remains at or
+  below 200 entries across many windows and reset periods.
+- [x] Subprocess and RPC limits are enforced during bounded asynchronous reads;
+  queued writes, pending calls, cancellation, and child reaping are also bounded.
+
+Reproduce with `npm run test:stress` and
+`python3 tools/smoke-shell.py --archive dist/usagebeam@oo7kc.github.io-2.0.0-alpha.3-dev.0.zip --matrix`.
+The optional suites do not replace `npm run check`. Test output belongs in
+temporary directories, not the release archive. Real GPU drivers, mixed-monitor
+hotplug, fractional scaling, non-English/RTL desktops and live provider failures
+remain unverified. GNOME versions other than the advertised 50 are not covered.
+
 ## Release gate
 
 Every milestone must satisfy all applicable gates before its checkbox is closed:

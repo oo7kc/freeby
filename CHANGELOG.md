@@ -31,6 +31,15 @@ All notable UsageBeam changes are documented here.
 
 ### Fixed
 
+- Expanded menus adapt to smaller work areas with keyboard-accessible pagination,
+  preserving access to all quotas and model totals without nested scrolling.
+- Calendar-gap centering now accounts for neighboring panel extensions and their
+  size changes.
+- History totals recover from same-length and growing in-place rewrites, malformed
+  caches, and oversized lines followed by valid usage records.
+- Subprocess and RPC output limits are enforced during reads; queued RPC writes
+  are bounded and cancellation reaps child processes.
+- Notification period tracking stays bounded while retaining active milestones.
 - Calendar-side readouts anchor toward the clock on both sides, keeping reserved
   width outside the visible gap when provider names and countdowns change.
 - Each quota now shows its reset countdown below the bar as `Resets in …`, with

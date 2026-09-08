@@ -36,6 +36,18 @@ receive a scoped `PATH` without changing the Shell process environment. Refresh
 jobs do not overlap, resume events refresh only after wake, and results are
 ignored after extension disable.
 
+Subprocess output is capped during asynchronous reads, before decoding or parsing.
+RPC reads, queued writes, and pending requests are bounded independently; cancellation
+reaps the managed child. Notification tracking uses a bounded least-recently-used
+set of quota-period milestones and accepts current partial quota responses.
+
+Popup layout measures native actor heights against the monitor work area before
+painting. Normal displays retain the full expanded activity view; constrained
+layouts progressively paginate limits, daily/model activity, and model totals.
+Page sizes remain stable during navigation, all records remain reachable, and
+keyboard focus survives page changes. No nested scroll view or allocation-driven
+rebuild loop is used. Calendar balancing includes other visible center-panel actors.
+
 The provider-neutral record is currently schema version 2. A record claiming
 current, partial, or cached data must include a source and successful-update
 timestamp; ready limits must contain at least one typed quota window. Invalid or
@@ -48,6 +60,13 @@ incremental scan caches in `$XDG_CACHE_HOME/usagebeam`, with private directory
 and file modes. Credentials are read only when needed and are never written by
 UsageBeam. Prompt/response content is ignored, while session and account identifiers
 used for deduplication are hashed once before persistence.
+
+History cache version 5 stores a digest of each committed file prefix. Changed
+files must match that digest before an incremental read resumes; rewrites rebuild
+their derived totals. Oversized lines are skipped within the scan deadline, with
+continuation state retained until their newline. Later valid records remain readable,
+and incomplete totals stay explicitly marked partial. Older caches rebuild from
+source without modifying the provider's files.
 
 On the first start after the pre-alpha identity change, UsageBeam copies only
 recognized provider records and incremental history caches from the former

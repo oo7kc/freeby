@@ -27,6 +27,9 @@ UsageBeam displays only data reported by a provider or found in local usage
 records. Local activity covers this device; it is not billing data and is never
 converted into an account quota.
 
+Activity expands in full when space allows. On smaller screens, compact page
+controls keep every quota and model total reachable without a scrolling popup.
+
 ## Supported providers
 
 ### Codex
