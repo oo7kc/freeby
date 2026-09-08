@@ -1,6 +1,7 @@
 // Loaded only by tools/smoke-shell.py in its isolated, synthetic desktop.
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import Pango from 'gi://Pango';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -17,6 +18,8 @@ const bounds = actor => {
 };
 // Clutter reports logical sizes; Pango pixel sizes can include monitor scale.
 const textWidth = actor => actor.clutter_text.get_preferred_width(-1)[1];
+const textBaseline = actor => bounds(actor.clutter_text).y +
+    actor.clutter_text.get_layout().get_baseline() / Pango.SCALE;
 const assert = (condition, message) => {
     if (!condition)
         throw new Error(message);
@@ -80,6 +83,12 @@ export default class UsageBeamUITest extends Extension {
         const value = bounds(indicator._panelValue);
         const separator = bounds(indicator._panelSeparator);
         const reset = bounds(indicator._panelReset);
+        const providerBaseline = textBaseline(indicator._panelProvider);
+        for (const actor of [indicator._panelValue, indicator._panelReset]) {
+            const offset = textBaseline(actor) - providerBaseline;
+            assert(Math.abs(offset) <= 1,
+                `${position}: panel text baseline differs by ${offset}px`);
+        }
         assert(value.x - provider.x - provider.width <= 6 * scale,
             `${position}: provider and percentage are spaced too far apart`);
         assert(Math.abs(separator.x - value.x - value.width -
@@ -146,6 +155,7 @@ export default class UsageBeamUITest extends Extension {
         if (GLib.getenv('USAGEBEAM_STRESS') === '1')
             return runStress({indicator, records, settings, calendar,
                 wait: milliseconds => this._wait(milliseconds), screenshot: name => this._screenshot(name),
+                checkPanel: position => this._checkPanelSpacing(indicator, calendar, position, textScale),
                 monitorScale, textScale});
         for (const position of positions) {
             settings.set_string('panel-position', position);
@@ -196,6 +206,27 @@ export default class UsageBeamUITest extends Extension {
             if (position.includes('calendar'))
                 await this._screenshot(position);
             placement.push({position, indicator: before, calendar: clockBefore, visualGaps: gaps});
+        }
+        for (const provider of ['codex', 'claude']) {
+            const windows = records[provider].limits.windows;
+            const shortest = windows.reduce((selected, window) =>
+                window.durationMinutes < selected.durationMinutes ? window : selected);
+            const longer = windows.find(window => window.durationMinutes > shortest.durationMinutes);
+            const original = [shortest.usedPercent, longer.usedPercent];
+            settings.set_string('default-provider', provider);
+            shortest.usedPercent = 0;
+            longer.usedPercent = 100;
+            indicator.render();
+            await this._wait();
+            assert(indicator._panelValue.text === '0%',
+                `${provider}: panel did not prefer the freshly reset short window`);
+            shortest.usedPercent = 100;
+            longer.usedPercent = 0;
+            indicator.render();
+            await this._wait();
+            assert(indicator._panelValue.text === '100%',
+                `${provider}: panel dropped the exhausted short window`);
+            [shortest.usedPercent, longer.usedPercent] = original;
         }
         settings.set_string('default-provider', 'codex');
         indicator.menu.open(0);
@@ -270,7 +301,7 @@ export default class UsageBeamUITest extends Extension {
                 `${severity}: meter does not expose quota severity`);
         }
         assert(indicator._panelValue.has_style_class_name('usagebeam-danger'),
-            'Panel indicator does not expose the highest quota severity');
+            'Panel indicator does not expose the shortest quota severity');
         const modelContent = matching(content, 'usagebeam-model-content')[0];
         const [modelName, modelTotal] = modelContent.get_children();
         assert(modelTotal.get_theme_node().get_font().get_size() <

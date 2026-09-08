@@ -38,8 +38,11 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
         this._panelValue = metricLabel('—', 'usagebeam-panel-value');
         this._panelReset = metricLabel('—', 'usagebeam-panel-reset');
         this._panelSeparator = separatorDot('usagebeam-panel-separator');
-        for (const actor of [this._panelIcon, this._panelProvider, this._panelValue,
-            this._panelSeparator, this._panelReset])
+        this._panelMetrics = new St.BoxLayout({style_class: 'usagebeam-panel-metrics',
+            y_align: Clutter.ActorAlign.CENTER});
+        for (const actor of [this._panelValue, this._panelSeparator, this._panelReset])
+            this._panelMetrics.add_child(actor);
+        for (const actor of [this._panelIcon, this._panelProvider, this._panelMetrics])
             this._panelStatus.add_child(actor);
         this._panelProviderId = null;
         // Reserve stable panel space separately from the naturally sized readout.

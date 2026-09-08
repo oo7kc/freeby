@@ -69,10 +69,18 @@ export function quotaPresentation(window, now = Date.now()) {
 export function panelQuota(record, now = Date.now()) {
     if (!CURRENT_STATES.has(record?.limits?.status))
         return null;
-    const candidates = record.limits.windows
-        .filter(window => !window.unlimited && Number.isFinite(window.usedPercent))
-        .sort((left, right) => right.usedPercent - left.usedPercent);
-    const window = candidates[0];
+    let window = null;
+    let shortest = Infinity;
+    for (const candidate of record.limits.windows) {
+        if (candidate.unlimited || !Number.isFinite(candidate.usedPercent))
+            continue;
+        const duration = Number.isFinite(candidate.durationMinutes) &&
+            candidate.durationMinutes > 0 ? candidate.durationMinutes : Infinity;
+        if (!window || duration < shortest) {
+            window = candidate;
+            shortest = duration;
+        }
+    }
     if (!window)
         return null;
     return {

@@ -67,14 +67,23 @@ test('notification milestones follow quota semantics without duplicate levels', 
     assert.deepEqual(notificationMilestones(NaN), [90, 100]);
 });
 
-test('panel quota reports only the highest current quota window', () => {
+test('panel quota prefers the shortest current quota window at every usage level', () => {
     const now = 1_000_000;
     const record = {limits: {status: 'ready', windows: [
-        {usedPercent: 15, resetsAt: now + 3600000},
-        {usedPercent: 46, resetsAt: now + 15 * 3600000 + 59 * 60000},
+        {id: 'weekly', usedPercent: 96, durationMinutes: 10080,
+            resetsAt: now + 15 * 3600000 + 59 * 60000},
+        {id: 'five-hour', usedPercent: 15, durationMinutes: 300,
+            resetsAt: now + 3600000},
         {usedPercent: null, unlimited: true},
     ]}};
-    assert.deepEqual(panelQuota(record, now), {percent: 46, reset: '15h 59m'});
+    assert.deepEqual(panelQuota(record, now), {percent: 15, reset: '1h 0m'});
+    record.limits.windows[1].usedPercent = 100;
+    assert.deepEqual(panelQuota(record, now), {percent: 100, reset: '1h 0m'});
+    record.limits.windows = [
+        {id: 'provider-first', usedPercent: 20},
+        {id: 'provider-second', usedPercent: 90},
+    ];
+    assert.deepEqual(panelQuota(record, now), {percent: 20, reset: null});
     assert.equal(panelQuota({limits: {...record.limits, status: 'stale'}}, now), null);
     assert.equal(panelQuota(null, now), null);
 });

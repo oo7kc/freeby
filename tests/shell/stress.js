@@ -11,7 +11,8 @@ const bounds = actor => {
 };
 const copy = value => JSON.parse(JSON.stringify(value));
 
-export async function runStress({indicator, records, settings, calendar, wait, screenshot, monitorScale, textScale}) {
+export async function runStress({indicator, records, settings, calendar, wait, screenshot,
+    checkPanel, monitorScale, textScale}) {
     const checks = [];
     const geometry = [];
     const check = (name, ok, details = {}) => checks.push({name, ok: Boolean(ok), ...details});
@@ -43,6 +44,7 @@ export async function runStress({indicator, records, settings, calendar, wait, s
                 Math.abs(bounds(indicator.container).width - slot.width) <= 1);
             check(`${position}/${provider}: panel labels fit`,
                 [indicator._panelProvider, indicator._panelValue, indicator._panelReset].every(textFits));
+            checkPanel(position);
         }
         if (position.includes('calendar')) {
             const panel = bounds(Main.panel);

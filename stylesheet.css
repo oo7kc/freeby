@@ -46,6 +46,11 @@
   spacing: 4px;
 }
 
+.usagebeam-panel-metrics {
+  spacing: 4px;
+  padding-top: 2px;
+}
+
 .usagebeam-panel-icon-slot { width: 16px; }
 
 .usagebeam-provider-icon {
