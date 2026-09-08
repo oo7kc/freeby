@@ -35,12 +35,15 @@
   -minimum-hpadding: 3px;
 }
 
-.usagebeam-panel-status {
-  spacing: 4px;
+.usagebeam-panel-slot {
   width: 12.5em;
   font-family: "SF Pro Text";
   font-size: 9.5pt;
   font-feature-settings: "tnum";
+}
+
+.usagebeam-panel-status {
+  spacing: 4px;
 }
 
 .usagebeam-panel-icon-slot { width: 16px; }
@@ -206,38 +209,18 @@
   font-weight: 520;
 }
 
-.usagebeam-limit-metrics {
-  spacing: 4px;
-  font-feature-settings: "tnum";
-}
-
-.usagebeam-limit-percent,
-.usagebeam-limit-reset,
-.usagebeam-limit-value {
+.usagebeam-limit-percent {
   color: st-mix(-st-accent-color, #d7e4eb, 28%);
   font-size: 9.5pt;
+  font-weight: 620;
   text-align: right;
 }
 
-.usagebeam-limit-percent {
-  min-width: 3em;
-  font-weight: 620;
-}
-
-.usagebeam-limit-separator {
-  min-width: 4px;
-}
-
 .usagebeam-limit-reset {
-  min-width: 4.3em;
+  color: st-mix(-st-accent-color, #9baab4, 12%);
+  font-size: 9.5pt;
   font-weight: 500;
-  opacity: 0.84;
   text-align: left;
-}
-
-.usagebeam-limit-value {
-  min-width: 8.6em;
-  font-weight: 550;
 }
 
 .usagebeam-number {
@@ -246,7 +229,7 @@
 }
 
 .usagebeam-window {
-  spacing: 5px;
+  spacing: 4px;
   padding-bottom: 8px;
 }
 
@@ -392,10 +375,12 @@
   opacity: 0.92;
 }
 
-.usagebeam-menu.usagebeam-light .usagebeam-limit-percent,
-.usagebeam-menu.usagebeam-light .usagebeam-limit-reset,
-.usagebeam-menu.usagebeam-light .usagebeam-limit-value {
+.usagebeam-menu.usagebeam-light .usagebeam-limit-percent {
   color: st-mix(-st-accent-color, #263b46, 38%);
+}
+
+.usagebeam-menu.usagebeam-light .usagebeam-limit-reset {
+  color: st-mix(-st-accent-color, #586b76, 12%);
 }
 
 .usagebeam-menu.usagebeam-light .usagebeam-separator-dot-core {

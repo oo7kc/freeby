@@ -40,13 +40,13 @@ test('history overview summarizes daily activity without double-counting models'
     assert.equal(historyOverview(null), null);
 });
 
-test('quota presentation keeps names concise and reset times inline', () => {
+test('quota presentation keeps names concise and reset descriptions explicit', () => {
     const now = 1_000_000;
     const reserve = {id: 'gpt-reserve:primary', label: 'Reserve · Weekly',
         durationMinutes: 10080, usedPercent: 18.2, resetsAt: now + 4 * 86400000 + 22 * 3600000};
     assert.equal(quotaName(reserve), 'Weekly Reserve');
     assert.deepEqual(quotaPresentation(reserve, now), {
-        name: 'Weekly Reserve', value: '18%', reset: '4d 22h',
+        name: 'Weekly Reserve', value: '18%', reset: 'Resets in 4d 22h',
     });
     assert.equal(quotaName({id: 'five-hour', label: 'Session · 5 hours', durationMinutes: 300}),
         '5H Session');
@@ -54,6 +54,10 @@ test('quota presentation keeps names concise and reset times inline', () => {
         name: 'Credits', value: 'Unlimited', reset: null,
     });
     assert.equal(quotaPresentation({id: 'broken', label: 'Broken'}, now), null);
+    assert.equal(quotaPresentation({...reserve, resetsAt: now - 1}, now).reset,
+        'Reset due · awaiting update');
+    assert.equal(quotaPresentation({...reserve, resetsAt: null}, now).reset,
+        'Reset time unavailable');
 });
 
 test('notification milestones follow quota semantics without duplicate levels', () => {

@@ -31,6 +31,10 @@ All notable UsageBeam changes are documented here.
 
 ### Fixed
 
+- Calendar-side readouts anchor toward the clock on both sides, keeping reserved
+  width outside the visible gap when provider names and countdowns change.
+- Each quota now shows its reset countdown below the bar as `Resets in …`, with
+  its percentage right-aligned above the bar.
 - Daily chart columns allocate visible bottom-aligned bars for non-zero activity.
 - Model fills remain compact and stable across repeated layout passes.
 - Calendar placement remains fixed while providers and quota values change.

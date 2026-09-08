@@ -25,18 +25,21 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
         this._openPreferences = openPreferences;
         this._service = null;
         this._detailsExpanded = false;
-        this._panelStatus = new St.BoxLayout({style_class: 'usagebeam-panel-status'});
+        this._panelStatus = new St.BoxLayout({style_class: 'usagebeam-panel-status',
+            x_expand: true, x_align: Clutter.ActorAlign.START});
         this._panelIcon = new St.Bin({style_class: 'usagebeam-panel-icon-slot', y_align: Clutter.ActorAlign.CENTER});
         this._panelProvider = label('UsageBeam', 'usagebeam-panel-provider');
         this._panelProvider.clutter_text.ellipsize = Pango.EllipsizeMode.END;
         this._panelValue = metricLabel('—', 'usagebeam-panel-value');
-        this._panelReset = metricLabel('—', 'usagebeam-panel-reset', true);
+        this._panelReset = metricLabel('—', 'usagebeam-panel-reset');
         this._panelSeparator = separatorDot('usagebeam-panel-separator');
         for (const actor of [this._panelIcon, this._panelProvider, this._panelValue,
             this._panelSeparator, this._panelReset])
             this._panelStatus.add_child(actor);
         this._panelProviderId = null;
-        this.add_child(this._panelStatus);
+        // Reserve stable panel space separately from the naturally sized readout.
+        // The unused space belongs on the side away from the calendar.
+        this.add_child(new St.Bin({style_class: 'usagebeam-panel-slot', child: this._panelStatus}));
         this.menu.actor.add_style_class_name('usagebeam-menu');
         this._shellSettings = St.Settings.get();
         this._shellSettings.connectObject(
@@ -79,6 +82,11 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
     attach(service) {
         this._service = service;
         this.render();
+    }
+
+    alignPanelContent(position) {
+        this._panelStatus.x_align = position === 'left-of-calendar'
+            ? Clutter.ActorAlign.END : Clutter.ActorAlign.START;
     }
 
     render() {
@@ -163,13 +171,12 @@ export const UsageBeamIndicator = GObject.registerClass(class UsageBeamIndicator
             if (!view)
                 continue;
             const severity = quotaSeverity(window.usedPercent);
-            box.add_child(limitRow(view.name, view.value, view.reset, severity));
+            box.add_child(limitRow(view.name, view.value, severity));
             if (!window.unlimited) {
-                const resetDescription = view.reset === 'due' ? ', reset due' :
-                    view.reset ? `, resets in ${view.reset}` : '';
                 box.add_child(meter(window.usedPercent / 100,
-                    `${view.name}: ${view.value} used${resetDescription}`,
+                    `${view.name}: ${view.value} used, ${view.reset.toLowerCase()}`,
                     severity ? `usagebeam-${severity}` : ''));
+                box.add_child(label(view.reset, 'usagebeam-limit-reset'));
             }
             this._contentBox.add_child(box);
         }

@@ -1,4 +1,4 @@
-import {resetCountdown} from '../core/format.js';
+import {resetCountdown, resetTime} from '../core/format.js';
 
 const CURRENT_STATES = new Set(['ready', 'partial']);
 
@@ -62,7 +62,7 @@ export function quotaPresentation(window, now = Date.now()) {
     return {
         name: quotaName(window),
         value: `${Math.round(window.usedPercent)}%`,
-        reset: resetCountdown(window.resetsAt, now),
+        reset: resetTime(window.resetsAt, now),
     };
 }
 

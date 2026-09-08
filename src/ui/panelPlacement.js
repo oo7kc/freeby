@@ -44,6 +44,7 @@ export function placeIndicator(indicator, position) {
     const boxes = {left: Main.panel._leftBox, right: Main.panel._rightBox};
     const resolved = CALENDAR_POSITIONS.has(position) || position in boxes
         ? position : 'right-of-calendar';
+    indicator.alignPanelContent(resolved);
     const besideCalendar = CALENDAR_POSITIONS.has(resolved);
     const target = besideCalendar ? calendar?.get_parent() ?? Main.panel._centerBox : boxes[resolved];
     container.get_parent()?.remove_child(container);

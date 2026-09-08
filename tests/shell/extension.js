@@ -14,6 +14,8 @@ const bounds = actor => {
     const [width, height] = actor.get_transformed_size();
     return {x, y, width, height};
 };
+// Clutter reports logical sizes; Pango pixel sizes can include monitor scale.
+const textWidth = actor => actor.clutter_text.get_preferred_width(-1)[1];
 const assert = (condition, message) => {
     if (!condition)
         throw new Error(message);
@@ -71,6 +73,40 @@ export default class UsageBeamUITest extends Extension {
             }));
     }
 
+    _checkPanelSpacing(indicator, calendar, position, textScale) {
+        const scale = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        const provider = bounds(indicator._panelProvider);
+        const value = bounds(indicator._panelValue);
+        const separator = bounds(indicator._panelSeparator);
+        const reset = bounds(indicator._panelReset);
+        assert(value.x - provider.x - provider.width <= 6 * scale,
+            `${position}: provider and percentage are spaced too far apart`);
+        assert(Math.abs(separator.x - value.x - value.width -
+            (reset.x - separator.x - separator.width)) <= 1,
+        `${position}: panel separator spacing is uneven`);
+        assert(bounds(indicator.container).width / scale < 180 * textScale,
+            `${position}: panel indicator is not compact`);
+        for (const actor of [indicator._panelProvider, indicator._panelValue, indicator._panelReset]) {
+            assert(!actor.clutter_text.get_layout().is_ellipsized(), `${position}: panel text clipped`);
+            assert(textWidth(actor) <= actor.width + 1,
+                `${position}: panel text exceeds its allocation`);
+        }
+        if (!position.includes('calendar'))
+            return null;
+        const clockLabels = descendants(calendar).filter(actor =>
+            actor instanceof St.Label && actor.visible && actor.mapped && actor.width > 0);
+        assert(clockLabels.length > 0, 'Calendar has no visible label');
+        const clockLeft = Math.min(...clockLabels.map(actor => bounds(actor).x));
+        const clockRight = Math.max(...clockLabels.map(actor => bounds(actor).x + actor.width));
+        // Measure the visible text, not the label's allocated expansion space.
+        const resetRight = reset.x + textWidth(indicator._panelReset);
+        const gap = position === 'left-of-calendar' ? clockLeft - resetRight
+            : bounds(indicator._panelIcon).x - clockRight;
+        assert(gap >= 0 && gap <= 20 * scale,
+            `${position}: calendar/readout visual gap is not compact: ${gap / scale}`);
+        return gap / scale;
+    }
+
     async _run() {
         let indicator;
         for (let attempt = 0; attempt < 80 && !indicator; attempt++) {
@@ -104,6 +140,8 @@ export default class UsageBeamUITest extends Extension {
         const [, , logicalMonitors] = await this._displayCall('GetCurrentState');
         const monitorScale = logicalMonitors[0][2];
         assert(monitorScale === expectedScale, `Expected monitor scale ${expectedScale}, got ${monitorScale}`);
+        const interfaceSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.interface'});
+        const textScale = interfaceSettings.get_double('text-scaling-factor');
         for (const position of positions) {
             settings.set_string('panel-position', position);
             settings.set_string('default-provider', 'codex');
@@ -113,6 +151,7 @@ export default class UsageBeamUITest extends Extension {
             assert(indicator.container.get_parent() === parent, `${position}: wrong panel area`);
             const before = bounds(indicator.container);
             const clockBefore = bounds(calendar);
+            const gaps = [this._checkPanelSpacing(indicator, calendar, position, textScale)];
             // Check both a different provider and unavailable quota text.
             const original = records.claude;
             for (const available of [true, false]) {
@@ -121,6 +160,7 @@ export default class UsageBeamUITest extends Extension {
                 settings.set_string('default-provider', 'claude');
                 indicator.render();
                 await this._wait();
+                gaps.push(this._checkPanelSpacing(indicator, calendar, position, textScale));
                 assert(Math.abs(bounds(calendar).x - clockBefore.x) <= 1,
                     `${position}: calendar moved on provider change`);
                 assert(Math.abs(bounds(indicator.container).width - before.width) <= 1,
@@ -146,7 +186,11 @@ export default class UsageBeamUITest extends Extension {
                 assert(Math.abs(gapCenter - (panel.x + panel.width / 2)) <= 1,
                     `${position}: calendar/indicator gap is not centered (${gapCenter})`);
             }
-            placement.push({position, indicator: before, calendar: clockBefore});
+            settings.set_string('default-provider', 'codex');
+            await this._wait();
+            if (position.includes('calendar'))
+                await this._screenshot(position);
+            placement.push({position, indicator: before, calendar: clockBefore, visualGaps: gaps});
         }
         settings.set_string('default-provider', 'codex');
         indicator.menu.open(0);
@@ -157,10 +201,8 @@ export default class UsageBeamUITest extends Extension {
         assert(indicator._detailsExpanded, 'Activity button did not expand');
         const content = indicator._contentBox;
         const scale = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        const interfaceSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.interface'});
-        const textScale = interfaceSettings.get_double('text-scaling-factor');
         const initial = bounds(indicator.menu.actor);
-        assert(initial.height / scale < 680 * textScale, `Expanded menu too tall: ${initial.height / scale}`);
+        assert(initial.height / scale < 720 * textScale, `Expanded menu too tall: ${initial.height / scale}`);
         assert(!descendants(content).some(actor => actor instanceof St.ScrollView), 'Activity is scrollable');
         const models = matching(content, 'usagebeam-model-meter');
         assert(models.length === 3, 'Expected three synthetic models');
@@ -177,20 +219,20 @@ export default class UsageBeamUITest extends Extension {
             if (plot._fraction > 0)
                 assert(plot._fill.width > 0 && plot._fill.height > 0, 'Daily bar has no area');
         }
-        for (const style of ['usagebeam-limit-percent', 'usagebeam-limit-reset']) {
-            const actors = matching(content, style);
-            const firstText = actors[0].get_child();
-            const firstEdge = style === 'usagebeam-limit-percent'
-                ? bounds(firstText).x + firstText.width : bounds(firstText).x;
-            for (const actor of actors) {
-                const text = actor.get_child();
-                assert(!text.clutter_text.get_layout().is_ellipsized(), `${style}: clipped text`);
-                assert(Math.abs(bounds(actor).x - bounds(actors[0]).x) <= 1, `${style}: misaligned column`);
-                const edge = style === 'usagebeam-limit-percent'
-                    ? bounds(text).x + text.width : bounds(text).x;
-                assert(Math.abs(edge - firstEdge) <= 1,
-                    `${style}: text alignment drifted (${edge} vs ${firstEdge})`);
-            }
+        for (const window of matching(content, 'usagebeam-window')) {
+            const [row, track, reset] = window.get_children();
+            const percent = matching(row, 'usagebeam-limit-percent')[0];
+            assert(!percent.clutter_text.get_layout().is_ellipsized(), 'Quota percentage clipped');
+            assert(!reset.clutter_text.get_layout().is_ellipsized(), 'Reset description clipped');
+            const trackBox = bounds(track);
+            const resetBox = bounds(reset);
+            const valueBox = bounds(percent);
+            const valueWidth = textWidth(percent);
+            assert(Math.abs(valueBox.x + valueWidth - trackBox.x - trackBox.width) <= 1,
+                'Quota percentage does not align with the right edge of its bar');
+            assert(resetBox.y >= trackBox.y + trackBox.height && Math.abs(resetBox.x - trackBox.x) <= 1,
+                'Reset description should be left-aligned below its bar');
+            assert(/^Resets in \d+[dhm]/.test(reset.text), 'Reset description lacks its explanatory prefix');
         }
         const dots = [indicator._panelSeparator, ...matching(content, 'usagebeam-separator-dot')];
         for (const dot of dots) {
@@ -200,38 +242,8 @@ export default class UsageBeamUITest extends Extension {
                 Math.abs(coreBounds.y + coreBounds.height / 2 - (dotBounds.y + dotBounds.height / 2)) <= 1,
             'Separator dot is not optically centered');
         }
-        const valueBounds = bounds(indicator._panelValue);
-        const separatorBounds = bounds(indicator._panelSeparator);
-        const resetBounds = bounds(indicator._panelReset);
-        assert(Math.abs(separatorBounds.x - (valueBounds.x + valueBounds.width) -
-            (resetBounds.x - separatorBounds.x - separatorBounds.width)) <= 1,
-        'Panel separator does not have equal spacing');
-        const providerBounds = bounds(indicator._panelProvider);
-        assert(valueBounds.x - providerBounds.x - providerBounds.width <= 6 * scale,
-            'Panel provider and percentage are spaced too far apart');
-        assert(bounds(indicator.container).width / scale < 180,
-            `Panel indicator is not compact: ${bounds(indicator.container).width / scale}`);
-        const clockLabels = descendants(calendar).filter(actor =>
-            actor instanceof St.Label && actor.visible && actor.mapped && actor.width > 0);
-        assert(clockLabels.length > 0, 'Calendar has no visible label');
-        const clockRight = Math.max(...clockLabels.map(actor => bounds(actor).x + actor.width));
-        const calendarGap = bounds(indicator._panelIcon).x - clockRight;
-        assert(calendarGap >= 0 && calendarGap <= 20 * scale,
-            `Calendar/provider visual gap is not compact: ${calendarGap / scale}`);
-        for (const metrics of matching(content, 'usagebeam-limit-metrics')) {
-            if (metrics.get_children().length !== 3)
-                continue;
-            const [percent, dot, reset] = metrics.get_children();
-            const percentText = bounds(percent.get_child());
-            const dotCore = bounds(dot.get_child());
-            const resetText = bounds(reset.get_child());
-            const beforeDot = dotCore.x - percentText.x - percentText.width;
-            const afterDot = resetText.x - dotCore.x - dotCore.width;
-            assert(Math.abs(beforeDot - afterDot) <= 1,
-                `Limit separator spacing is uneven: ${beforeDot} vs ${afterDot}`);
-        }
         const limitName = matching(content, 'usagebeam-limit-name')[0];
-        const limitValue = matching(content, 'usagebeam-limit-percent')[0].get_child();
+        const limitValue = matching(content, 'usagebeam-limit-percent')[0];
         assert(limitValue.get_theme_node().get_font().get_size() <
             limitName.get_theme_node().get_font().get_size(), 'Limit metrics lack font hierarchy');
         assert(matching(content, 'usagebeam-disclosure-summary').length === 0,

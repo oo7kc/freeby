@@ -30,12 +30,6 @@ export function separatorDot(style = '') {
     });
 }
 
-function metricColumn(text, style, alignment = Clutter.ActorAlign.END) {
-    const child = metricLabel(text, '', true);
-    child.x_align = alignment;
-    return new St.Bin({style_class: style, child});
-}
-
 export function providerIcon(provider, extensionPath, style = '') {
     if (!PROVIDER_ICONS.has(provider))
         return null;
@@ -47,21 +41,13 @@ export function providerIcon(provider, extensionPath, style = '') {
     });
 }
 
-export function limitRow(name, value, reset, severity = null) {
+export function limitRow(name, value, severity = null) {
     const box = new St.BoxLayout({style_class: 'usagebeam-limit-row', x_expand: true});
     const title = label(name, 'usagebeam-limit-name', true);
     title.clutter_text.ellipsize = Pango.EllipsizeMode.END;
     box.add_child(title);
-    const metrics = new St.BoxLayout({style_class: 'usagebeam-limit-metrics'});
-    if (reset) {
-        metrics.add_child(metricColumn(value,
-            `usagebeam-limit-percent${severity ? ` usagebeam-${severity}` : ''}`));
-        metrics.add_child(separatorDot('usagebeam-limit-separator'));
-        metrics.add_child(metricColumn(reset, 'usagebeam-limit-reset', Clutter.ActorAlign.START));
-    } else {
-        metrics.add_child(metricColumn(value, 'usagebeam-limit-value'));
-    }
-    box.add_child(metrics);
+    box.add_child(metricLabel(value,
+        `usagebeam-limit-percent${severity ? ` usagebeam-${severity}` : ''}`));
     return box;
 }
 
