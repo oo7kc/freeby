@@ -5,6 +5,7 @@ import Shell from 'gi://Shell';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+import {runStress} from './stress.js';
 
 const UUID = 'usagebeam@oo7kc.github.io';
 const descendants = actor => [actor, ...actor.get_children().flatMap(descendants)];
@@ -142,6 +143,10 @@ export default class UsageBeamUITest extends Extension {
         assert(monitorScale === expectedScale, `Expected monitor scale ${expectedScale}, got ${monitorScale}`);
         const interfaceSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.interface'});
         const textScale = interfaceSettings.get_double('text-scaling-factor');
+        if (GLib.getenv('USAGEBEAM_STRESS') === '1')
+            return runStress({indicator, records, settings, calendar,
+                wait: milliseconds => this._wait(milliseconds), screenshot: name => this._screenshot(name),
+                monitorScale, textScale});
         for (const position of positions) {
             settings.set_string('panel-position', position);
             settings.set_string('default-provider', 'codex');

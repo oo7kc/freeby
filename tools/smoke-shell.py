@@ -93,7 +93,8 @@ def seed_usage(destination):
     (destination / 'ui-fixtures.json').write_text(json.dumps(records))
 
 
-def smoke(source, archive, destination, scale=1, text_scale=1.0):
+def smoke(source, archive, destination, scale=1, text_scale=1.0, *,
+          width=1280, height=1024, system_fonts=False, stress=False):
     destination.mkdir(parents=True, exist_ok=True)
     prefix = destination / 'install'
     install(source, archive, prefix, destination)
@@ -110,13 +111,21 @@ def smoke(source, archive, destination, scale=1, text_scale=1.0):
            'XDG_RUNTIME_DIR': str(runtime),
            'GSETTINGS_SCHEMA_DIR': str(prefix / 'share/gnome-shell/extensions' / UUID / 'schemas'),
            'LIBGL_ALWAYS_SOFTWARE': '1', 'USAGEBEAM_TEST_OUTPUT': str(destination),
-           'USAGEBEAM_TEST_SCALE': str(scale)}
+           'USAGEBEAM_TEST_SCALE': str(scale),
+           'USAGEBEAM_STRESS': '1' if stress else '0'}
+    # Never let inherited provider paths expose the real account to a test shell.
+    for name in ('CODEX_HOME', 'CLAUDE_CONFIG_DIR'):
+        env.pop(name, None)
     # Use locally installed fonts without copying or distributing licensed files.
     font = run(['fc-match', '-f', '%{file}', 'SF Pro Text'], os.environ, check=True).stdout
     font_config = destination / 'fonts.conf'
+    extra_fonts = '' if system_fonts else f'<dir>{escape(str(Path(font).parent))}</dir>'
     font_config.write_text('<fontconfig><include>/etc/fonts/fonts.conf</include>'
-                           f'<dir>{escape(str(Path(font).parent))}</dir></fontconfig>')
+                           f'{extra_fonts}</fontconfig>')
     env['FONTCONFIG_FILE'] = str(font_config)
+    resolved_font = run(['fc-match', '-f', '%{family}', 'SF Pro Text'], env, check=True).stdout
+    if system_fonts and 'SF Pro' in resolved_font:
+        raise RuntimeError('System-font case still resolves SF Pro; font fallback was not isolated')
     run(['gsettings', 'set', 'org.gnome.desktop.interface', 'scaling-factor', str(scale)], env, check=True)
     run(['gsettings', 'set', 'org.gnome.desktop.interface', 'text-scaling-factor', str(text_scale)], env, check=True)
     run(['gsettings', 'set', SCHEMA, 'enabled-providers', "['codex', 'claude']"], env, check=True)
@@ -129,7 +138,7 @@ def smoke(source, archive, destination, scale=1, text_scale=1.0):
     shell = None
     try:
         with log_path.open('w') as log:
-            shell = subprocess.Popen(['gnome-shell', '--headless', '--no-x11', '--virtual-monitor', f'{1280 * scale}x{1024 * scale}',
+            shell = subprocess.Popen(['gnome-shell', '--headless', '--no-x11', '--virtual-monitor', f'{width * scale}x{height * scale}',
                                       '--wayland-display', 'usagebeam-test'], env=env, stdout=log, stderr=log, start_new_session=True)
         command = ['gdbus', 'call', '--session', '--dest', 'org.gnome.Shell.Extensions', '--object-path', '/org/gnome/Shell/Extensions',
                    '--method', 'org.gnome.Shell.Extensions.GetExtensionInfo', UUID]
@@ -147,21 +156,29 @@ def smoke(source, archive, destination, scale=1, text_scale=1.0):
             raise RuntimeError(f'Extension did not become active: {info}')
         print('PASS: packaged extension loads in a private GNOME Shell session')
         results_path = destination / 'ui-results.json'
-        deadline = time.monotonic() + 25
+        deadline = time.monotonic() + (90 if stress else 25)
         while time.monotonic() < deadline and not results_path.exists() and shell.poll() is None:
             time.sleep(0.2)
         if not results_path.exists():
             raise RuntimeError(f'UI tests did not complete; inspect {log_path}')
         results = json.loads(results_path.read_text())
-        if not results['ok']:
+        if not results['ok'] and not stress:
             raise RuntimeError(f"UI check failed: {results['error']}")
-        print('PASS: four positions, stable provider width, and exact calendar-gap centering')
-        print('PASS: opened popup, compact bars, aligned text, repeated allocation, and theme screenshots')
+        if results['ok']:
+            print('PASS: private-shell UI assertions')
         print(f'UI geometry and screenshots: {destination}')
         run(['gnome-extensions', 'disable', TEST_UUID], env, check=True)
-        run(['gnome-extensions', 'disable', UUID], env, check=True)
-        run(['gnome-extensions', 'enable', UUID], env, check=True)
-        print('PASS: extension disable/re-enable')
+        cycles = 10 if stress else 1
+        for cycle in range(cycles):
+            run(['gnome-extensions', 'disable', UUID], env, check=True)
+            disabled = run(command, env, check=True).stdout
+            if "'state': <2.0>" not in disabled:
+                raise RuntimeError(f'Disable cycle {cycle + 1} did not reach INACTIVE')
+            run(['gnome-extensions', 'enable', UUID], env, check=True)
+            enabled = run(command, env, check=True).stdout
+            if "'state': <1.0>" not in enabled:
+                raise RuntimeError(f'Enable cycle {cycle + 1} did not reach ACTIVE')
+        print(f'PASS: {cycles} verified disable/re-enable cycles')
         # Leave no collector running while the private shell itself shuts down.
         run(['gnome-extensions', 'disable', UUID], env, check=True)
     finally:
@@ -180,6 +197,35 @@ def smoke(source, archive, destination, scale=1, text_scale=1.0):
         raise RuntimeError(f'Extension emitted a GJS critical; inspect {log_path}')
     if 'St-WARNING' in contents or 'UsageBeam could not' in contents or 'JS ERROR' in contents:
         raise RuntimeError(f'UI, stylesheet, or JavaScript warning; inspect {log_path}')
+    results.update(resolvedFont=resolved_font, lifecycleCycles=cycles)
+    (destination / 'ui-results.json').write_text(json.dumps(results, indent=2))
+    if not results['ok']:
+        raise RuntimeError(f"UI stress failures; inspect {destination / 'ui-results.json'}")
+
+
+def matrix(source, archive, destination, selected=None):
+    cases = [
+        ('desktop-sf', 1280, 1024, 1, 1.0, False),
+        ('laptop-fallback', 1366, 768, 1, 1.0, True),
+        ('small-fallback', 1024, 600, 1, 1.0, True),
+        ('large-text', 1920, 1080, 1, 1.5, True),
+        ('hidpi-fallback', 1920, 1080, 2, 1.0, True),
+        ('hidpi-large-text', 1280, 1024, 2, 1.25, False),
+    ]
+    outcomes = []
+    for name, width, height, scale, text_scale, fallback in cases:
+        if selected and name != selected:
+            continue
+        print(f'CASE: {name} ({width}x{height} logical, scale {scale}, text {text_scale})', flush=True)
+        try:
+            smoke(source, archive, destination / name, scale, text_scale,
+                  width=width, height=height, system_fonts=fallback, stress=True)
+            outcomes.append({'case': name, 'ok': True})
+        except (RuntimeError, subprocess.SubprocessError) as error:
+            outcomes.append({'case': name, 'ok': False, 'error': str(error)})
+            print(f'FAIL: {name}: {error}', flush=True)
+    (destination / 'matrix-results.json').write_text(json.dumps(outcomes, indent=2))
+    return all(result['ok'] for result in outcomes)
 
 
 if __name__ == '__main__':
@@ -187,9 +233,18 @@ if __name__ == '__main__':
     parser.add_argument('--source', type=Path, default=Path(__file__).resolve().parent.parent)
     parser.add_argument('--archive', type=Path, help='Test an already-built release archive instead of a Meson install')
     parser.add_argument('--output', type=Path)
+    parser.add_argument('--matrix', action='store_true', help='Run isolated portability stress cases')
+    parser.add_argument('--case', choices=['desktop-sf', 'laptop-fallback', 'small-fallback',
+                        'large-text', 'hidpi-fallback', 'hidpi-large-text'], help='Select one matrix case')
     parser.add_argument('--scale', type=int, choices=[1, 2], default=1, help='Private virtual-monitor scale')
     parser.add_argument('--text-scale', type=float, choices=[1.0, 1.25], default=1.0, help='Accessibility text scale')
     args = parser.parse_args()
+    if args.case and not args.matrix:
+        parser.error('--case requires --matrix')
+    if args.matrix:
+        output = args.output.resolve() if args.output else Path(tempfile.mkdtemp(prefix='usagebeam-stress-'))
+        raise SystemExit(0 if matrix(args.source.resolve(), args.archive.resolve() if args.archive else None,
+                                     output, args.case) else 1)
     smoke(args.source.resolve(), args.archive.resolve() if args.archive else None,
           args.output.resolve() if args.output else Path(tempfile.mkdtemp(prefix='usagebeam-shell-')),
           args.scale, args.text_scale)

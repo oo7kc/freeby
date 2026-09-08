@@ -141,3 +141,21 @@ export function actionButton(text, callback, name = text) {
     actor.add_style_class_name('usagebeam-action-button');
     return actor;
 }
+
+export function pageControls(name, page, pages, changed) {
+    const row = new St.BoxLayout({style_class: 'usagebeam-pagination', x_expand: true});
+    for (const direction of [-1, 0, 1]) {
+        if (!direction) {
+            row.add_child(label(`${name} · ${page + 1} / ${pages}`, 'usagebeam-page-label', true));
+            continue;
+        }
+        const control = actionButton(direction < 0 ? '‹' : '›', () => changed(page + direction),
+            `${direction < 0 ? 'Previous' : 'Next'} ${name.toLowerCase()} page`);
+        control.reactive = page + direction >= 0 && page + direction < pages;
+        control.can_focus = control.reactive;
+        if (!control.reactive)
+            control.add_style_pseudo_class('insensitive');
+        row.add_child(control);
+    }
+    return row;
+}

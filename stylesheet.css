@@ -359,6 +359,26 @@
   border-top: 1px solid rgba(128, 150, 160, 0.22);
 }
 
+.usagebeam-pagination {
+  spacing: 8px;
+  padding: 3px 0 7px;
+}
+
+.usagebeam-page-label {
+  text-align: center;
+  font-size: 9pt;
+  opacity: 0.8;
+}
+
+.usagebeam-pagination .usagebeam-button:insensitive {
+  opacity: 0.35;
+}
+
+.usagebeam-compact .usagebeam-header { padding-bottom: 5px; }
+.usagebeam-compact .usagebeam-selector { padding-bottom: 5px; }
+.usagebeam-compact .usagebeam-window { padding-bottom: 4px; }
+.usagebeam-compact .usagebeam-message { padding: 4px 8px; margin-bottom: 4px; }
+
 .usagebeam-action-button {
   min-height: 21px;
   padding: 3px 9px;
