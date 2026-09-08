@@ -1,41 +1,38 @@
-# Codex provider
+# Codex support
 
-UsageBeam keeps Codex account limits and local activity as separate sources.
-Failure of either source does not turn missing data into zero usage.
+UsageBeam can show live Codex account limits alongside seven days of activity
+recorded on the current device.
 
-## Account limits
+## Set up Codex
 
-The collector launches the installed Codex CLI app-server, completes its normal
-initialization handshake, reads the current signed-in account, and requests
-account rate limits. It supports the reported session, weekly, reserve, and
-scoped quota windows without inventing windows that are absent from the response.
+1. Install the Codex CLI.
+2. Sign in with `codex login`.
+3. Enable Codex in UsageBeam preferences.
+4. Select **Refresh** from the UsageBeam menu.
 
-UsageBeam does not persist the account email or account identifier. When an
-identifier is available, it is reduced to a SHA-256 fingerprint used only to
-prevent cached values from crossing accounts.
+UsageBeam recognizes standard command locations as well as common fnm, nvm,
+mise, asdf, and Volta installations.
 
-The CLI is discovered from the Shell `PATH`, common user-local directories, and
-fnm, nvm, mise, asdf, and Volta layouts. When a version-managed CLI requires
-Node, its sibling runtime is added only to the collector process environment.
+## What UsageBeam shows
 
-## Local activity
+- The shortest available quota window in the top panel, including when it is
+  exhausted.
+- Every session, weekly, reserve, or scoped limit reported for the signed-in
+  account in the menu.
+- A seven-day token chart and per-model totals from local Codex activity.
 
-Codex JSONL records are scanned incrementally from `sessions/` and
-`archived_sessions/` under `$CODEX_HOME` or `~/.codex`. UsageBeam reads timestamps,
-models, session identifiers, and token counters. Prompt and response content is
-ignored.
+Account limits and local activity are independent. Local activity is not an
+account-wide total, subscription quota, or billable cost.
 
-Cumulative counters are converted into individual deltas, including counter
-reset handling. Cached-input and cache-write counters retain their own
-categories. Session identifiers are hashed before derived events are persisted.
+## Privacy
 
-History covers the displayed period on this device. It is not account-wide
-subscription usage or billable cost.
+UsageBeam reads only the account and usage fields needed for these views. It
+does not store account email addresses, prompts, responses, credentials, or raw
+session identifiers.
 
-## Verification status
+## If Codex shows Setup
 
-- Codex CLI 0.145.0: live account, quota, and local-history verification.
-- Session/weekly/reserve parsing, cumulative resets, rotated/replaced records,
-  duplicate events, and version-managed runtime discovery: deterministic tests.
-- GNOME Shell 50 restricted-environment discovery: isolated lifecycle and
-  sanitized live verification.
+- Confirm `codex` runs from a terminal for the same user.
+- Confirm the CLI is signed in.
+- Refresh UsageBeam after signing in.
+- If the CLI was just installed, log out of GNOME and back in once.

@@ -1,7 +1,7 @@
 # UsageBeam
 
 UsageBeam puts Codex and Claude Code usage where it is easiest to see: in the
-GNOME top panel. The compact indicator shows the active provider's highest quota
+GNOME top panel. The compact indicator shows the active provider's shortest quota
 and reset countdown; its popup reveals every reported limit plus seven days of
 local token and model activity.
 
@@ -29,6 +29,20 @@ converted into an account quota.
 
 Activity expands in full when space allows. On smaller screens, compact page
 controls keep every quota and model total reachable without a scrolling popup.
+
+## Screenshots
+
+### Panel indicator
+
+_Screenshot placeholder — compact provider usage beside the calendar._
+
+### Usage details
+
+_Screenshot placeholder — account limits and seven-day local activity._
+
+### Preferences
+
+_Screenshot placeholder — provider, placement, refresh, and notification settings._
 
 ## Supported providers
 
@@ -84,7 +98,9 @@ gnome-extensions prefs usagebeam@oo7kc.github.io
 Preferences control panel placement, refresh frequency, and quota notifications.
 Calendar-side placement keeps the gap between the indicator and clock on the
 panel midpoint. The indicator reserves a stable width so switching providers or
-loading new quota data does not move the calendar.
+loading new quota data does not move the calendar. When several limits are
+available, the panel shows the shortest reported window; the popup continues to
+show every reported limit.
 
 ## Privacy and storage
 
@@ -121,5 +137,4 @@ gnome-extensions disable usagebeam@oo7kc.github.io
 gnome-extensions uninstall usagebeam@oo7kc.github.io
 ```
 
-UsageBeam is licensed under the [MIT License](LICENSE). Its runtime design and
-security boundaries are documented in [Architecture](docs/architecture.md).
+UsageBeam is licensed under the [MIT License](LICENSE).

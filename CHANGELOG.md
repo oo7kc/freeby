@@ -9,7 +9,7 @@ All notable UsageBeam changes are documented here.
 - UsageBeam product identity with the permanent extension UUID
   `usagebeam@oo7kc.github.io` and settings schema
   `org.gnome.shell.extensions.usagebeam`.
-- Active-provider panel readout with provider icon, highest current quota, and
+- Active-provider panel readout with provider icon, shortest current quota, and
   reset countdown.
 - Left area, right area, left-of-calendar, and right-of-calendar placement.
 - Expandable seven-day activity chart and compact per-model token totals.
@@ -21,11 +21,9 @@ All notable UsageBeam changes are documented here.
 
 - Rebuilt the popup as a compact, accent-aware GNOME surface with SF Pro
   typography when available, aligned quota metrics, and stable panel geometry.
-- Account limits, local activity, and cached results now expose their scope and
-  freshness independently.
+- Account limits, local activity, and saved results now remain available
+  independently when one source cannot refresh.
 - Codex discovery supports common user-local and Node version-manager layouts.
-- Provider records use a strict versioned contract with bounded collection,
-  typed quota states, source attribution, and private derived storage.
 - Recognized Freeby alpha settings and derived data migrate without copying
   credentials or overwriting existing UsageBeam data.
 
@@ -35,11 +33,9 @@ All notable UsageBeam changes are documented here.
   preserving access to all quotas and model totals without nested scrolling.
 - Calendar-gap centering now accounts for neighboring panel extensions and their
   size changes.
-- History totals recover from same-length and growing in-place rewrites, malformed
-  caches, and oversized lines followed by valid usage records.
-- Subprocess and RPC output limits are enforced during reads; queued RPC writes
-  are bounded and cancellation reaps child processes.
-- Notification period tracking stays bounded while retaining active milestones.
+- Local activity totals recover when provider history files are rewritten or
+  contain an unreadable record.
+- Large or malformed provider responses no longer interrupt future refreshes.
 - Calendar-side readouts anchor toward the clock on both sides, keeping reserved
   width outside the visible gap when provider names and countdowns change.
 - Each quota now shows its reset countdown below the bar as `Resets in …`, with
@@ -50,6 +46,9 @@ All notable UsageBeam changes are documented here.
 - Reset values, percentages, and separator dots retain consistent alignment.
 - The active-provider readout uses compact internal and calendar-side spacing,
   while retaining a fixed width across provider changes.
+- Panel usage metrics share the provider label's visual baseline.
+- The panel always prefers the shortest available quota period, even at 0% or
+  100%, instead of switching to a longer window with higher usage.
 - Seven-day activity emphasizes its local/account scope without repeating a
   date range already represented by the chart.
 - The activity disclosure now shows only its title and chevron; period, totals,
@@ -84,32 +83,27 @@ All notable UsageBeam changes are documented here.
 - Expired cached quota windows are discarded after their reset time.
 - Missing, absent, and expired Claude authentication remain distinct states.
 
-### Verification scope
+### Compatibility
 
-- Claude Code 2.1.218 installation detection and missing-authentication behavior
-  were exercised locally.
-- Quota payloads, expired authentication, duplicate messages, and cache-token
-  semantics were verified with deterministic fixtures.
-- A signed-in Claude account was not available for a live quota probe.
+- Tested with Claude Code 2.1.218.
+- Supports standard and model-scoped limits, expired sign-ins, duplicate local
+  activity records, and separate cache-token categories.
+- Live account-limit validation was not available for this prerelease.
 
 ## 2.0.0-alpha.1 - 2026-09-06
 
 ### Added
 
-- Provider-neutral usage contract with explicit capabilities, source scope,
-  freshness, quota state, reset timestamp, and token categories.
-- Bounded Codex app-server collection for account rate limits.
+- Codex account limits with distinct quota periods and reset times.
 - Incremental local Codex history with seven-day and model aggregates.
-- Private XDG state/cache persistence, stale-data recovery, and refresh backoff.
-- Deterministic packaging and isolated GNOME lifecycle verification.
+- Private local storage and temporary saved-value recovery during refresh
+  failures.
 
 ### Fixed
 
 - Refresh occurs after resume instead of before suspend.
-- Provider jobs do not overlap or update a destroyed interface.
-- Notifications require a verified threshold crossing and deduplicate per
-  account, quota window, and reset period.
-- Runtime package downloads and unbounded collection processes were removed.
+- Repeated refreshes no longer overlap.
+- Notifications appear once for each reached milestone and quota period.
 
 ## 1.0.2 - 2026-04-27
 

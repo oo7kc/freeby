@@ -47,12 +47,11 @@ const version = JSON.parse(readFileSync('package.json', 'utf8')).version;
 if (!readFileSync('meson.build', 'utf8').includes(`version: '${version}'`))
     throw new Error('Meson and package versions differ');
 
-const required = ['AGENTS.md', '.AGENTS/README.md', '.AGENTS/plans/roadmap.md',
-    '.AGENTS/rules/architecture.md', '.AGENTS/rules/quality.md', '.AGENTS/rules/releases.md',
-    'docs/architecture.md', 'docs/providers/codex.md', 'docs/providers/claude.md'];
+const required = ['README.md', 'CHANGELOG.md',
+    'docs/providers/codex.md', 'docs/providers/claude.md'];
 for (const file of required) {
     if (!existsSync(file))
-        throw new Error(`Missing repository guidance: ${file}`);
+        throw new Error(`Missing product documentation: ${file}`);
 }
 const schemas = walk('schemas').filter(file => file.endsWith('.xml'));
 if (schemas.length !== 1 || schemas[0] !== 'schemas/org.gnome.shell.extensions.usagebeam.gschema.xml')
@@ -67,16 +66,12 @@ if (providerFiles.join(',') !== 'src/providers/claude.js,src/providers/codex.js'
 const obsolete = ['plan.md', 'indicator.js', 'src/providers/legacy.js', 'scripts/freeby.sh',
     'src/providers/cursor.js', 'src/providers/copilot.js', 'scripts/copilot-setup.sh',
     'tests/freeby.bats', 'docs/README.md', 'docs/assets', 'docs/providers/README.md',
-    'docs/s1.png', 'docs/s2.png', 'reference-images', 'CONTRIBUTING.md'];
+    'docs/s1.png', 'docs/s2.png', 'CONTRIBUTING.md'];
 for (const file of obsolete) {
     if (existsSync(file))
         throw new Error(`Obsolete repository path returned: ${file}`);
 }
-for (const file of walk('.AGENTS/rules')) {
-    if (readFileSync(file, 'utf8').split('\n').length > 50)
-        throw new Error(`${file}: agent rules must stay focused and under 50 lines`);
-}
-const markdown = ['README.md', 'CHANGELOG.md', 'AGENTS.md', ...walk('.AGENTS'), ...walk('docs')]
+const markdown = ['README.md', 'CHANGELOG.md', ...walk('docs')]
     .filter(file => file.endsWith('.md'));
 for (const file of markdown) {
     const text = readFileSync(file, 'utf8');

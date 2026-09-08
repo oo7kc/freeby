@@ -1,41 +1,37 @@
-# Claude Code provider
+# Claude Code support
 
-UsageBeam keeps Claude's account limits and local activity as separate sources.
-Failure of one source does not erase valid data from the other.
+UsageBeam can show supported Claude Code account limits alongside seven days of
+activity recorded on the current device.
 
-## Account limits
+## Set up Claude Code
 
-The collector reads only the `claudeAiOauth` fields needed from
-`$CLAUDE_CONFIG_DIR/.credentials.json` (or `~/.claude/.credentials.json`) and
-sends the access token only to `https://api.anthropic.com/api/oauth/usage`.
-It supports the current 5-hour, weekly, and model-scoped response buckets. The
-token itself is never cached or logged; only a SHA-256 account fingerprint may
-be retained to prevent stale data crossing accounts.
+1. Install Claude Code.
+2. Open Claude Code and complete its normal sign-in flow.
+3. Enable Claude in UsageBeam preferences.
+4. Select **Refresh** from the UsageBeam menu.
 
-This OAuth usage interface is used by current Claude Code integrations but is
-not a stable public Anthropic API contract. UsageBeam treats unknown/empty payloads
-as unavailable, retains only unexpired stale windows after transient failures,
-and keeps local history visible when sign-in expires or the endpoint is offline.
+## What UsageBeam shows
 
-## Local activity
+- The shortest available quota window in the top panel, including when it is
+  exhausted.
+- The current 5-hour, weekly, and model-scoped limits reported for the signed-in
+  account in the menu.
+- A seven-day token chart and per-model totals from local Claude Code activity.
 
-Claude Code assistant-message usage is scanned incrementally from
-`$CLAUDE_CONFIG_DIR/projects/**/*.jsonl` or `~/.claude/projects/**/*.jsonl`.
-UsageBeam reads timestamps, model identifiers, message/session identifiers, and the
-four usage counters only. Prompt and response content is ignored.
+Account limits and local activity are independent. Local activity is not an
+account-wide total, subscription quota, or billable cost.
 
-`input_tokens`, `output_tokens`, `cache_read_input_tokens`, and
-`cache_creation_input_tokens` are independent Anthropic counters, so UsageBeam adds
-all four to activity totals without subtracting cache tokens from input. Repeated
-message IDs are counted once. Session identifiers are hashed before derived data
-is written to UsageBeam's XDG cache.
+## Privacy
 
-History is local to this device, covers the displayed seven-day period, and is
-not a measure of subscription quota or billable cost.
+UsageBeam reads only the sign-in and usage fields needed for these views. It
+does not store access tokens, prompts, responses, credentials, or raw session
+identifiers.
 
-## Verification status
+## If Claude shows Setup
 
-- Claude Code 2.1.218 installation detection and missing-auth behavior: live.
-- Standard/scoped limits, percentage normalization, expired auth, endpoint auth
-  errors, duplicate messages, and token categories: deterministic fixtures.
-- Signed-in account quota probe: not yet available for live verification.
+- Open Claude Code and confirm the same user is signed in.
+- Refresh UsageBeam after completing sign-in.
+- If limits remain unavailable, local activity may still continue to work.
+
+Claude Code's account-usage interface can change independently of UsageBeam. An
+unsupported response is shown as unavailable rather than as zero usage.
