@@ -95,7 +95,7 @@ export async function runCommand(spec, {input = null, timeout = 15000, cancellab
         local.cancel();
         // Give managed collectors time to cancel and reap their own CLI child.
         if (!completed) {
-            proc.send_signal(15);
+            try { proc.send_signal(15); } catch { /* The child exited between callbacks. */ }
             let killTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 300, () => {
                 killTimer = 0;
                 proc.force_exit();

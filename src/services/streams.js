@@ -35,28 +35,40 @@ export async function readText(stream, maxBytes, cancellable, limitError) {
 
 // RPC lines are bounded before decoding or parsing, including unterminated lines.
 export async function* readLines(stream, maxBytes, cancellable, limitError) {
-    let tail = new Uint8Array();
+    let parts = [];
+    let size = 0;
     while (true) {
         const bytes = await readBytes(stream, cancellable);
         if (!bytes.length) {
-            if (tail.length)
+            if (size)
                 throw new Error('Incomplete RPC message');
             return;
         }
-        const buffer = new Uint8Array(tail.length + bytes.length);
-        buffer.set(tail);
-        buffer.set(bytes, tail.length);
         let start = 0;
-        for (let i = 0; i < buffer.length; i++) {
-            if (i - start > maxBytes)
-                throw limitError();
-            if (buffer[i] === 10) {
-                yield new TextDecoder('utf-8', {fatal: true}).decode(buffer.subarray(start, i));
+        for (let i = 0; i < bytes.length; i++) {
+            if (bytes[i] === 10) {
+                const part = bytes.subarray(start, i);
+                size += part.length;
+                if (size > maxBytes)
+                    throw limitError();
+                const line = new Uint8Array(size);
+                let offset = 0;
+                for (const entry of [...parts, part]) {
+                    line.set(entry, offset);
+                    offset += entry.length;
+                }
+                yield new TextDecoder('utf-8', {fatal: true}).decode(line);
+                parts = [];
+                size = 0;
                 start = i + 1;
             }
         }
-        tail = buffer.slice(start);
-        if (tail.length > maxBytes)
+        if (start < bytes.length) {
+            const part = bytes.slice(start);
+            parts.push(part);
+            size += part.length;
+        }
+        if (size > maxBytes)
             throw limitError();
     }
 }
