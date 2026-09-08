@@ -18,6 +18,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y gjs gir1.2-soup-3.0 libglib2.0-dev-bin meson ninja-build python3
       - name: Verify JavaScript, schemas, fixtures, and package
         run: npm run verify
+      - name: Stress history, notifications, and subprocess bounds
+        run: npm run test:stress
       - name: Verify isolated install
         run: |
           meson setup build --prefix="$RUNNER_TEMP/usagebeam-install"

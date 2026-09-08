@@ -13,7 +13,7 @@ export class ThresholdTracker {
     }
 
     update(record, threshold = 90) {
-        if (record.limits.status !== 'ready')
+        if (!['ready', 'partial'].includes(record.limits.status))
             return [];
         const alerts = [];
         const milestones = notificationMilestones(threshold);
@@ -25,9 +25,11 @@ export class ThresholdTracker {
             const reached = milestones.filter(value => window.usedPercent >= value).at(-1) ?? 0;
             if (previous !== undefined && reached > previous)
                 alerts.push({provider: record.name, label: window.label, threshold: reached});
+            // Refresh insertion order so active windows survive eviction of old periods.
+            this.previous.delete(key);
             this.previous.set(key, Math.max(previous ?? 0, reached));
         }
-        if (this.previous.size > 200)
+        while (this.previous.size > 200)
             this.previous.delete(this.previous.keys().next().value);
         return alerts;
     }

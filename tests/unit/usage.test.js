@@ -147,6 +147,20 @@ test('simultaneous and repeated alerts produce one concise notification body', (
     assert.equal(notificationBody([]), '');
 });
 
+test('notification eviction retains recently refreshed windows and accepts fresh partial data', () => {
+    const tracker = new ThresholdTracker();
+    const current = (id, percent) => ({id: 'codex', name: 'Codex', limits: {status: 'partial', windows: [
+        {id, label: id, usedPercent: percent, resetsAt: 1000},
+    ]}});
+    tracker.update(current('active', 79), 80);
+    assert.equal(tracker.update(current('active', 90), 80).length, 1);
+    for (let id = 0; id < 500; id++) {
+        tracker.update(current(String(id), 0), 80);
+        assert.deepEqual(tracker.update(current('active', 90), 80), []);
+    }
+    assert.equal(tracker.previous.size, 200);
+});
+
 test('formatting preserves unknown/reset-due states', () => {
     assert.equal(tokens(null), '—');
     assert.equal(tokens(23000000), '23.0M');

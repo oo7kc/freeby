@@ -7,6 +7,7 @@
     "test": "node --test tests/unit/*.test.js",
     "lint": "node tools/check.js",
     "test:integration": "gjs -m tests/integration/collector.js",
+    "test:stress": "gjs -m tests/integration/stress.js",
     "check": "npm run lint && npm test && npm run test:integration",
     "pack": "python3 tools/package.py",
     "verify": "npm run check && npm run pack",

@@ -3,7 +3,7 @@ import GLib from 'gi://GLib';
 import {aggregateEvents, recentDates, section} from '../core/usage.js';
 import {cacheDirectory, fingerprint, join, readJson, writeJson} from './files.js';
 
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
 const MAX_DEPTH = 12;
 const MAX_FILES = 20000;
 const MAX_LINE_BYTES = 4 * 1024 * 1024;
@@ -86,7 +86,30 @@ function cachedFile(value, fallbackSession) {
     if (offset === null || size === null || typeof value.stamp !== 'string' || typeof value.fileId !== 'string')
         return null;
     return {offset, size, stamp: value.stamp, fileId: value.fileId,
+        digest: typeof value.digest === 'string' && /^[a-f0-9]{64}$/.test(value.digest) ? value.digest : null,
+        skipping: value.skipping === true,
         state: parserState(value.state, fallbackSession), events: value.events, partial: value.partial === true};
+}
+
+function newFileState(fileId, session) {
+    return {offset: 0, size: 0, stamp: '', fileId, digest: null, skipping: false,
+        state: {session}, events: {}, partial: false};
+}
+
+function hashPrefix(input, length, deadline) {
+    const checksum = new GLib.Checksum(GLib.ChecksumType.SHA256);
+    input.seek(0, GLib.SeekType.SET, null);
+    let remaining = length;
+    while (remaining > 0) {
+        if (GLib.get_monotonic_time() > deadline)
+            throw new Error('History validation timed out');
+        const bytes = input.read_bytes(Math.min(65536, remaining), null).toArray();
+        if (!bytes.length)
+            throw new Error('History changed while validating');
+        checksum.update(bytes);
+        remaining -= bytes.length;
+    }
+    return checksum;
 }
 
 function validDate(value) {
@@ -122,7 +145,7 @@ export function scanHistory(id, roots, parse, {retention = 30, now = Date.now(),
     const destination = cachePath ?? join(cacheDirectory(), `history-${id}.json`);
     let cached = readJson(destination, {}, 64 * 1024 * 1024);
     const identity = fingerprint(JSON.stringify(roots));
-    if (cached.version !== CACHE_VERSION || cached.identity !== identity || typeof cached.files !== 'object' ||
+    if (cached?.version !== CACHE_VERSION || cached.identity !== identity || !cached.files || typeof cached.files !== 'object' ||
         Array.isArray(cached.files))
         cached = {version: CACHE_VERSION, identity, files: {}, updatedAt: null};
     const files = [];
@@ -149,12 +172,20 @@ export function scanHistory(id, roots, parse, {retention = 30, now = Date.now(),
             continue;
         }
         // Changed or truncated files are rebuilt; append-only files resume at the last complete line.
-        if (!previous || file.fileId !== previous.fileId || file.size < previous.size || previous.offset > file.size)
-            previous = {offset: 0, size: 0, stamp: '', fileId: file.fileId,
-                state: {session: fallbackSession}, events: {}, partial: false};
+        if (!previous || file.fileId !== previous.fileId || file.size < previous.size || previous.offset > file.size ||
+            (file.size === previous.size && file.stamp !== previous.stamp))
+            previous = newFileState(file.fileId, fallbackSession);
         let input;
         try {
             input = Gio.File.new_for_path(file.path).read(null);
+            // Verify the entire committed prefix before resuming. In-place rewrites
+            // can grow as well as shrink, so size/mtime or sampled bytes are not proof
+            // that a file is append-only. Only a digest reaches the private cache.
+            let checksum = hashPrefix(input, previous.offset, deadline);
+            if (previous.offset && (!previous.digest || checksum.copy().get_string() !== previous.digest)) {
+                previous = newFileState(file.fileId, fallbackSession);
+                checksum = hashPrefix(input, 0, deadline);
+            }
             input.seek(previous.offset, GLib.SeekType.SET, null);
             let offset = previous.offset;
             let tail = new Uint8Array();
@@ -173,6 +204,11 @@ export function scanHistory(id, roots, parse, {retention = 30, now = Date.now(),
                     const line = buffer.subarray(start, i);
                     offset += i - start + 1;
                     start = i + 1;
+                    if (previous.skipping || line.length > MAX_LINE_BYTES) {
+                        previous.skipping = false;
+                        previous.partial = true;
+                        continue;
+                    }
                     try {
                         const text = new TextDecoder().decode(line);
                         if (!text.trim())
@@ -195,14 +231,25 @@ export function scanHistory(id, roots, parse, {retention = 30, now = Date.now(),
                         previous.partial = true;
                     }
                 }
+                checksum.update(buffer.subarray(0, start));
                 tail = buffer.slice(start);
-                if (tail.length > MAX_LINE_BYTES ||
-                    (GLib.get_monotonic_time() - started) / 1000000 > SCAN_SECONDS) {
+                if (tail.length > MAX_LINE_BYTES || previous.skipping) {
+                    // Consume, rather than retry, oversized lines. Persist the skip
+                    // state across deadlines and appends, never treating their suffix
+                    // as a new JSON record. Keep processing later complete records.
+                    previous.partial = true;
+                    previous.skipping = true;
+                    checksum.update(tail);
+                    offset += tail.length;
+                    tail = new Uint8Array();
+                }
+                if ((GLib.get_monotonic_time() - started) / 1000000 > SCAN_SECONDS) {
                     partial = true;
                     stop = true;
                 }
             }
             previous.offset = offset;
+            previous.digest = checksum.get_string();
             // A time-limited scan must resume even if the source file has not changed.
             previous.size = stop ? -1 : Math.max(file.size, offset);
             previous.stamp = file.stamp;
@@ -215,7 +262,7 @@ export function scanHistory(id, roots, parse, {retention = 30, now = Date.now(),
     }
     const events = [];
     for (const [key, file] of Object.entries(cached.files)) {
-        const normalized = cachedFile(file, privateIdentity(id, key));
+        const normalized = /^[a-f0-9]{64}$/.test(key) ? cachedFile(file, privateIdentity(id, key)) : null;
         if (!normalized) {
             delete cached.files[key];
             partial = true;
