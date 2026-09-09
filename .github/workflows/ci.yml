@@ -7,29 +7,25 @@ on:
     branches: [main, dev]
 
 jobs:
-  shellcheck:
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install shellcheck
-        run: sudo apt-get install -y shellcheck
-      - name: Lint shell scripts
-        run: shellcheck scripts/freeby.sh scripts/copilot-setup.sh
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
       - name: Install dependencies
-        run: sudo apt-get install -y meson ninja-build libglib2.0-dev-bin python3
-      - name: Build
-        run: meson setup build --prefix=$HOME/.local && meson install -C build
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: sudo apt-get install -y bats python3 curl
-      - name: Run tests
-        run: bats tests/
+        run: sudo apt-get update && sudo apt-get install -y gjs gir1.2-soup-3.0 libglib2.0-dev-bin meson ninja-build python3
+      - name: Verify JavaScript, schemas, fixtures, and package
+        run: npm run verify
+      - name: Stress history, notifications, and subprocess bounds
+        run: npm run test:stress
+      - name: Verify isolated install
+        run: |
+          meson setup build --prefix="$RUNNER_TEMP/usagebeam-install"
+          meson install -C build
+          test -f "$RUNNER_TEMP/usagebeam-install/share/gnome-shell/extensions/usagebeam@oo7kc.github.io/schemas/gschemas.compiled"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: usagebeam-extension
+          path: dist/*.zip

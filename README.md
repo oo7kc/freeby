@@ -1,120 +1,133 @@
-<p align="center">
-  <h1 align="center">Freeby</h1>
-  <p align="center">Track your free-tier AI coding tool usage at a glance.</p>
-</p>
+# UsageBeam
 
-<p align="center">
-  <img src="docs/s1.png" width="400" alt="Panel indicator" />
-  <img src="docs/s2.png" width="400" alt="Dropdown menu" />
-</p>
+UsageBeam puts Codex and Claude Code usage where it is easiest to see: in the
+GNOME top panel. The compact indicator shows the active provider's shortest quota
+and reset countdown; its popup reveals every reported limit plus seven days of
+local token and model activity.
 
-<p align="center">
-  <a href="#features">Features</a> ·
-  <a href="#supported-providers">Providers</a> ·
-  <a href="#install">Install</a> ·
-  <a href="#settings">Settings</a> ·
-  <a href="#contributing">Contributing</a> ·
-  <a href="https://github.com/kcnewman/freeby/releases">Releases</a>
-</p>
+The product concept was adapted for GNOME Shell from the
+[Agents plugin in Omarchy](https://github.com/omacom/omarchy/blob/quattro/shell/plugins/agents/README.md).
+UsageBeam is an independent implementation designed around GNOME's native panel,
+preferences, accessibility, and lifecycle conventions.
 
-### Features
+## At a glance
 
-- **Panel indicator** — colored `ai·N` shows available providers at a glance
-- **Dropdown** — per-provider usage, limits, and reset countdown
-- **Notifications** — desktop alert when a provider hits its limit
-- **Auto-refresh on wake** — refreshes immediately after sleep
-- **Parallel fetches** — all providers queried in parallel (~2s)
-- **Configurable** — adjust refresh interval and notifications in settings
-- **Accessible** — screen reader support for all UI elements
-- **Theme-aware** — works with light and dark GNOME themes
+- Live account limits and reset windows for Codex and Claude Code.
+- A stable, single-provider panel indicator.
+- Four panel placements: left area, right area, left of calendar, or right of
+  calendar.
+- Seven-day local activity chart and per-model token totals.
+- Independent live, local, cached, syncing, and setup states.
+- Light and dark surfaces derived from the active GNOME accent color.
+- Private local storage with no prompt, response, transcript, or credential
+  retention.
 
-### Supported providers
+UsageBeam displays only data reported by a provider or found in local usage
+records. Local activity covers this device; it is not billing data and is never
+converted into an account quota.
 
-| Provider | Auth source | Data source |
-|---|---|---|
-| 🟡 **Codex** | `~/.codex/auth.json` | `codex-check` CLI |
-| 🟢 **Cursor** | `~/.config/cursor/auth.json` | Cursor API |
-| 🟠 **Copilot** | `gh` CLI or `~/.config/freeby/copilot-token` | GitHub API |
+## Screenshots
 
-### Install
+### Panel indicator
 
-**Prerequisites**
+![UsageBeam showing the active Codex quota beside the GNOME calendar](docs/images/panel-indicator.png)
 
-- GNOME Shell 45+ (Wayland or X11)
-- `python3`, `curl`, `meson`, `ninja-build`
-- `npx` (for Codex)
-- `gh` CLI (for Copilot, optional)
+### Account limits
 
-<details>
-<summary>Fedora</summary>
+![UsageBeam showing Codex account limits and reset times](docs/images/account-limits.png)
 
-```bash
-sudo dnf install meson ninja-build python3 curl glib2-devel
-```
-</details>
+### Local activity
 
-<details>
-<summary>Ubuntu / Debian</summary>
+![UsageBeam showing a seven-day activity chart and token totals by model](docs/images/local-activity.png)
 
-```bash
-sudo apt install meson ninja-build python3 curl libglib2.0-dev-bin
-```
-</details>
+### Preferences
 
-**Build and install**
+_Screenshot placeholder — provider, placement, refresh, and notification settings._
 
-```bash
-git clone https://github.com/kcnewman/freeby.git && cd freeby
-meson setup build --prefix=$HOME/.local
-meson install -C build
-```
+## Supported providers
 
-Then restart your session and enable:
+### Codex
 
-```bash
-gnome-extensions enable freeby@kelvin.local
-```
+UsageBeam reads account quota windows through the installed Codex CLI app-server
+and scans local Codex session records for activity. The CLI must be installed
+and signed in to show live limits. Common user-local, fnm, nvm, mise, asdf, and
+Volta installations are discovered even when GNOME Shell has a restricted
+`PATH`.
 
-> **Copilot users:** If `gh` isn't installed, run `copilot-setup.sh` first.
+### Claude Code
 
-### Settings
+UsageBeam reads supported account limits from Claude Code's saved OAuth sign-in
+and scans local Claude Code project records for activity. Account limits require
+an active sign-in; local activity can remain available independently.
 
-| Setting | Default | Range | Description |
-|---|---|---|---|
-| Refresh interval | `120s` | 30–3600s | How often to check usage |
-| Notifications | `on` | — | Alert when a provider hits its limit |
+See the detailed [Codex](docs/providers/codex.md) and
+[Claude Code](docs/providers/claude.md) provider notes for source and
+compatibility details.
 
-Configure via Extension Manager or CLI:
+## Requirements
+
+- GNOME Shell 50.
+- GJS with Gio, GLib, and Soup 3 introspection data.
+- The Codex CLI and/or Claude Code, installed and signed in for account limits.
+
+## Install
+
+Download the UsageBeam ZIP from [GitHub Releases](https://github.com/oo7kc/usagebeam/releases),
+then run:
 
 ```bash
-gsettings --schemadir ~/.local/share/glib-2.0/schemas \
-  set org.gnome.shell.extensions.freeby refresh-interval 60
+gnome-extensions install ./usagebeam@oo7kc.github.io-VERSION.zip
+gnome-extensions enable usagebeam@oo7kc.github.io
 ```
 
-### Uninstall
+Log out and back in when installing UsageBeam for the first time so GNOME Shell
+can discover the new extension identity. When replacing an existing UsageBeam
+installation, add `--force`; it tells `gnome-extensions` that overwriting the
+installed copy is intentional.
+
+## Settings
+
+Open the preferences window from the popup or with:
 
 ```bash
-gnome-extensions disable freeby@kelvin.local
-rm -rf ~/.local/share/gnome-shell/extensions/freeby@kelvin.local
-rm -f ~/.local/bin/freeby.sh ~/.local/bin/copilot-setup.sh
-rm -f ~/.local/share/glib-2.0/schemas/org.gnome.shell.extensions.freeby.gschema.xml
-rm -f ~/.local/share/glib-2.0/schemas/gschemas.compiled
+gnome-extensions prefs usagebeam@oo7kc.github.io
 ```
 
-### Debug
+Preferences control panel placement, refresh frequency, and quota notifications.
+
+## Privacy and storage
+
+UsageBeam processes provider data locally and stores only derived usage metadata:
+
+- State: `$XDG_STATE_HOME/usagebeam`
+- Incremental history cache: `$XDG_CACHE_HOME/usagebeam`
+
+Files are created with private permissions. Credentials are read only when a
+provider requires them and are never copied, cached, or logged. Account and
+session identifiers used for change detection or deduplication are hashed before
+persistence. Prompt and response content is ignored.
+
+Recognized settings and derived data from older Freeby alpha builds are migrated
+once without overwriting existing UsageBeam data. Credentials are excluded from
+that migration.
+
+## Troubleshooting
+
+- **Limits show Setup:** open the provider's CLI and confirm it is signed in.
+- **Activity is local only:** this is expected; UsageBeam does not merge records
+  from other devices.
+- **Values show Cached:** the last valid values remain visible during a temporary
+  provider or network failure.
+- **The indicator is absent after installation:** log out and back in, then enable
+  the extension again.
+- **Another panel extension changes placement:** UsageBeam follows GNOME's panel
+  boxes, so layout extensions may override the final arrangement.
+
+## Remove
 
 ```bash
-# test the data script
-bash ~/.local/bin/freeby.sh | python3 -m json.tool
-
-# watch extension logs
-journalctl -f -o cat /usr/bin/gnome-shell
+gnome-extensions disable usagebeam@oo7kc.github.io
+gnome-extensions uninstall usagebeam@oo7kc.github.io
 ```
 
-### Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
-
-### License
-
-[MIT](LICENSE)
+UsageBeam is licensed under the [MIT License](LICENSE).

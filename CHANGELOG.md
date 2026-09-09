@@ -1,89 +1,117 @@
 # Changelog
 
-## v1.0.2
+All notable UsageBeam changes are documented here.
 
-### Fixed
-- Added GNOME 49 and 50 to shell-version compatibility
-- Removed deprecated `version` field from metadata.json
-- Dropdown now stays open when clicking refresh (deferred reopen)
-- Removed invalid `accessible_name` from PopupMenuItem (caused extension to fail loading)
-
-## v1.0.1
+## Unreleased
 
 ### Added
-- Accessible names for screen readers on panel indicator, dots, and summaries
-- System theme support in CSS (uses `currentColor` and opacity for better theme integration)
-- CONTRIBUTING.md with development setup and code style guidelines
-- GitHub Actions CI: shellcheck, meson build, bats tests
-- Bats test suite for shell script (JSON structure, required fields, cleanup)
+
+- UsageBeam product identity with the permanent extension UUID
+  `usagebeam@oo7kc.github.io` and settings schema
+  `org.gnome.shell.extensions.usagebeam`.
+- Active-provider panel readout with provider icon, shortest current quota, and
+  reset countdown.
+- Left area, right area, left-of-calendar, and right-of-calendar placement.
+- Expandable seven-day activity chart and compact per-model token totals.
+- Native preferences for placement, refresh interval, and notifications.
+- Explicit quota severity states: caution at 80%, warning at 90%, and exhausted
+  at 100%.
+- Product screenshots for the panel indicator, account limits, and local
+  activity views.
 
 ### Changed
-- CSS colors use `currentColor` where possible for better theme compatibility
-- Status dot and summary text use opacity for dimmed states instead of hardcoded colors
 
-## v1.0.0
-
-### Fixed
-- Crash when subprocess returns empty/null output
-- Race condition from concurrent refresh calls (clicking during auto-refresh)
-- Stale async callback after extension disable
-- False "limit reached" notification on first refresh
-- Schema not compiled during install (gsettings now works out of the box)
-- Codex percentage parser using string instead of boolean for `has_remaining`
-- Copilot percentage exceeding 100% on overages
-- Cursor showing "resets now" when billing cycle end is unknown
-- `copilot-setup.sh` infinite loop (now times out after 5 minutes)
-- Shell script temp directory shadowing system `$TMPDIR`
-- Shell script hanging forever when curl or npx times out
-
-### Changed
-- Consistent percentage display across all providers
-- Metadata: added `version` and `settings-schema` fields
-- Metadata: removed unreleased GNOME shell versions from compatibility list
-- GSettings: enforced 30–3600s range on refresh interval
-- Build: schema compilation now runs automatically during `meson install`
-- README: added prerequisites, uninstall instructions, corrected copilot-setup path
-
-### Security
-- Fixed Python code injection risk when `$HOME` contains single quotes
-- Removed unused `json_escape` function
-
-## v0.5.0
+- Rebuilt the popup as a compact, accent-aware GNOME surface with aligned quota
+  metrics and stable panel geometry.
+- Account limits, local activity, and saved results now remain available
+  independently when one source cannot refresh.
+- Codex discovery supports common user-local and Node version-manager layouts.
+- Recognized Freeby alpha settings and derived data migrate without copying
+  credentials or overwriting existing UsageBeam data.
 
 ### Fixed
-- Dropdown now stays open when clicking the refresh icon
-- Consistent percentage display for Copilot (was showing token counts)
 
-## v0.4.0
+- Expanded menus adapt to smaller work areas with keyboard-accessible pagination,
+  preserving access to all quotas and model totals without nested scrolling.
+- Calendar-gap centering now accounts for neighboring panel extensions and their
+  size changes.
+- Local activity totals recover when provider history files are rewritten or
+  contain an unreadable record.
+- Large or malformed provider responses no longer interrupt future refreshes.
+- Calendar-side readouts anchor toward the clock on both sides, keeping reserved
+  width outside the visible gap when provider names and countdowns change.
+- Each quota now shows its reset countdown below the bar as `Resets in …`, with
+  its percentage right-aligned above the bar.
+- Daily chart columns allocate visible bottom-aligned bars for non-zero activity.
+- Model fills remain compact and stable across repeated layout passes.
+- Calendar placement remains fixed while providers and quota values change.
+- Reset values, percentages, and separator dots retain consistent alignment.
+- The active-provider readout uses compact internal and calendar-side spacing,
+  while retaining a fixed width across provider changes.
+- Panel usage metrics share the provider label's visual baseline.
+- The panel always prefers the shortest available quota period, even at 0% or
+  100%, instead of switching to a longer window with higher usage.
+- Seven-day activity emphasizes its local/account scope without repeating a
+  date range already represented by the chart.
+- The activity disclosure now shows only its title and chevron; period, totals,
+  and source remain in the expanded content where they are needed.
+- Usage alerts now progress through configured, warning, and exhausted milestones
+  once per quota period and combine simultaneous crossings into one notification.
+- Quota labels use compact `5H Session` and `Weekly Reserve` names, while expanded
+  activity keeps scope implicit and gives the chart more breathing room.
+- Expired quota windows are not presented as current cached data.
+- Empty, malformed, or unavailable provider responses are never shown as zero
+  usage.
+
+### Removed
+
+- Unverified Cursor and Copilot preview adapters. Providers now ship only after
+  their data sources and failure states have completed validation.
+- Superseded runtime scripts and historical UI artifacts that were not part of
+  the product.
+
+## 2.0.0-alpha.2 - 2026-09-06
 
 ### Added
-- Desktop notifications on provider limit hit
-- Auto-refresh on wake from sleep (systemd PrepareForSleep)
-- Configurable refresh interval via gsettings
-- Settings UI in Extension Manager (prefs.js)
-- Parallel provider fetches (4.6s → 1.9s)
 
-### Changed
-- Split extension.js into extension.js + indicator.js + prefs.js
-
-## v0.3.0
-
-### Added
-- Click panel to refresh
-- Clickable refresh icon in dropdown
-- `has_remaining` field for accurate provider count
+- Claude Code installation and saved OAuth sign-in detection.
+- Supported 5-hour, weekly, and model-scoped Claude quota windows.
+- Incremental Claude Code activity with per-model input, output, cache-read, and
+  cache-write totals.
+- Shared provider switching between Codex and Claude Code.
 
 ### Fixed
-- Consistent comma separator and countdown format
-- Codex parsed via `--json` flag for reliable parsing
 
-## v0.2.0
+- Expired cached quota windows are discarded after their reset time.
+- Missing, absent, and expired Claude authentication remain distinct states.
+
+### Compatibility
+
+- Tested with Claude Code 2.1.218.
+- Supports standard and model-scoped limits, expired sign-ins, duplicate local
+  activity records, and separate cache-token categories.
+- Live account-limit validation was not available for this prerelease.
+
+## 2.0.0-alpha.1 - 2026-09-06
 
 ### Added
-- Real provider integrations: Codex, Cursor, Copilot
-- `copilot-setup.sh` device-flow auth script
-- Panel indicator with colored status
 
-## v0.1.0
+- Codex account limits with distinct quota periods and reset times.
+- Incremental local Codex history with seven-day and model aggregates.
+- Private local storage and temporary saved-value recovery during refresh
+  failures.
 
-- Initial release with placeholder data
+### Fixed
+
+- Refresh occurs after resume instead of before suspend.
+- Repeated refreshes no longer overlap.
+- Notifications appear once for each reached milestone and quota period.
+
+## 1.0.2 - 2026-04-27
+
+- Added GNOME 49 and 50 metadata compatibility and removed deprecated extension
+  version metadata.
+- Kept the dropdown open after manual refresh and fixed an invalid popup
+  accessibility property.
+
+Earlier history remains available in the repository's Git tags and releases.

@@ -1,16 +1,48 @@
-import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { FreebyIndicator } from './indicator.js';
+import {notificationBody} from './src/core/notifications.js';
+import {UsageBeamIndicator} from './src/ui/indicator.js';
+import {clearIndicatorPlacement, placeIndicator} from './src/ui/panelPlacement.js';
+import {migrateLegacyInstall} from './src/services/migration.js';
+import {UsageService} from './src/services/usageService.js';
 
-export default class FreebyExtension extends Extension {
+export default class UsageBeamExtension extends Extension {
     enable() {
-        this._settings = this.getSettings('org.gnome.shell.extensions.freeby');
-        this._settingsId = this._settings.connect('changed::refresh-interval', () => this._indicator?._setupTimer());
-        this._indicator = new FreebyIndicator(this._settings);
-        Main.panel.addToStatusArea(this.uuid, this._indicator);
+        this._settings = this.getSettings('org.gnome.shell.extensions.usagebeam');
+        migrateLegacyInstall(this._settings);
+        this._indicator = new UsageBeamIndicator(this._settings, this.path, () => this.openPreferences());
+        Main.panel.addToStatusArea(this.uuid, this._indicator, 0, 'center');
+        this._placeIndicator();
+        this._service = new UsageService(this._settings, this.path, () => this._indicator?.render(), alerts => {
+            const message = notificationBody(alerts);
+            if (message)
+                Main.notify('UsageBeam usage alert', message);
+        });
+        this._indicator.attach(this._service);
+        this._settingsIds = [];
+        this._settingsIds.push(this._settings.connect('changed::enabled-providers', () => {
+            this._service.configure();
+            this._indicator.render();
+            this._service.refreshAll();
+        }));
+        this._settingsIds.push(this._settings.connect('changed::default-provider', () => this._indicator.render()));
+        this._settingsIds.push(this._settings.connect('changed::panel-position', () => this._placeIndicator()));
+        this._settingsIds.push(this._settings.connect('changed::history-retention-days', () =>
+            this._service.refreshAll(true)));
+        this._service.refreshAll();
     }
+
+    _placeIndicator() {
+        placeIndicator(this._indicator, this._settings.get_string('panel-position'));
+    }
+
     disable() {
-        if (this._settingsId) { this._settings.disconnect(this._settingsId); this._settingsId = null; }
+        for (const id of this._settingsIds ?? [])
+            this._settings.disconnect(id);
+        this._settingsIds = null;
+        this._service?.destroy();
+        this._service = null;
+        clearIndicatorPlacement(this._indicator);
         this._indicator?.destroy();
         this._indicator = null;
         this._settings = null;

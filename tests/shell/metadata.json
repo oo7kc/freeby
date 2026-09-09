@@ -1,0 +1,6 @@
+{
+  "uuid": "usagebeam-ui-test@tests.invalid",
+  "name": "UsageBeam private UI checks",
+  "description": "Test-only companion; never shipped in the product archive.",
+  "shell-version": ["50"]
+}
