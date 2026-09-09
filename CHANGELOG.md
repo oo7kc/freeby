@@ -16,11 +16,13 @@ All notable UsageBeam changes are documented here.
 - Native preferences for placement, refresh interval, and notifications.
 - Explicit quota severity states: caution at 80%, warning at 90%, and exhausted
   at 100%.
+- Product screenshots for the panel indicator, account limits, and local
+  activity views.
 
 ### Changed
 
-- Rebuilt the popup as a compact, accent-aware GNOME surface with SF Pro
-  typography when available, aligned quota metrics, and stable panel geometry.
+- Rebuilt the popup as a compact, accent-aware GNOME surface with aligned quota
+  metrics and stable panel geometry.
 - Account limits, local activity, and saved results now remain available
   independently when one source cannot refresh.
 - Codex discovery supports common user-local and Node version-manager layouts.

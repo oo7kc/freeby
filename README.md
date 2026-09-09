@@ -13,8 +13,7 @@ preferences, accessibility, and lifecycle conventions.
 ## At a glance
 
 - Live account limits and reset windows for Codex and Claude Code.
-- A stable, single-provider panel indicator that does not move the clock when
-  its content changes.
+- A stable, single-provider panel indicator.
 - Four panel placements: left area, right area, left of calendar, or right of
   calendar.
 - Seven-day local activity chart and per-model token totals.
@@ -27,18 +26,19 @@ UsageBeam displays only data reported by a provider or found in local usage
 records. Local activity covers this device; it is not billing data and is never
 converted into an account quota.
 
-Activity expands in full when space allows. On smaller screens, compact page
-controls keep every quota and model total reachable without a scrolling popup.
-
 ## Screenshots
 
 ### Panel indicator
 
-_Screenshot placeholder — compact provider usage beside the calendar._
+![UsageBeam showing the active Codex quota beside the GNOME calendar](docs/images/panel-indicator.png)
 
-### Usage details
+### Account limits
 
-_Screenshot placeholder — account limits and seven-day local activity._
+![UsageBeam showing Codex account limits and reset times](docs/images/account-limits.png)
+
+### Local activity
+
+![UsageBeam showing a seven-day activity chart and token totals by model](docs/images/local-activity.png)
 
 ### Preferences
 
@@ -69,8 +69,6 @@ compatibility details.
 - GNOME Shell 50.
 - GJS with Gio, GLib, and Soup 3 introspection data.
 - The Codex CLI and/or Claude Code, installed and signed in for account limits.
-- SF Pro Text and SF Pro Display are used when installed; GNOME's system fallback
-  is used otherwise. UsageBeam does not bundle or download fonts.
 
 ## Install
 
@@ -96,11 +94,6 @@ gnome-extensions prefs usagebeam@oo7kc.github.io
 ```
 
 Preferences control panel placement, refresh frequency, and quota notifications.
-Calendar-side placement keeps the gap between the indicator and clock on the
-panel midpoint. The indicator reserves a stable width so switching providers or
-loading new quota data does not move the calendar. When several limits are
-available, the panel shows the shortest reported window; the popup continues to
-show every reported limit.
 
 ## Privacy and storage
 
