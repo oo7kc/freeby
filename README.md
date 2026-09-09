@@ -72,7 +72,7 @@ compatibility details.
 
 ## Install
 
-Download the UsageBeam ZIP from [GitHub Releases](https://github.com/oo7kc/freeby/releases),
+Download the UsageBeam ZIP from [GitHub Releases](https://github.com/oo7kc/usagebeam/releases),
 then run:
 
 ```bash

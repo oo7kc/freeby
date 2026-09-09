@@ -4,5 +4,5 @@
   "description": "Private, at-a-glance usage monitoring for Codex and Claude Code, with account limits, reset windows, local token activity and model breakdowns.",
   "shell-version": ["50"],
   "settings-schema": "org.gnome.shell.extensions.usagebeam",
-  "url": "https://github.com/oo7kc/freeby"
+  "url": "https://github.com/oo7kc/usagebeam"
 }
