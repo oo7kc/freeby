@@ -4,6 +4,8 @@ All notable UsageBeam changes are documented here.
 
 ## Unreleased
 
+## 2.0.0-alpha.3 - 2026-09-09
+
 ### Added
 
 - UsageBeam product identity with the permanent extension UUID
